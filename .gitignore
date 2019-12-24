@@ -1,0 +1,14 @@
+**/.*.swp
+build
+
+conan.lock
+conan_paths.cmake
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+
+CMakeCache.txt
+CMakeFiles
+*.cmake
+cmake_install.cmake
+Makefile
