@@ -1,5 +1,7 @@
 # CDCF: C++ Distributed Computing Framework
 
+![](https://github.com/thoughtworks-hpc/cdcf/workflows/CI/badge.svg)
+
 ## Project Hierarchy
 
 ```text
