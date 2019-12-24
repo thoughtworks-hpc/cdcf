@@ -1,2 +1,1 @@
-# cdcf
-C++ Distributed Computing Framework
+# CDCF: C++ Distributed Computing Framework
