@@ -2,21 +2,18 @@
 
 ![](https://github.com/thoughtworks-hpc/cdcf/workflows/CI/badge.svg)
 
-## Project Hierarchy
+## Build from source
 
-```text
-root
-.
-├── CMakeLists.txt
-├── actor_system            ....... Library to build actor system
-│   ├── CMakeLists.txt
-│   ├── include             .......   Exported headers
-│   └── src                 .......   Implementation and testing for actor system
-├── demos                   ....... Folders holding demos
-│   ├── CMakeLists.txt
-│   └── hello_world         .......   Folders holding per demo
-│       └── CMakeLists.txt
-└── node_keeper             ....... Executable to manage nodes in cluster
-    ├── CMakeLists.txt
-    └── src                 .......   Implementation and testing for node keeper
+Requires:
+
+- CMake 3.10 above
+- conan 1.21 above
+
+Checkout to project root and run following commands:
+
+```shell
+$ conan install .
+$ cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
+$ cmake --build .
+$ ctest .
 ```
