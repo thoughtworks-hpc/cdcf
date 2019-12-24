@@ -5,7 +5,6 @@ We welcome new contributors, following is the general rule to contribute to the 
 ## Project hierarchy
 
 ```text
-root
 .
 ├── CMakeLists.txt
 ├── actor_system            ....... Library to build actor system
