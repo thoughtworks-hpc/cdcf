@@ -1,6 +1,7 @@
 # CDCF: C++ Distributed Computing Framework
 
 ![](https://github.com/thoughtworks-hpc/cdcf/workflows/CI/badge.svg)
+![](https://github.com/thoughtworks-hpc/cdcf/workflows/Coding%20Style/badge.svg)
 
 ## Build from source
 

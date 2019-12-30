@@ -1,4 +1,4 @@
-int main(int argc, char *argv[])
-{
-    return 0;
-}
+/*
+ * Copyright (c) 2019 ThoughtWorks Inc.
+ */
+int main(int argc, char *argv[]) { return 0; }

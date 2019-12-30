@@ -1,0 +1,29 @@
+name: Coding Style
+
+on: [push]
+
+jobs:
+  check-format:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: clang-format lint
+      uses: DoozyX/clang-format-lint-action@v0.5
+
+  check-style:
+    needs: check-format
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/setup-python@v1
+    - name: Install cpplint
+      run: |
+        python -m pip install --upgrade pip
+        pip install cpplint
+    - uses: actions/checkout@v1
+    - name: Run cpplint
+      run: |
+        cpplint --recursive .
