@@ -8,6 +8,7 @@ if("${CONAN_COMPILER}" STREQUAL "gcc")
     set(CMAKE_SHARED_LINKER_FLAGS "${CONAN_SHARED_LINKER_FLAGS}")
 endif()
 
+include(CTest)
 add_subdirectory(node_keeper)
 add_subdirectory(actor_system)
 add_subdirectory(demos)
