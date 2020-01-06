@@ -12,3 +12,5 @@ CMakeFiles
 *.cmake
 cmake_install.cmake
 Makefile
+cmake-build-debug
+.idea
