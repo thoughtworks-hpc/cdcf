@@ -6,7 +6,6 @@
 #define CDCF_CDCF_CONFIG_H
 
 #include "caf/all.hpp"
-//#include "caf/io/all.hpp"
 
 class cdcf_config : public caf::actor_system_config {
  public:
