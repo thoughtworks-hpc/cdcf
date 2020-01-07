@@ -9,5 +9,4 @@
 
 const std::string INI_FILE_PATH = "@TEST_INI_FILE_PATH@";
 
-
-#endif //CDCF_CONFIG_MANAGER_TEST_H
+#endif  // CDCF_CONFIG_MANAGER_TEST_H
