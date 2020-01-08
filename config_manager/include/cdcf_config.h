@@ -2,8 +2,8 @@
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_CDCF_CONFIG_H
-#define CDCF_CDCF_CONFIG_H
+#ifndef CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
+#define CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
 
 #include "caf/all.hpp"
 
@@ -23,4 +23,4 @@ class cdcf_config : public caf::actor_system_config {
                          const char* ini_file_cstr = "cdcf-default.ini");
 };
 
-#endif  // CDCF_CDCF_CONFIG_H
+#endif  // CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
