@@ -1,12 +1,13 @@
-//
-// Created by Mingfei Deng on 2020/1/2.
-//
+/*
+ * Copyright (c) 2019 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_CONFIG_MANAGER_TEST_H
 #define CDCF_CONFIG_MANAGER_TEST_H
 
 #include <string>
 
-const std::string INI_FILE_PATH = "@TEST_INI_FILE_PATH@";
-
+char INI_FILE_PARAMETER[] =
+    "--config-file="
+    "@TEST_INI_FILE_PATH@";
 #endif  // CDCF_CONFIG_MANAGER_TEST_H

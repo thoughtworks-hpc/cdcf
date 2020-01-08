@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2019/12/26.
-//
+/*
+ * Copyright (c) 2019 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_CDCF_CONFIG_H
 #define CDCF_CDCF_CONFIG_H
@@ -9,13 +9,9 @@
 
 class cdcf_config : public caf::actor_system_config {
  public:
-  cdcf_config(){};
-
   cdcf_config(cdcf_config&& config) = default;
   cdcf_config(const cdcf_config& config) = delete;
   cdcf_config& operator=(const cdcf_config&) = delete;
-
-  virtual ~cdcf_config(){};
 
   enum RET_VALUE {
     SUCCESS = 0,

@@ -1,4 +1,7 @@
-#include "cdcf_config.h"
+/*
+ * Copyright (c) 2019 ThoughtWorks Inc.
+ */
+#include "../include/cdcf_config.h"
 
 cdcf_config::RET_VALUE cdcf_config::parse_config(int argc, char** argv,
                                                  const char* ini_file_cstr) {

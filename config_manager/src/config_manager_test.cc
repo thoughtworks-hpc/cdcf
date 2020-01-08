@@ -1,8 +1,12 @@
-#include "config_manager_test.h"
+/*
+ * Copyright (c) 2019 ThoughtWorks Inc.
+ */
+
+#include "../include/config_manager_test.h"
 
 #include <gmock/gmock.h>
 
-#include "cdcf_config.h"
+#include "../include/cdcf_config.h"
 
 class test_config : public cdcf_config {
  public:
@@ -18,16 +22,11 @@ class test_config : public cdcf_config {
   }
 };
 
-TEST(TestConfigLoad, load_from_file) {
+TEST(TestConfigLoad, load_from_file) { /* NOLINT */
   int fake_argc = 2;
   char arg0[] = "test_program";
-  const std::string ini_file_path = "--config-file=" + INI_FILE_PATH;
-  // char arg1[] = ini_file_path.c_str();
-  // char *arg1 = new char[ini_file_path.size()];
-  char arg1[ini_file_path.size() + 1];
-  std::strcpy(arg1, ini_file_path.c_str());
 
-  char **fake_argv = new char *[fake_argc + 1] { arg0, arg1 };
+  char **fake_argv = new char *[fake_argc + 1] { arg0, INI_FILE_PARAMETER };
 
   test_config config;
   cdcf_config::RET_VALUE ret =
@@ -39,7 +38,7 @@ TEST(TestConfigLoad, load_from_file) {
   EXPECT_EQ(true, config.my_server_mode);
 }
 
-TEST(TestConfigLoad, load_from_parameter) {
+TEST(TestConfigLoad, load_from_parameter) { /* NOLINT */
   int fake_argc = 4;
   char arg0[] = "test_program";
   char arg1[] = "--port=8088";
@@ -58,7 +57,7 @@ TEST(TestConfigLoad, load_from_parameter) {
   EXPECT_EQ(true, config.my_server_mode);
 }
 
-TEST(TestConfigLoad, load_from_parameter_short) {
+TEST(TestConfigLoad, load_from_parameter_short) { /* NOLINT */
   int fake_argc = 6;
   char arg0[] = "test_program";
   char arg1[] = "-p";
