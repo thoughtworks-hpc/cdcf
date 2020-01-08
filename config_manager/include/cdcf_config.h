@@ -9,6 +9,7 @@
 
 class cdcf_config : public caf::actor_system_config {
  public:
+  cdcf_config() = default;
   cdcf_config(cdcf_config&& config) = default;
   cdcf_config(const cdcf_config& config) = delete;
   cdcf_config& operator=(const cdcf_config&) = delete;
