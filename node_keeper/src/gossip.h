@@ -4,12 +4,19 @@
 #ifndef NODE_KEEPER_SRC_GOSSIP_H_
 #define NODE_KEEPER_SRC_GOSSIP_H_
 
+#include <chrono>
 #include <functional>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace gossip {
+
+enum ErrorCode {
+  kOK = 0,
+  kTimeout,
+};
 
 struct Address {
   std::string host;
@@ -24,7 +31,7 @@ class Payload {
   Payload(char *data, int size);
 
  private:
-  char data[kMaxPayloadSize];
+  std::vector<unsigned char> data_;
 };
 
 class Gossipable {
@@ -36,24 +43,42 @@ class Gossipable {
   typedef std::function<void(const Address &node, const Payload &data)>
       GossipHandler;
   virtual void RegisterGossipHandler(GossipHandler handler) = 0;
+
+ public:
+  virtual ~Gossipable() = default;
 };
 
 class Pushable {
  public:
-  virtual int Push(const Address &node, const void *data, size_t size) = 0;
+  typedef std::function<void(ErrorCode)> DidPushHandler;
+  virtual ErrorCode Push(
+      const Address &node, const void *data, size_t size,
+      std::chrono::milliseconds timeout = std::chrono::milliseconds{0},
+      DidPushHandler didPush = nullptr) = 0;
 
   typedef std::function<void(const Address &, const void *, size_t)>
       PushHandler;
   virtual void RegisterPushHandler(PushHandler handler) = 0;
+
+ public:
+  virtual ~Pushable() = default;
 };
 
 class Pullable {
  public:
-  virtual int Pull(const Address &node, const void *data, size_t size) = 0;
+  typedef std::pair<ErrorCode, std::vector<unsigned char>> PullResult;
+  typedef std::function<void(PullResult)> DidPullHandler;
+  virtual PullResult Pull(
+      const Address &node, const void *data, size_t size,
+      std::chrono::milliseconds timeout = std::chrono::milliseconds{0},
+      DidPullHandler didPull = nullptr) = 0;
 
   typedef std::function<void(const Address &, const void *, size_t)>
       PullHandler;
   virtual void RegisterPullHandler(PullHandler handler) = 0;
+
+ public:
+  virtual ~Pullable() = default;
 };
 
 class Transportable : public Gossipable, public Pushable, public Pullable {};
