@@ -1,5 +1,6 @@
 [requires]
 gtest/1.10.0
+asio/1.13.0
 caf/0.17.3@bincrafters/stable
 
 [generators]

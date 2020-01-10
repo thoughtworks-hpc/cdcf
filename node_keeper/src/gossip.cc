@@ -3,11 +3,23 @@
  */
 #include "src/gossip.h"
 
+#include <iostream>
+// anti clang-format sort
+#include <asio.hpp>
+
 namespace gossip {
 
+using asio::ip::udp;
 using std::chrono::milliseconds;
 
 class Transport : public Transportable {
+ public:
+  Transport(const Address &udp, const Address &tcp) try
+      : udpSocket_(ioContext_, udp::endpoint(udp::v4(), udp.port)) {
+  } catch (const std::exception &e) {
+    throw PortOccupied(e);
+  }
+
  public:
   virtual int Gossip(const std::vector<Address> &nodes, const Payload &data) {
     return 0;
@@ -23,11 +35,15 @@ class Transport : public Transportable {
     return PullResult{ErrorCode::kOK, {0}};
   }
   virtual void RegisterPullHandler(PullHandler handler) {}
+
+ private:
+  asio::io_context ioContext_;
+  udp::socket udpSocket_;
 };
 
-std::unique_ptr<Transportable> CreateTransport(const Address &upd,
+std::unique_ptr<Transportable> CreateTransport(const Address &udp,
                                                const Address &tcp) {
-  return std::make_unique<Transport>();
+  return std::make_unique<Transport>(udp, tcp);
 }
 
 }  // namespace gossip

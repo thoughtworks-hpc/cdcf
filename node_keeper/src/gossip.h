@@ -84,6 +84,12 @@ class Pullable {
 
 class Transportable : public Gossipable, public Pushable, public Pullable {};
 
+class PortOccupied : public std::runtime_error {
+ public:
+  explicit PortOccupied(const std::exception &e)
+      : std::runtime_error(e.what()) {}
+};
+
 std::unique_ptr<Transportable> CreateTransport(const Address &upd,
                                                const Address &tcp);
 };      // namespace gossip
