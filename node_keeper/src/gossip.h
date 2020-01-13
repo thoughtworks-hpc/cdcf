@@ -26,13 +26,30 @@ struct Address {
 
 class Payload {
  public:
+  class MaxPayloadExceeded : public std::runtime_error {
+   public:
+    explicit MaxPayloadExceeded(size_t actual)
+        : std::runtime_error(
+              "max payload length is: " + std::to_string(kMaxPayloadSize) +
+              ", but " + std::to_string(actual) + " is provided.") {}
+  };
+
   static constexpr int kMaxPayloadSize = 65527;
 
-  explicit Payload(std::string data);
-  Payload(char *data, int size);
+  std::vector<unsigned char> data;
 
- private:
-  std::vector<unsigned char> data_;
+  explicit Payload(const std::string &data)
+      : Payload(data.c_str(), data.size()) {}
+
+  explicit Payload(const std::vector<unsigned char> &data)
+      : Payload(data.data(), data.size()) {}
+
+  Payload(const void *data, size_t size) {
+    if (size > kMaxPayloadSize) {
+      throw MaxPayloadExceeded(size);
+    }
+    this->data.assign((unsigned char *)data, ((unsigned char *)data) + size);
+  }
 };
 
 class Gossipable {

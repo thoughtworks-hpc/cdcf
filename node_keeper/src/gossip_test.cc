@@ -5,7 +5,14 @@
 
 #include <gmock/gmock.h>
 
-using testing::NotNull;
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <condition_variable>
+#include <cstdint>
+#include <mutex>
+
+using testing::NotNull, testing::Eq;
 
 TEST(Transport, ShouldReturnTransportIfCreateTransportWithAvailablePort) {
   gossip::Address udp = {"127.0.0.1", 5000};
@@ -22,4 +29,44 @@ TEST(Transport, ShouldThrowErrorIfCreateTransportWithOccupiedPort) {
   auto occupiedTransport = gossip::CreateTransport(udp, tcp);
 
   EXPECT_THROW(gossip::CreateTransport(udp, tcp), gossip::PortOccupied);
+}
+
+class Gossip : public testing::Test {
+ public:
+  void SetUp() {
+    std::generate(addresses_.begin(), addresses_.end(), [i = 0]() mutable {
+      ++i;
+      return gossip::Address{"127.0.0.1", (uint16_t)(5000 + i)};
+    });
+    std::transform(addresses_.begin(), addresses_.end(), peers_.begin(),
+                   [](const gossip::Address &address) {
+                     return gossip::CreateTransport(address, address);
+                   });
+  }
+
+ protected:
+  std::array<gossip::Address, 5> addresses_;
+  std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
+};
+
+TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
+  using gossip::Address, gossip::Payload, std::chrono_literals::operator""ms;
+  const Payload sent("hello world!");
+  std::unique_ptr<std::vector<unsigned char>> received;
+  std::mutex mutex;
+  std::condition_variable cv;
+  peers_[1]->RegisterGossipHandler(
+      [&received, &mutex, &cv](const Address &node, const Payload &data) {
+        {
+          std::lock_guard<std::mutex> lock(mutex);
+          received = std::make_unique<std::vector<unsigned char>>(data.data);
+        }
+        cv.notify_all();
+      });
+
+  peers_[0]->Gossip({addresses_[1]}, sent);
+
+  std::unique_lock<std::mutex> lock(mutex);
+  EXPECT_TRUE(cv.wait_for(lock, 1000ms, [&received]() { return !!received; }));
+  EXPECT_THAT(*received, Eq(sent.data));
 }
