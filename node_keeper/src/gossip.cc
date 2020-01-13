@@ -35,11 +35,12 @@ class Transport : public Transportable {
   virtual int Gossip(const std::vector<Address> &nodes,
                      const Payload &payload) {
     udp::resolver resolver(ioContext_);
-    auto endpoints =
-        resolver.resolve(nodes[0].host, std::to_string(nodes[0].port));
-    const auto &endpoint = *endpoints.begin();
-    auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
-    assert(sent == payload.data.size() && "all bytes should be sent");
+    for (const auto &node : nodes) {
+      auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
+      const auto &endpoint = *endpoints.begin();
+      auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
+      assert(sent == payload.data.size() && "all bytes should be sent");
+    }
     return 0;
   }
 

@@ -31,6 +31,8 @@ TEST(Transport, ShouldThrowErrorIfCreateTransportWithOccupiedPort) {
   EXPECT_THROW(gossip::CreateTransport(udp, tcp), gossip::PortOccupied);
 }
 
+using gossip::Address, gossip::Payload;
+
 class Gossip : public testing::Test {
  public:
   void SetUp() {
@@ -42,31 +44,61 @@ class Gossip : public testing::Test {
                    [](const gossip::Address &address) {
                      return gossip::CreateTransport(address, address);
                    });
-  }
-
- protected:
-  std::array<gossip::Address, 5> addresses_;
-  std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
-};
-
-TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
-  using gossip::Address, gossip::Payload, std::chrono_literals::operator""ms;
-  const Payload sent("hello world!");
-  std::unique_ptr<std::vector<unsigned char>> received;
-  std::mutex mutex;
-  std::condition_variable cv;
-  peers_[1]->RegisterGossipHandler(
-      [&received, &mutex, &cv](const Address &node, const Payload &data) {
+    for (size_t i = 0; i < peers_.size(); ++i) {
+      auto &mutex = mutexes_[i];
+      auto &cv = cvs_[i];
+      auto &received = receives_[i];
+      peers_[i]->RegisterGossipHandler([&](const Address &node,
+                                           const Payload &data) {
         {
           std::lock_guard<std::mutex> lock(mutex);
           received = std::make_unique<std::vector<unsigned char>>(data.data);
         }
         cv.notify_all();
       });
+    }
+  }
+
+ protected:
+  std::array<gossip::Address, 5> addresses_;
+  std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
+  std::array<std::mutex, 5> mutexes_;
+  std::array<std::condition_variable, 5> cvs_;
+  std::array<std::unique_ptr<std::vector<unsigned char>>, 5> receives_;
+  static constexpr const std::chrono::milliseconds kTimeout{
+      std::chrono::milliseconds(1000)};
+};
+
+TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
+  const Payload sent("hello world!");
+  std::unique_ptr<std::vector<unsigned char>> received;
 
   peers_[0]->Gossip({addresses_[1]}, sent);
 
-  std::unique_lock<std::mutex> lock(mutex);
-  EXPECT_TRUE(cv.wait_for(lock, 1000ms, [&received]() { return !!received; }));
-  EXPECT_THAT(*received, Eq(sent.data));
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !!receives_[1]; }));
+  }
+  EXPECT_THAT(*receives_[1], Eq(sent.data));
+}
+
+TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
+  using gossip::Address, gossip::Payload;
+  const Payload sent("hello world!");
+
+  peers_[0]->Gossip({addresses_[1], addresses_[2]}, sent);
+
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !!receives_[1]; }));
+  }
+  EXPECT_THAT(*receives_[1], Eq(sent.data));
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[2]);
+    ASSERT_TRUE(
+        cvs_[2].wait_for(lock, kTimeout, [&]() { return !!receives_[2]; }));
+  }
+  EXPECT_THAT(*receives_[2], Eq(sent.data));
 }
