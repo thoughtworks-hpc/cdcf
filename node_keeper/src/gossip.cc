@@ -16,18 +16,18 @@ class Transport : public Transportable {
  public:
   Transport(const Address &udp, const Address &tcp) try
       : udpSocket_(ioContext_, udp::endpoint(udp::v4(), udp.port)),
-        stopReceiving_(false),
-        gossipThread_(&Transport::ReceiveRoutine, this) {
+        stopReceiving_(false) {
+    StartReceiveGossip();
+    ioThread_ = std::thread(&Transport::IORoutine, this);
   } catch (const std::exception &e) {
     throw PortOccupied(e);
   }
 
   virtual ~Transport() {
     stopReceiving_ = true;
-    // intended to close socket first to wakeup gossipThread to response to join
-    udpSocket_.close();
-    if (gossipThread_.joinable()) {
-      gossipThread_.join();
+    ioContext_.stop();
+    if (ioThread_.joinable()) {
+      ioThread_.join();
     }
   }
 
@@ -60,18 +60,29 @@ class Transport : public Transportable {
   virtual void RegisterPullHandler(PullHandler handler) {}
 
  private:
-  void ReceiveRoutine() {
-    while (!stopReceiving_) {
-      try {
-        std::vector<unsigned char> buffer(Payload::kMaxPayloadSize);
-        udp::endpoint remote;
-        size_t len = udpSocket_.receive_from(asio::buffer(buffer), remote);
-        if (gossipHandler_) {
-          const Address address{remote.address().to_string(), remote.port()};
-          gossipHandler_(address, Payload(buffer.data(), len));
-        }
-      } catch (...) {
-      }
+  void StartReceiveGossip() {
+    auto buffer =
+        std::make_shared<std::vector<uint8_t>>(Payload::kMaxPayloadSize);
+    auto remote = std::make_shared<udp::endpoint>();
+    udpSocket_.async_receive_from(
+        asio::buffer(*buffer), *remote,
+        [this, buffer, remote](const asio::error_code &error,
+                               std::size_t bytes_transferred) {
+          if (error) {
+            return;
+          }
+          if (gossipHandler_) {
+            const Address address{remote->address().to_string(),
+                                  remote->port()};
+            gossipHandler_(address, Payload(buffer->data(), bytes_transferred));
+          }
+          StartReceiveGossip();
+        });
+  }
+  void IORoutine() {
+    try {
+      ioContext_.run();
+    } catch (...) {
     }
   }
 
@@ -79,7 +90,7 @@ class Transport : public Transportable {
   asio::io_context ioContext_;
   udp::socket udpSocket_;
   bool stopReceiving_;
-  std::thread gossipThread_;
+  std::thread ioThread_;
   GossipHandler gossipHandler_;
 };
 
