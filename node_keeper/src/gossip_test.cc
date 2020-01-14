@@ -71,7 +71,6 @@ class Gossip : public testing::Test {
 
 TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
   const Payload sent("hello world!");
-  std::unique_ptr<std::vector<uint8_t>> received;
 
   peers_[0]->Gossip({addresses_[1]}, sent);
 
