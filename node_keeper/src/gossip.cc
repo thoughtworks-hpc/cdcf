@@ -32,8 +32,8 @@ class Transport : public Transportable {
   }
 
  public:
-  virtual int Gossip(const std::vector<Address> &nodes,
-                     const Payload &payload) {
+  virtual ErrorCode Gossip(const std::vector<Address> &nodes,
+                           const Payload &payload) {
     udp::resolver resolver(ioContext_);
     for (const auto &node : nodes) {
       auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
@@ -41,7 +41,7 @@ class Transport : public Transportable {
       auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
       assert(sent == payload.data.size() && "all bytes should be sent");
     }
-    return 0;
+    return ErrorCode::kOK;
   }
 
   virtual void RegisterGossipHandler(GossipHandler handler) {

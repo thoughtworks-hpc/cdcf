@@ -57,8 +57,8 @@ class Payload {
 class Gossipable {
  public:
   // payload dissemination via gossip protocol
-  virtual int Gossip(const std::vector<Address> &nodes,
-                     const Payload &data) = 0;
+  virtual ErrorCode Gossip(const std::vector<Address> &nodes,
+                           const Payload &data) = 0;
 
   typedef std::function<void(const Address &node, const Payload &data)>
       GossipHandler;
