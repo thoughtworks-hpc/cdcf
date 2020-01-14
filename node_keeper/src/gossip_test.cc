@@ -48,14 +48,14 @@ class Gossip : public testing::Test {
       auto &mutex = mutexes_[i];
       auto &cv = cvs_[i];
       auto &received = receives_[i];
-      peers_[i]->RegisterGossipHandler([&](const Address &node,
-                                           const Payload &data) {
-        {
-          std::lock_guard<std::mutex> lock(mutex);
-          received = std::make_unique<std::vector<unsigned char>>(data.data);
-        }
-        cv.notify_all();
-      });
+      peers_[i]->RegisterGossipHandler(
+          [&](const Address &node, const Payload &data) {
+            {
+              std::lock_guard<std::mutex> lock(mutex);
+              received = std::make_unique<std::vector<uint8_t>>(data.data);
+            }
+            cv.notify_all();
+          });
     }
   }
 
@@ -64,14 +64,14 @@ class Gossip : public testing::Test {
   std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
   std::array<std::mutex, 5> mutexes_;
   std::array<std::condition_variable, 5> cvs_;
-  std::array<std::unique_ptr<std::vector<unsigned char>>, 5> receives_;
+  std::array<std::unique_ptr<std::vector<uint8_t>>, 5> receives_;
   static constexpr const std::chrono::milliseconds kTimeout{
       std::chrono::milliseconds(1000)};
 };
 
 TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
   const Payload sent("hello world!");
-  std::unique_ptr<std::vector<unsigned char>> received;
+  std::unique_ptr<std::vector<uint8_t>> received;
 
   peers_[0]->Gossip({addresses_[1]}, sent);
 

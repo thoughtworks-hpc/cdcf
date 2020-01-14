@@ -5,6 +5,7 @@
 #define NODE_KEEPER_SRC_GOSSIP_H_
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -21,7 +22,7 @@ enum ErrorCode {
 
 struct Address {
   std::string host;
-  unsigned short port;
+  uint16_t port;
 };
 
 class Payload {
@@ -36,19 +37,20 @@ class Payload {
 
   static constexpr int kMaxPayloadSize = 65527;
 
-  std::vector<unsigned char> data;
+  std::vector<uint8_t> data;
 
   explicit Payload(const std::string &data)
       : Payload(data.c_str(), data.size()) {}
 
-  explicit Payload(const std::vector<unsigned char> &data)
+  explicit Payload(const std::vector<uint8_t> &data)
       : Payload(data.data(), data.size()) {}
 
   Payload(const void *data, size_t size) {
     if (size > kMaxPayloadSize) {
       throw MaxPayloadExceeded(size);
     }
-    this->data.assign((unsigned char *)data, ((unsigned char *)data) + size);
+    auto begin = reinterpret_cast<const uint8_t *>(data);
+    this->data.assign(begin, begin + size);
   }
 };
 
@@ -84,7 +86,7 @@ class Pushable {
 
 class Pullable {
  public:
-  typedef std::pair<ErrorCode, std::vector<unsigned char>> PullResult;
+  typedef std::pair<ErrorCode, std::vector<uint8_t>> PullResult;
   typedef std::function<void(PullResult)> DidPullHandler;
   virtual PullResult Pull(
       const Address &node, const void *data, size_t size,
