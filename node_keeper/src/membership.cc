@@ -11,13 +11,10 @@ std::vector<membership::Member> membership::Membership::GetMembers() {
   Member member("node1", "127.0.0.1", 27777);
   return members_;
 }
-int membership::Membership::Init(const std::string& node_name,
-                                 const std::string& ip_address, short port) {
-  Member self_member(node_name, ip_address, port);
-
+int membership::Membership::Init(Config config) {
   // TODO existence checking
-
-  addMember(self_member);
+  // TODO host member checking
+  addMember(config.GetHostMember());
 
   return 0;
 }
@@ -40,4 +37,12 @@ bool membership::operator==(const membership::Member& lhs,
 bool membership::operator!=(const membership::Member& lhs,
                             const membership::Member& rhs) {
   return !operator==(lhs, rhs);
+}
+int membership::Config::AddHostMember(const std::string& node_name,
+                                      const std::string& ip_address,
+                                      short port) {
+  Member host(node_name, ip_address, port);
+  host_ = host;
+
+  return 0;
 }

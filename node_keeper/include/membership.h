@@ -45,8 +45,7 @@ class Config {
 
 class Membership {
  public:
-  int Init(const std::string& node_name, const std::string& ip_address,
-           short port);
+  int Init(Config config);
   std::vector<Member> GetMembers();
 
  private:
