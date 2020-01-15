@@ -46,3 +46,14 @@ int membership::Config::AddHostMember(const std::string& node_name,
 
   return 0;
 }
+int membership::Config::AddOneSeedMember(const std::string& node_name,
+                                         const std::string& ip_address,
+                                         short port) {
+  Member seed(node_name, ip_address, port);
+
+  // TODO existing member check
+
+  seed_members_.push_back(seed);
+
+  return 0;
+}

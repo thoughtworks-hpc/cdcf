@@ -8,6 +8,22 @@
 #include "../include/membership.h"
 
 // Member
+
+bool CompareMembers(const std::vector<membership::Member> &lhs,
+                    const std::vector<membership::Member> &rhs) {
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+
+  for (int i = lhs.size(); i < lhs.size(); ++i) {
+    if (lhs[i] != rhs[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 TEST(Membership, CreateOneMember) {
   membership::Member member("node1", "127.0.0.1", 27777);
 
@@ -38,6 +54,18 @@ TEST(Membership, ConfigWithHost) {
   membership::Member member("node1", "127.0.0.1", 27777);
 
   EXPECT_EQ(config.GetHostMember(), member);
+}
+
+TEST(Membership, ConfigWithSeedMember) {
+  membership::Config config;
+  config.AddOneSeedMember("node1", "127.0.0.1", 27777);
+  std::vector<membership::Member> seed_members = config.GetSeedMembers();
+
+  membership::Member seed_member1("node1", "127.0.0.1", 27777);
+  std::vector<membership::Member> seed_members_compare;
+  seed_members_compare.push_back(seed_member1);
+
+  EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
 }
 
 // Membership

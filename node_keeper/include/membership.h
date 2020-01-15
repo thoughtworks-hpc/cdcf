@@ -39,8 +39,13 @@ class Config {
                     short port);
   Member GetHostMember() { return host_; }
 
+  int AddOneSeedMember(const std::string& node_name,
+                       const std::string& ip_address, short port);
+  std::vector<Member> GetSeedMembers() { return seed_members_; }
+
  private:
   Member host_;
+  std::vector<Member> seed_members_;
 };
 
 class Membership {
