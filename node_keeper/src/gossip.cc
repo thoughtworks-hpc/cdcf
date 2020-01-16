@@ -60,8 +60,16 @@ class Transport : public Transportable {
     asio::connect(socket, endpoints);
     auto pointer = reinterpret_cast<const uint8_t *>(data);
     auto buffer = Message(pointer, size).Encode();
-    auto sent = socket.write_some(asio::buffer(buffer));
-    return sent == buffer.size() ? ErrorCode::kOK : ErrorCode::kUnknown;
+    if (didPush) {
+      socket.async_write_some(asio::buffer(buffer),
+                              [&](const std::error_code &error, size_t) {
+                                didPush(ErrorCode::kOK);
+                              });
+      return ErrorCode::kOK;
+    } else {
+      auto sent = socket.write_some(asio::buffer(buffer));
+      return sent == buffer.size() ? ErrorCode::kOK : ErrorCode::kUnknown;
+    }
   }
 
   virtual void RegisterPushHandler(PushHandler handler) {

@@ -156,3 +156,32 @@ TEST_F(Push, ShouldPushTwoDataToRemotePeerSeparately) {
   EXPECT_THAT(queue.front(), Eq(sent));
   EXPECT_THAT(queue.back(), Eq(sent));
 }
+
+TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool done = false;
+  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size(),
+                                kTimeout, [&](gossip::ErrorCode) {
+                                  {
+                                    std::lock_guard<std::mutex> lock(mutex);
+                                    done = true;
+                                  }
+                                  cv.notify_all();
+                                });
+
+  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
+  }
+  auto &queue = receivedQueues_[1];
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
+  }
+  EXPECT_THAT(queue.front(), Eq(sent));
+}
