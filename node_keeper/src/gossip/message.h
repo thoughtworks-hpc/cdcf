@@ -11,14 +11,15 @@
 namespace gossip {
 class Message {
  public:
-  static const size_t kHeaderLength = 4;
+  enum Type : uint8_t { kPush, kPull };
 
   Message() = default;
-  Message(const uint8_t *data, size_t size) {
-    buffer_.reserve(kHeaderLength + size);
-    for (size_t i = 0; i < kHeaderLength; i++) {
-      buffer_.push_back(size >> (8 * (kHeaderLength - i - 1)));
+  Message(Type type, const uint8_t *data, size_t size) {
+    buffer_.reserve(kHeaderBytes + size);
+    for (size_t i = 0; i < kHeaderLengthBytes; i++) {
+      buffer_.push_back(size >> (8 * (kHeaderLengthBytes - i - 1)));
     }
+    buffer_.push_back(type);
     std::copy(data, data + size, std::back_inserter(buffer_));
   }
 
@@ -37,11 +38,11 @@ class Message {
   }
 
   bool IsSatisfied() const {
-    return IsHeaderOut() && buffer_.size() == Length() + kHeaderLength;
+    return IsHeaderOut() && buffer_.size() == Length() + kHeaderBytes;
   }
 
   std::vector<uint8_t> Data() const {
-    return std::vector<uint8_t>(buffer_.begin() + kHeaderLength, buffer_.end());
+    return std::vector<uint8_t>(buffer_.begin() + kHeaderBytes, buffer_.end());
   }
 
   void Reset() {
@@ -51,44 +52,51 @@ class Message {
 
   const std::vector<uint8_t> &Encode() const { return buffer_; }
 
+  Type Type() const {
+    return static_cast<enum Type>(buffer_[kHeaderLengthBytes]);
+  }
+
  private:
   size_t decodeHeader(const uint8_t *begin, const uint8_t *end) {
     size_t consumedBytes = 0;
     const size_t size = end - begin;
-    if (buffer_.size() + size < kHeaderLength) {
+    if (buffer_.size() + size < kHeaderBytes) {
       consumedBytes = size;
     } else {
-      consumedBytes = kHeaderLength - buffer_.size();
+      consumedBytes = kHeaderBytes - buffer_.size();
     }
     std::copy(begin, begin + consumedBytes, std::back_inserter(buffer_));
     if (Length() > 0) {
-      buffer_.reserve(kHeaderLength + Length());
+      buffer_.reserve(kHeaderBytes + Length());
     }
     return consumedBytes;
   }
 
   size_t decodeBody(const uint8_t *begin, const uint8_t *end) {
-    auto expectedBytes = Length() + kHeaderLength - buffer_.size();
+    auto expectedBytes = Length() + kHeaderBytes - buffer_.size();
     auto last = std::min(begin + expectedBytes, end);
     std::copy(begin, last, std::back_inserter(buffer_));
     return last - begin;
   }
 
   size_t Length() const {
-    if (buffer_.size() < kHeaderLength) {
+    if (buffer_.size() < kHeaderBytes) {
       return 0;
     }
     size_t result = 0;
-    for (size_t i = 0; i < kHeaderLength; i++) {
-      result |= buffer_[i] << (8 * (kHeaderLength - i - 1));
+    for (size_t i = 0; i < kHeaderLengthBytes; i++) {
+      result |= buffer_[i] << (8 * (kHeaderLengthBytes - i - 1));
     }
     return result;
   }
 
-  bool IsHeaderOut() const { return buffer_.size() >= kHeaderLength; }
+  bool IsHeaderOut() const { return buffer_.size() >= kHeaderBytes; }
 
  private:
   std::vector<uint8_t> buffer_;
+
+  static const size_t kHeaderBytes = 5;
+  static const size_t kHeaderLengthBytes = 4;
 };
 }  // namespace gossip
 #endif  // NODE_KEEPER_SRC_GOSSIP_MESSAGE_H_

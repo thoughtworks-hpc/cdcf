@@ -58,7 +58,7 @@ class Transport : public Transportable {
     tcp::socket socket(ioContext_);
     asio::connect(socket, endpoints);
     auto pointer = reinterpret_cast<const uint8_t *>(data);
-    auto buffer = Message(pointer, size).Encode();
+    auto buffer = Message(Message::Type::kPush, pointer, size).Encode();
     if (didPush) {
       socket.async_write_some(asio::buffer(buffer),
                               [&](const std::error_code &error, size_t) {
