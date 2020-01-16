@@ -7,6 +7,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "include/gossip.h"
@@ -15,17 +16,19 @@ namespace membership {
 
 // TODO Error Code
 
-class Member {
- private:
-  std::string node_name_;
-  std::string ip_address_;
-  short port_;
+enum ErrorCode {
+  MEMBERSHIP_SUCCESS,
+  MEMBERSHIP_FAILURE,
+  MEMBERSHIP_INIT_HOSTMEMBER_EMPTY,
+};
 
+class Member {
  public:
   Member() : node_name_(""), ip_address_(""), port_(0) {}
-  Member(const std::string& node_name, const std::string& ip_address,
-         short port)
-      : node_name_(node_name), ip_address_(ip_address), port_(port) {}
+  Member(std::string node_name, std::string ip_address, short port)
+      : node_name_(std::move(node_name)),
+        ip_address_(std::move(ip_address)),
+        port_(port) {}
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
@@ -33,6 +36,13 @@ class Member {
   const std::string& GetNodeName() const { return node_name_; }
   const std::string& GetIpAddress() const { return ip_address_; }
   short GetPort() const { return port_; }
+
+  bool IsEmptyMember();
+
+ private:
+  std::string node_name_;
+  std::string ip_address_;
+  short port_;
 };
 
 class Config {

@@ -94,3 +94,13 @@ TEST(Membership, CreateHostMember) {
   EXPECT_EQ(members.size(), 1);
   EXPECT_EQ(members[0], member);
 }
+
+TEST(Membership, CreateHostMemberWithEmptyConfig) {
+  membership::Membership my_membership;
+  membership::Member member("node1", "127.0.0.1", 27777);
+
+  membership::Config config;
+
+  EXPECT_EQ(my_membership.Init(config),
+            membership::MEMBERSHIP_INIT_HOSTMEMBER_EMPTY);
+}

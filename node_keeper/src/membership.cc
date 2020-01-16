@@ -13,11 +13,13 @@ std::vector<membership::Member> membership::Membership::GetMembers() {
 }
 int membership::Membership::Init(Config config) {
   // TODO existence checking
-  // TODO host member checking
-  AddMember(config.GetHostMember());
+  // TODO host member further checking
 
-  if (config.GetSeedMembers().size() != 0) {
+  Member member = config.GetHostMember();
+  if (member.IsEmptyMember()) {
+    return MEMBERSHIP_INIT_HOSTMEMBER_EMPTY;
   }
+  AddMember(member);
 
   return 0;
 }
@@ -35,6 +37,13 @@ bool membership::operator==(const membership::Member& lhs,
 bool membership::operator!=(const membership::Member& lhs,
                             const membership::Member& rhs) {
   return !operator==(lhs, rhs);
+}
+bool membership::Member::IsEmptyMember() {
+  if (node_name_ == "" && ip_address_ == "" && port_ == 0) {
+    return true;
+  }
+
+  return false;
 }
 int membership::Config::AddHostMember(const std::string& node_name,
                                       const std::string& ip_address,
