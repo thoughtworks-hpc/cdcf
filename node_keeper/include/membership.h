@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "include/gossip.h"
+
 namespace membership {
 
 // TODO Error Code
@@ -43,9 +45,13 @@ class Config {
                        const std::string& ip_address, short port);
   std::vector<Member> GetSeedMembers() { return seed_members_; }
 
+  int AddTransport(gossip::Transportable* transport);
+  gossip::Transportable* GetTransport() { return transport_; }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
+  gossip::Transportable* transport_;
 };
 
 class Membership {
@@ -54,8 +60,8 @@ class Membership {
   std::vector<Member> GetMembers();
 
  private:
-  int addMember(const Member& member);
-
+  int AddMember(const Member& member);
+  int JoinCluster(const std::vector<Member>& seed_nodes);
   std::vector<Member> members_;
 };
 

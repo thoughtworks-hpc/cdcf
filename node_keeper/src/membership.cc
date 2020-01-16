@@ -14,25 +14,23 @@ std::vector<membership::Member> membership::Membership::GetMembers() {
 int membership::Membership::Init(Config config) {
   // TODO existence checking
   // TODO host member checking
-  addMember(config.GetHostMember());
+  AddMember(config.GetHostMember());
+
+  if (config.GetSeedMembers().size() != 0) {
+  }
 
   return 0;
 }
-int membership::Membership::addMember(const membership::Member& member) {
+int membership::Membership::AddMember(const membership::Member& member) {
+  // TODO considering nessicity of mutex here
   members_.push_back(member);
 
   return 0;
 }
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
-  if (lhs.GetIpAddress() != rhs.GetIpAddress()) {
-    return false;
-  }
-  if (lhs.GetPort() != rhs.GetPort()) {
-    return false;
-  }
-
-  return true;
+  return !((lhs.GetIpAddress() != rhs.GetIpAddress()) ||
+           (lhs.GetPort() != rhs.GetPort()));
 }
 bool membership::operator!=(const membership::Member& lhs,
                             const membership::Member& rhs) {
@@ -55,5 +53,11 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
 
   seed_members_.push_back(seed);
 
+  return 0;
+}
+int membership::Config::AddTransport(gossip::Transportable* transport) {
+  assert(transport != nullptr);
+
+  transport_ = transport;
   return 0;
 }

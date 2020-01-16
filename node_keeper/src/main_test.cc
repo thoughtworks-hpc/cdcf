@@ -1,11 +1,15 @@
 /*
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
-#include <gmock/gmock.h>
-
 #include <vector>
 
+#include "../include/gossip.h"
 #include "../include/membership.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "include/mock_gossip.h"
+
+using namespace testing;
 
 // Member
 
@@ -66,6 +70,14 @@ TEST(Membership, ConfigWithSeedMember) {
   seed_members_compare.push_back(seed_member1);
 
   EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
+}
+
+TEST(Membership, ConfigWithTransport) {
+  MockTransport transport;
+  membership::Config config;
+
+  config.AddTransport(&transport);
+  EXPECT_EQ(config.GetTransport(), &transport);
 }
 
 // Membership
