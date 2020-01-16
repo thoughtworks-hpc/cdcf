@@ -11,7 +11,7 @@
 namespace gossip {
 class Message {
  public:
-  enum Type : uint8_t { kPush, kPull };
+  enum Type : uint8_t { kPush, kPull, kPullResponse };
 
   Message() = default;
   Message(Type type, const uint8_t *data, size_t size) {

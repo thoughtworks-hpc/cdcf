@@ -185,3 +185,19 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   }
   EXPECT_THAT(queue.front(), Eq(sent));
 }
+
+TEST(Pull, ShouldPullDataFromRemotePeer) {
+  gossip::Address addressA{"127.0.0.1", 5000};
+  auto peerA = gossip::CreateTransport(addressA, addressA);
+  gossip::Address addressB{"127.0.0.1", 5001};
+  auto peerB = gossip::CreateTransport(addressB, addressB);
+  const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
+  peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
+                                       size_t size) { return pulled; });
+
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+  auto result = peerA->Pull(addressB, sent.data(), sent.size());
+
+  ASSERT_THAT(result.first, Eq(gossip::ErrorCode::kOK));
+  ASSERT_THAT(result.second, Eq(pulled));
+}

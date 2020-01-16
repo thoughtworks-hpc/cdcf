@@ -85,11 +85,12 @@ class Pushable {
 class Pullable {
  public:
   typedef std::pair<ErrorCode, std::vector<uint8_t>> PullResult;
-  typedef std::function<void(PullResult)> DidPullHandler;
+  typedef std::function<void(PullResult &)> DidPullHandler;
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
                           DidPullHandler didPull = nullptr) = 0;
 
-  typedef std::function<void(const Address &, const void *, size_t)>
+  typedef std::function<std::vector<uint8_t>(const Address &, const void *,
+                                             size_t)>
       PullHandler;
   virtual void RegisterPullHandler(PullHandler handler) = 0;
 

@@ -76,10 +76,40 @@ class Transport : public Transportable {
   }
 
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
-                          DidPullHandler didPull) {
-    return PullResult{ErrorCode::kOK, {0}};
+                          DidPullHandler didPull) try {
+    PullResult result{ErrorCode::kUnknown, {}};
+    tcp::resolver resolver(ioContext_);
+    auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
+    tcp::socket socket(ioContext_);
+    asio::connect(socket, endpoints);
+    auto pointer = reinterpret_cast<const uint8_t *>(data);
+    auto out = Message(Message::Type::kPull, pointer, size).Encode();
+    auto sent = socket.write_some(asio::buffer(out));
+    if (sent != out.size()) {
+      return result;
+    }
+    Message message;
+    auto buffer = std::vector<uint8_t>(1024, 0);
+    while (true) {
+      auto bytes_transferred = socket.read_some(asio::buffer(buffer, 1024));
+      if (bytes_transferred == 0) {
+        return result;
+      }
+      for (size_t decoded = 0; decoded < bytes_transferred;) {
+        decoded +=
+            message.Decode(&buffer[decoded], bytes_transferred - decoded);
+        if (message.IsSatisfied()) {
+          return PullResult{ErrorCode::kOK, message.Data()};
+        }
+      }
+    }
+  } catch (const std::exception &) {
+    return PullResult{ErrorCode::kUnknown, {}};
   }
-  virtual void RegisterPullHandler(PullHandler handler) {}
+
+  virtual void RegisterPullHandler(PullHandler handler) {
+    pullHandler_ = handler;
+  }
 
  private:
   void StartReceiveGossip() {
@@ -111,7 +141,8 @@ class Transport : public Transportable {
 
   class Connection : public std::enable_shared_from_this<Connection> {
    public:
-    typedef std::function<void(const Address &, const std::vector<uint8_t> &)>
+    typedef std::function<void(tcp::socket *socket, const Address &,
+                               const Message &)>
         ReceiveHandler;
 
     Connection(tcp::socket &&socket, ReceiveHandler onReceive)
@@ -139,7 +170,7 @@ class Transport : public Transportable {
                   auto remote = socket_.remote_endpoint();
                   const Address address{remote.address().to_string(),
                                         remote.port()};
-                  onReceive_(address, message_.Data());
+                  onReceive_(&socket_, address, message_);
                   message_.Reset();
                 }
               }
@@ -155,21 +186,36 @@ class Transport : public Transportable {
   };  // namespace gossip
 
   void StartAccept() {
-    acceptor_.async_accept([this](const std::error_code &error,
-                                  tcp::socket socket) {
-      if (!error) {
-        std::make_shared<Connection>(
-            std::move(socket),
-            [this](const Address &address, const std::vector<uint8_t> &buffer) {
-              pushHandler_(address, buffer.data(), buffer.size());
-            })
-            ->Start();
-      }
-      StartAccept();
-    });
+    acceptor_.async_accept(
+        [this](const std::error_code &error, tcp::socket socket) {
+          if (!error) {
+            std::make_shared<Connection>(
+                std::move(socket),
+                [this](tcp::socket *socket, const Address &address,
+                       const Message &message) {
+                  const auto &buffer = message.Data();
+                  if (message.Type() == Message::Type::kPush) {
+                    pushHandler_(address, buffer.data(), buffer.size());
+                  } else if (message.Type() == Message::Type::kPull) {
+                    OnPull(socket, address, buffer);
+                  }
+                })
+                ->Start();
+          }
+          StartAccept();
+        });
   }
 
  private:
+  void OnPull(tcp::socket *socket, const Address &address,
+              const std::vector<uint8_t> &request) {
+    auto response = pullHandler_(address, request.data(), request.size());
+    Message respondMessage(Message::Type::kPullResponse, response.data(),
+                           response.size());
+    auto out = respondMessage.Encode();
+    socket->write_some(asio::buffer(out));
+  }
+
   asio::io_context ioContext_;
   udp::socket udpSocket_;
   bool stopReceiving_;
@@ -177,6 +223,7 @@ class Transport : public Transportable {
   GossipHandler gossipHandler_;
   tcp::acceptor acceptor_;
   PushHandler pushHandler_;
+  PullHandler pullHandler_;
 };  // namespace gossip
 
 std::unique_ptr<Transportable> CreateTransport(const Address &udp,
