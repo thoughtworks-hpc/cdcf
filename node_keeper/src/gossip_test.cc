@@ -164,7 +164,7 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   std::condition_variable cv;
   bool done = false;
   auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size(),
-                                kTimeout, [&](gossip::ErrorCode) {
+                                [&](gossip::ErrorCode) {
                                   {
                                     std::lock_guard<std::mutex> lock(mutex);
                                     done = true;

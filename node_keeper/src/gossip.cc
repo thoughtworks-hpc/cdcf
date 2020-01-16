@@ -12,7 +12,6 @@
 namespace gossip {
 
 using asio::ip::tcp, asio::ip::udp;
-using std::chrono::milliseconds;
 
 class Transport : public Transportable {
  public:
@@ -53,7 +52,7 @@ class Transport : public Transportable {
   }
 
   virtual ErrorCode Push(const Address &node, const void *data, size_t size,
-                         milliseconds timeout, DidPushHandler didPush) {
+                         DidPushHandler didPush) {
     tcp::resolver resolver(ioContext_);
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
     tcp::socket socket(ioContext_);
@@ -77,7 +76,7 @@ class Transport : public Transportable {
   }
 
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
-                          milliseconds timeout, DidPullHandler didPull) {
+                          DidPullHandler didPull) {
     return PullResult{ErrorCode::kOK, {0}};
   }
   virtual void RegisterPullHandler(PullHandler handler) {}

@@ -17,7 +17,6 @@ namespace gossip {
 
 enum ErrorCode {
   kOK = 0,
-  kTimeout,
   kUnknown,
 };
 
@@ -72,10 +71,8 @@ class Gossipable {
 class Pushable {
  public:
   typedef std::function<void(ErrorCode)> DidPushHandler;
-  virtual ErrorCode Push(
-      const Address &node, const void *data, size_t size,
-      std::chrono::milliseconds timeout = std::chrono::milliseconds{0},
-      DidPushHandler didPush = nullptr) = 0;
+  virtual ErrorCode Push(const Address &node, const void *data, size_t size,
+                         DidPushHandler didPush = nullptr) = 0;
 
   typedef std::function<void(const Address &, const void *, size_t)>
       PushHandler;
@@ -89,10 +86,8 @@ class Pullable {
  public:
   typedef std::pair<ErrorCode, std::vector<uint8_t>> PullResult;
   typedef std::function<void(PullResult)> DidPullHandler;
-  virtual PullResult Pull(
-      const Address &node, const void *data, size_t size,
-      std::chrono::milliseconds timeout = std::chrono::milliseconds{0},
-      DidPullHandler didPull = nullptr) = 0;
+  virtual PullResult Pull(const Address &node, const void *data, size_t size,
+                          DidPullHandler didPull = nullptr) = 0;
 
   typedef std::function<void(const Address &, const void *, size_t)>
       PullHandler;
