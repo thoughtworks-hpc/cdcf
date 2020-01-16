@@ -4,6 +4,8 @@ project(node_keeper)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 aux_source_directory(src ALL_SOURCES)
+aux_source_directory(src/gossip GOSSIP_SOURCES)
+list(APPEND ALL_SOURCES ${GOSSIP_SOURCES})
 
 find_package(asio REQUIRED)
 
