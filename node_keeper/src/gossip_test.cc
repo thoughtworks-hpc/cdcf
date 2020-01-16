@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <mutex>
+#include <queue>
 
 using testing::NotNull, testing::Eq;
 
@@ -47,12 +48,12 @@ class Gossip : public testing::Test {
     for (size_t i = 0; i < peers_.size(); ++i) {
       auto &mutex = mutexes_[i];
       auto &cv = cvs_[i];
-      auto &received = receives_[i];
+      auto &queue = receivedQueues_[i];
       peers_[i]->RegisterGossipHandler(
           [&](const Address &node, const Payload &data) {
             {
               std::lock_guard<std::mutex> lock(mutex);
-              received = std::make_unique<std::vector<uint8_t>>(data.data);
+              queue.emplace(data.data);
             }
             cv.notify_all();
           });
@@ -64,7 +65,7 @@ class Gossip : public testing::Test {
   std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
   std::array<std::mutex, 5> mutexes_;
   std::array<std::condition_variable, 5> cvs_;
-  std::array<std::unique_ptr<std::vector<uint8_t>>, 5> receives_;
+  std::array<std::queue<std::vector<uint8_t>>, 5> receivedQueues_;
   static constexpr const std::chrono::milliseconds kTimeout{
       std::chrono::milliseconds(1000)};
 };
@@ -74,12 +75,13 @@ TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
 
   peers_[0]->Gossip({addresses_[1]}, sent);
 
+  auto &queue = receivedQueues_[1];
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
     ASSERT_TRUE(
-        cvs_[1].wait_for(lock, kTimeout, [&]() { return !!receives_[1]; }));
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
   }
-  EXPECT_THAT(*receives_[1], Eq(sent.data));
+  EXPECT_THAT(queue.front(), Eq(sent.data));
 }
 
 TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
@@ -90,14 +92,67 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
 
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
-    ASSERT_TRUE(
-        cvs_[1].wait_for(lock, kTimeout, [&]() { return !!receives_[1]; }));
+    ASSERT_TRUE(cvs_[1].wait_for(
+        lock, kTimeout, [&]() { return !receivedQueues_[1].empty(); }));
   }
-  EXPECT_THAT(*receives_[1], Eq(sent.data));
+  EXPECT_THAT(receivedQueues_[1].front(), Eq(sent.data));
   {
     std::unique_lock<std::mutex> lock(mutexes_[2]);
-    ASSERT_TRUE(
-        cvs_[2].wait_for(lock, kTimeout, [&]() { return !!receives_[2]; }));
+    ASSERT_TRUE(cvs_[2].wait_for(
+        lock, kTimeout, [&]() { return !receivedQueues_[2].empty(); }));
   }
-  EXPECT_THAT(*receives_[2], Eq(sent.data));
+  EXPECT_THAT(receivedQueues_[2].front(), Eq(sent.data));
+}
+
+class Push : public Gossip {
+ public:
+  void SetUp() {
+    Gossip::SetUp();
+    for (size_t i = 0; i < peers_.size(); ++i) {
+      auto &mutex = mutexes_[i];
+      auto &cv = cvs_[i];
+      auto &queue = receivedQueues_[i];
+      peers_[i]->RegisterPushHandler(
+          [&](const Address &node, const void *data, size_t size) {
+            {
+              std::lock_guard<std::mutex> lock(mutex);
+              auto pointer = reinterpret_cast<const uint8_t *>(data);
+              queue.emplace(pointer, pointer + size);
+            }
+            cv.notify_all();
+          });
+    }
+  }
+};
+
+TEST_F(Push, ShouldPushDataToRemotePeer) {
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+
+  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+
+  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
+  auto &queue = receivedQueues_[1];
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
+  }
+  EXPECT_THAT(queue.front(), Eq(sent));
+}
+
+TEST_F(Push, ShouldPushTwoDataToRemotePeerSeparately) {
+  const std::vector<uint8_t> sent(200, 12);
+  peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+
+  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+
+  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
+  auto &queue = receivedQueues_[1];
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return queue.size() == 2; }));
+  }
+  EXPECT_THAT(queue.front(), Eq(sent));
+  EXPECT_THAT(queue.back(), Eq(sent));
 }
