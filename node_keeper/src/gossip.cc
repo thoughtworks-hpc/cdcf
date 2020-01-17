@@ -35,13 +35,21 @@ class Transport : public Transportable {
 
  public:
   virtual ErrorCode Gossip(const std::vector<Address> &nodes,
-                           const Payload &payload) {
+                           const Payload &payload, DidGossipHandler didGossip) {
     udp::resolver resolver(ioContext_);
     for (const auto &node : nodes) {
       auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
       const auto &endpoint = *endpoints.begin();
-      auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
-      assert(sent == payload.data.size() && "all bytes should be sent");
+      if (didGossip) {
+        udpSocket_.async_send_to(
+            asio::buffer(payload.data), endpoint,
+            [didGossip](std::error_code error, std::size_t) {
+              didGossip(error ? ErrorCode::kUnknown : ErrorCode::kOK);
+            });
+      } else {
+        auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
+        assert(sent == payload.data.size() && "all bytes should be sent");
+      }
     }
     return ErrorCode::kOK;
   }

@@ -103,6 +103,33 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
   EXPECT_THAT(receivedQueues_[2].front(), Eq(sent.data));
 }
 
+TEST_F(Gossip, ShouldReceiveGossipWhenWasGossipAsynchronously) {
+  const Payload sent("hello world!");
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool done = false;
+
+  peers_[0]->Gossip({addresses_[1]}, sent, [&](ErrorCode error) {
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      done = true;
+    }
+    cv.notify_all();
+  });
+
+  {
+    std::unique_lock<std::mutex> lock(mutex);
+    ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
+  }
+  auto &queue = receivedQueues_[1];
+  {
+    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    ASSERT_TRUE(
+        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
+  }
+  EXPECT_THAT(queue.front(), Eq(sent.data));
+}
+
 class Push : public Gossip {
  public:
   void SetUp() {
