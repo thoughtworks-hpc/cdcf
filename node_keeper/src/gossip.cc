@@ -17,7 +17,6 @@ class Transport : public Transportable {
  public:
   Transport(const Address &udp, const Address &tcp) try
       : udpSocket_(ioContext_, udp::endpoint(udp::v4(), udp.port)),
-        stopReceiving_(false),
         acceptor_(ioContext_, tcp::endpoint(tcp::v4(), tcp.port)) {
     StartReceiveGossip();
     StartAccept();
@@ -27,7 +26,6 @@ class Transport : public Transportable {
   }
 
   virtual ~Transport() {
-    stopReceiving_ = true;
     ioContext_.stop();
     if (ioThread_.joinable()) {
       ioThread_.join();
@@ -237,7 +235,6 @@ class Transport : public Transportable {
 
   asio::io_context ioContext_;
   udp::socket udpSocket_;
-  bool stopReceiving_;
   std::thread ioThread_;
   GossipHandler gossipHandler_;
   tcp::acceptor acceptor_;
