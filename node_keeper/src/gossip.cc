@@ -3,7 +3,7 @@
  */
 #include "src/gossip.h"
 
-#include <iostream>
+#include <optional>
 // anti clang-format sort
 #include <asio.hpp>
 
@@ -83,52 +83,25 @@ class Transport : public Transportable {
     asio::connect(*socket, endpoints);
     auto out = Message(Message::Type::kPull, data, size).Encode();
     if (didPull) {
-      socket->async_write_some(
-          asio::buffer(out),
-          [didPull, result, socket](const std::error_code &err, size_t bytes) {
-            if (err) {
-              didPull(result);
-              return;
-            }
-            Message message;
-            auto buffer = std::vector<uint8_t>(1024, 0);
-            while (true) {
-              auto bytes_transferred =
-                  socket->read_some(asio::buffer(buffer, 1024));
-              if (bytes_transferred == 0) {
-                didPull(result);
-                return;
-              }
-              for (size_t decoded = 0; decoded < bytes_transferred;) {
-                decoded += message.Decode(&buffer[decoded],
-                                          bytes_transferred - decoded);
-                if (message.IsSatisfied()) {
-                  didPull(PullResult{ErrorCode::kOK, message.Data()});
-                  return;
-                }
-              }
-            }
-          });
+      auto onDidPull = [this, didPull, result, socket](
+                           const std::error_code &err, size_t) mutable {
+        if (err) {
+          didPull(result);
+          return;
+        }
+        if (auto message = ReadMessage(&*socket)) {
+          result = PullResult{ErrorCode::kOK, message->Data()};
+        }
+        didPull(result);
+      };
+      socket->async_write_some(asio::buffer(out), onDidPull);
     } else {
       auto sent = socket->write_some(asio::buffer(out));
       if (sent != out.size()) {
         return result;
       }
-      Message message;
-      auto buffer = std::vector<uint8_t>(1024, 0);
-      while (true) {
-        auto bytes_transferred = socket->read_some(asio::buffer(buffer, 1024));
-        if (bytes_transferred == 0) {
-          return result;
-        }
-        for (size_t decoded = 0; decoded < bytes_transferred;) {
-          decoded +=
-              message.Decode(&buffer[decoded], bytes_transferred - decoded);
-          if (message.IsSatisfied()) {
-            return PullResult{ErrorCode::kOK, message.Data()};
-          }
-        }
-      }
+      auto message = ReadMessage(&*socket);
+      return message ? PullResult{ErrorCode::kOK, message->Data()} : result;
     }
     return result;
   } catch (const std::exception &) {
@@ -140,6 +113,24 @@ class Transport : public Transportable {
   }
 
  private:
+  std::optional<Message> ReadMessage(tcp::socket *socket) {
+    Message message;
+    auto buffer = std::vector<uint8_t>(1024, 0);
+    while (true) {
+      auto bytes_transferred = socket->read_some(asio::buffer(buffer, 1024));
+      if (bytes_transferred == 0) {
+        return std::nullopt;
+      }
+      for (size_t decoded = 0; decoded < bytes_transferred;) {
+        decoded +=
+            message.Decode(&buffer[decoded], bytes_transferred - decoded);
+        if (message.IsSatisfied()) {
+          return std::optional<Message>(std::move(message));
+        }
+      }
+    }
+  }
+
   void StartReceiveGossip() {
     auto buffer =
         std::make_shared<std::vector<uint8_t>>(Payload::kMaxPayloadSize);

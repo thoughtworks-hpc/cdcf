@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace gossip {
@@ -23,6 +24,7 @@ class Message {
     auto begin = reinterpret_cast<const uint8_t *>(data);
     std::copy(begin, begin + size, std::back_inserter(buffer_));
   }
+  Message(Message &&other) : buffer_(std::move(other.buffer_)) {}
 
   size_t Decode(const uint8_t *data, size_t size) {
     if (IsSatisfied()) {
