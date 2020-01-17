@@ -61,7 +61,7 @@ class Transport : public Transportable {
     auto buffer = Message(Message::Type::kPush, pointer, size).Encode();
     if (didPush) {
       socket.async_write_some(asio::buffer(buffer),
-                              [&](const std::error_code &error, size_t) {
+                              [didPush](const std::error_code &error, size_t) {
                                 didPush(ErrorCode::kOK);
                               });
       return ErrorCode::kOK;
