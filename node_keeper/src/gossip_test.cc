@@ -189,36 +189,43 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   }
 }
 
-TEST(Pull, ShouldPullDataFromRemotePeer) {
-  Address addressA{"127.0.0.1", 5000};
-  auto peerA = CreateTransport(addressA, addressA);
-  Address addressB{"127.0.0.1", 5001};
-  auto peerB = CreateTransport(addressB, addressB);
-  const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
-  peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
-                                       size_t size) { return pulled; });
+class Pull : public Gossip {
+ public:
+  void SetUp() {
+    local_ = CreateTransport(addressLocal_, addressLocal_);
+    remote_ = CreateTransport(addressRemote_, addressRemote_);
+    remote_->RegisterPullHandler(
+        [](const Address &, const void *, size_t) { return Pull::kResponse; });
+  }
 
-  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
-  auto result = peerA->Pull(addressB, sent.data(), sent.size());
+ protected:
+  Address addressLocal_{"127.0.0.1", 5000};
+  Address addressRemote_{"127.0.0.1", 5001};
+  std::unique_ptr<Transportable> local_;
+  std::unique_ptr<Transportable> remote_;
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  static constexpr const std::chrono::milliseconds kTimeout{
+      std::chrono::milliseconds(1000)};
+  static const std::vector<uint8_t> kRequest;
+  static const std::vector<uint8_t> kResponse;
+};
+
+const std::vector<uint8_t> Pull::kRequest{1, 2, 3, 4, 5};
+const std::vector<uint8_t> Pull::kResponse{5, 4, 3, 2, 1};
+
+TEST_F(Pull, ShouldPullDataFromRemotePeer) {
+  auto result = local_->Pull(addressRemote_, kRequest.data(), kRequest.size());
 
   ASSERT_THAT(result.first, Eq(ErrorCode::kOK));
-  ASSERT_THAT(result.second, Eq(pulled));
+  ASSERT_THAT(result.second, Eq(kResponse));
 }
 
-TEST(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
-  Address addressA{"127.0.0.1", 5000};
-  auto peerA = CreateTransport(addressA, addressA);
-  Address addressB{"127.0.0.1", 5001};
-  auto peerB = CreateTransport(addressB, addressB);
-  const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
-  peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
-                                       size_t size) { return pulled; });
-
+TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   std::mutex mutex;
   std::condition_variable cv;
   using gossip::Pullable;
   std::unique_ptr<Pullable::PullResult> response;
-  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
   auto didPull = [&](const Pullable::PullResult &result) {
     {
       std::lock_guard<std::mutex> lock(mutex);
@@ -226,11 +233,11 @@ TEST(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
     }
     cv.notify_all();
   };
-  auto result = peerA->Pull(addressB, sent.data(), sent.size(), didPull);
+  auto result =
+      local_->Pull(addressRemote_, kRequest.data(), kRequest.size(), didPull);
 
   std::unique_lock<std::mutex> lock(mutex);
-  auto timeout = std::chrono::milliseconds(5000);
-  ASSERT_TRUE(cv.wait_for(lock, timeout, [&]() { return !!response; }));
+  ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return !!response; }));
   ASSERT_THAT(response->first, Eq(ErrorCode::kOK));
-  ASSERT_THAT(response->second, Eq(pulled));
+  ASSERT_THAT(response->second, Eq(kResponse));
 }
