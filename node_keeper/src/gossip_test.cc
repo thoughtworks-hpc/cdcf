@@ -104,57 +104,64 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
   EXPECT_THAT(receivedQueues_[2].front(), Eq(sent.data));
 }
 
+using gossip::ErrorCode, gossip::Transportable;
+
 class Push : public Gossip {
  public:
   void SetUp() {
-    Gossip::SetUp();
-    for (size_t i = 0; i < peers_.size(); ++i) {
-      auto &mutex = mutexes_[i];
-      auto &cv = cvs_[i];
-      auto &queue = receivedQueues_[i];
-      peers_[i]->RegisterPushHandler(
-          [&](const Address &node, const void *data, size_t size) {
-            {
-              std::lock_guard<std::mutex> lock(mutex);
-              auto pointer = reinterpret_cast<const uint8_t *>(data);
-              queue.emplace(pointer, pointer + size);
-            }
-            cv.notify_all();
-          });
-    }
+    local_ = gossip::CreateTransport(addressLocal_, addressLocal_);
+    remote_ = gossip::CreateTransport(addressRemote_, addressRemote_);
+    remote_->RegisterPushHandler(
+        [&](const Address &node, const void *data, size_t size) {
+          {
+            std::lock_guard<std::mutex> lock(mutex_);
+            auto pointer = reinterpret_cast<const uint8_t *>(data);
+            queue_.emplace(pointer, pointer + size);
+          }
+          cv_.notify_all();
+        });
   }
+
+ protected:
+  gossip::Address addressLocal_{"127.0.0.1", 5000};
+  gossip::Address addressRemote_{"127.0.0.1", 5001};
+  std::unique_ptr<Transportable> local_;
+  std::unique_ptr<Transportable> remote_;
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  std::queue<std::vector<uint8_t>> queue_;
+  static constexpr const std::chrono::milliseconds kTimeout{
+      std::chrono::milliseconds(1000)};
 };
 
 TEST_F(Push, ShouldPushDataToRemotePeer) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
 
-  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+  auto result = local_->Push(addressRemote_, sent.data(), sent.size());
 
-  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
-  auto &queue = receivedQueues_[1];
+  ASSERT_THAT(result, Eq(ErrorCode::kOK));
   {
-    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    std::unique_lock<std::mutex> lock(mutex_);
     ASSERT_TRUE(
-        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
+        cv_.wait_for(lock, kTimeout, [&]() { return !queue_.empty(); }));
   }
-  EXPECT_THAT(queue.front(), Eq(sent));
+  EXPECT_THAT(queue_.front(), Eq(sent));
 }
 
 TEST_F(Push, ShouldPushTwoDataToRemotePeerSeparately) {
   const std::vector<uint8_t> sent(200, 12);
-  peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+  local_->Push(addressRemote_, sent.data(), sent.size());
 
-  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size());
+  auto result = local_->Push(addressRemote_, sent.data(), sent.size());
 
-  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
-  auto &queue = receivedQueues_[1];
+  ASSERT_THAT(result, Eq(ErrorCode::kOK));
   {
-    std::unique_lock<std::mutex> lock(mutexes_[1]);
+    std::unique_lock<std::mutex> lock(mutex_);
     ASSERT_TRUE(
-        cvs_[1].wait_for(lock, kTimeout, [&]() { return queue.size() == 2; }));
+        cv_.wait_for(lock, kTimeout, [&]() { return queue_.size() == 2; }));
   }
-  EXPECT_THAT(queue.front(), Eq(sent));
-  EXPECT_THAT(queue.back(), Eq(sent));
+  EXPECT_THAT(queue_.front(), Eq(sent));
+  EXPECT_THAT(queue_.back(), Eq(sent));
 }
 
 TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
@@ -163,27 +170,26 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   std::mutex mutex;
   std::condition_variable cv;
   bool done = false;
-  auto result = peers_[0]->Push(addresses_[1], sent.data(), sent.size(),
-                                [&](gossip::ErrorCode) {
-                                  {
-                                    std::lock_guard<std::mutex> lock(mutex);
-                                    done = true;
-                                  }
-                                  cv.notify_all();
-                                });
+  auto didPush = [&](gossip::ErrorCode) {
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      done = true;
+    }
+    cv.notify_all();
+  };
+  auto result = local_->Push(addressRemote_, sent.data(), sent.size(), didPush);
 
-  ASSERT_THAT(result, Eq(gossip::ErrorCode::kOK));
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    ASSERT_TRUE(
+        cv_.wait_for(lock, kTimeout, [&]() { return !queue_.empty(); }));
+  }
+  EXPECT_THAT(queue_.front(), Eq(sent));
+  ASSERT_THAT(result, Eq(ErrorCode::kOK));
   {
     std::unique_lock<std::mutex> lock(mutex);
     ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
   }
-  auto &queue = receivedQueues_[1];
-  {
-    std::unique_lock<std::mutex> lock(mutexes_[1]);
-    ASSERT_TRUE(
-        cvs_[1].wait_for(lock, kTimeout, [&]() { return !queue.empty(); }));
-  }
-  EXPECT_THAT(queue.front(), Eq(sent));
 }
 
 TEST(Pull, ShouldPullDataFromRemotePeer) {
