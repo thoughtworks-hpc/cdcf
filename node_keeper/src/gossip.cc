@@ -57,8 +57,7 @@ class Transport : public Transportable {
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
     tcp::socket socket(ioContext_);
     asio::connect(socket, endpoints);
-    auto pointer = reinterpret_cast<const uint8_t *>(data);
-    auto buffer = Message(Message::Type::kPush, pointer, size).Encode();
+    auto buffer = Message(Message::Type::kPush, data, size).Encode();
     if (didPush) {
       socket.async_write_some(asio::buffer(buffer),
                               [didPush](const std::error_code &error, size_t) {
@@ -82,8 +81,7 @@ class Transport : public Transportable {
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
     auto socket = std::make_shared<tcp::socket>(ioContext_);
     asio::connect(*socket, endpoints);
-    auto pointer = reinterpret_cast<const uint8_t *>(data);
-    auto out = Message(Message::Type::kPull, pointer, size).Encode();
+    auto out = Message(Message::Type::kPull, data, size).Encode();
     if (didPull) {
       socket->async_write_some(
           asio::buffer(out),

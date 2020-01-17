@@ -14,13 +14,14 @@ class Message {
   enum Type : uint8_t { kPush, kPull, kPullResponse };
 
   Message() = default;
-  Message(Type type, const uint8_t *data, size_t size) {
+  Message(Type type, const void *data, size_t size) {
     buffer_.reserve(kHeaderBytes + size);
     for (size_t i = 0; i < kHeaderLengthBytes; i++) {
       buffer_.push_back(size >> (8 * (kHeaderLengthBytes - i - 1)));
     }
     buffer_.push_back(type);
-    std::copy(data, data + size, std::back_inserter(buffer_));
+    auto begin = reinterpret_cast<const uint8_t *>(data);
+    std::copy(begin, begin + size, std::back_inserter(buffer_));
   }
 
   size_t Decode(const uint8_t *data, size_t size) {
