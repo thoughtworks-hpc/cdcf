@@ -13,37 +13,37 @@
 #include <mutex>
 #include <queue>
 
+using gossip::Address, gossip::CreateTransport, gossip::ErrorCode,
+    gossip::Payload, gossip::PortOccupied, gossip::Transportable;
 using testing::NotNull, testing::Eq;
 
 TEST(Transport, ShouldReturnTransportIfCreateTransportWithAvailablePort) {
-  gossip::Address udp = {"127.0.0.1", 5000};
-  gossip::Address tcp = {"127.0.0.1", 5000};
+  Address udp = {"127.0.0.1", 5000};
+  Address tcp = {"127.0.0.1", 5000};
 
-  auto transport = gossip::CreateTransport(udp, tcp);
+  auto transport = CreateTransport(udp, tcp);
 
   EXPECT_THAT(transport, NotNull());
 }
 
 TEST(Transport, ShouldThrowErrorIfCreateTransportWithOccupiedPort) {
-  gossip::Address udp = {"127.0.0.1", 5000};
-  gossip::Address tcp = {"127.0.0.1", 5000};
-  auto occupiedTransport = gossip::CreateTransport(udp, tcp);
+  Address udp = {"127.0.0.1", 5000};
+  Address tcp = {"127.0.0.1", 5000};
+  auto occupiedTransport = CreateTransport(udp, tcp);
 
-  EXPECT_THROW(gossip::CreateTransport(udp, tcp), gossip::PortOccupied);
+  EXPECT_THROW(CreateTransport(udp, tcp), PortOccupied);
 }
-
-using gossip::Address, gossip::Payload;
 
 class Gossip : public testing::Test {
  public:
   void SetUp() {
     std::generate(addresses_.begin(), addresses_.end(), [i = 0]() mutable {
       ++i;
-      return gossip::Address{"127.0.0.1", (uint16_t)(5000 + i)};
+      return Address{"127.0.0.1", (uint16_t)(5000 + i)};
     });
     std::transform(addresses_.begin(), addresses_.end(), peers_.begin(),
-                   [](const gossip::Address &address) {
-                     return gossip::CreateTransport(address, address);
+                   [](const Address &address) {
+                     return CreateTransport(address, address);
                    });
     for (size_t i = 0; i < peers_.size(); ++i) {
       auto &mutex = mutexes_[i];
@@ -61,8 +61,8 @@ class Gossip : public testing::Test {
   }
 
  protected:
-  std::array<gossip::Address, 5> addresses_;
-  std::array<std::unique_ptr<gossip::Transportable>, 5> peers_;
+  std::array<Address, 5> addresses_;
+  std::array<std::unique_ptr<Transportable>, 5> peers_;
   std::array<std::mutex, 5> mutexes_;
   std::array<std::condition_variable, 5> cvs_;
   std::array<std::queue<std::vector<uint8_t>>, 5> receivedQueues_;
@@ -85,7 +85,6 @@ TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
 }
 
 TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
-  using gossip::Address, gossip::Payload;
   const Payload sent("hello world!");
 
   peers_[0]->Gossip({addresses_[1], addresses_[2]}, sent);
@@ -104,13 +103,11 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
   EXPECT_THAT(receivedQueues_[2].front(), Eq(sent.data));
 }
 
-using gossip::ErrorCode, gossip::Transportable;
-
 class Push : public Gossip {
  public:
   void SetUp() {
-    local_ = gossip::CreateTransport(addressLocal_, addressLocal_);
-    remote_ = gossip::CreateTransport(addressRemote_, addressRemote_);
+    local_ = CreateTransport(addressLocal_, addressLocal_);
+    remote_ = CreateTransport(addressRemote_, addressRemote_);
     remote_->RegisterPushHandler(
         [&](const Address &node, const void *data, size_t size) {
           {
@@ -123,8 +120,8 @@ class Push : public Gossip {
   }
 
  protected:
-  gossip::Address addressLocal_{"127.0.0.1", 5000};
-  gossip::Address addressRemote_{"127.0.0.1", 5001};
+  Address addressLocal_{"127.0.0.1", 5000};
+  Address addressRemote_{"127.0.0.1", 5001};
   std::unique_ptr<Transportable> local_;
   std::unique_ptr<Transportable> remote_;
   std::mutex mutex_;
@@ -170,7 +167,7 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   std::mutex mutex;
   std::condition_variable cv;
   bool done = false;
-  auto didPush = [&](gossip::ErrorCode) {
+  auto didPush = [&](ErrorCode) {
     {
       std::lock_guard<std::mutex> lock(mutex);
       done = true;
@@ -193,10 +190,10 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
 }
 
 TEST(Pull, ShouldPullDataFromRemotePeer) {
-  gossip::Address addressA{"127.0.0.1", 5000};
-  auto peerA = gossip::CreateTransport(addressA, addressA);
-  gossip::Address addressB{"127.0.0.1", 5001};
-  auto peerB = gossip::CreateTransport(addressB, addressB);
+  Address addressA{"127.0.0.1", 5000};
+  auto peerA = CreateTransport(addressA, addressA);
+  Address addressB{"127.0.0.1", 5001};
+  auto peerB = CreateTransport(addressB, addressB);
   const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
   peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
                                        size_t size) { return pulled; });
@@ -204,15 +201,15 @@ TEST(Pull, ShouldPullDataFromRemotePeer) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
   auto result = peerA->Pull(addressB, sent.data(), sent.size());
 
-  ASSERT_THAT(result.first, Eq(gossip::ErrorCode::kOK));
+  ASSERT_THAT(result.first, Eq(ErrorCode::kOK));
   ASSERT_THAT(result.second, Eq(pulled));
 }
 
 TEST(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
-  gossip::Address addressA{"127.0.0.1", 5000};
-  auto peerA = gossip::CreateTransport(addressA, addressA);
-  gossip::Address addressB{"127.0.0.1", 5001};
-  auto peerB = gossip::CreateTransport(addressB, addressB);
+  Address addressA{"127.0.0.1", 5000};
+  auto peerA = CreateTransport(addressA, addressA);
+  Address addressB{"127.0.0.1", 5001};
+  auto peerB = CreateTransport(addressB, addressB);
   const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
   peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
                                        size_t size) { return pulled; });
@@ -234,6 +231,6 @@ TEST(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   std::unique_lock<std::mutex> lock(mutex);
   auto timeout = std::chrono::milliseconds(5000);
   ASSERT_TRUE(cv.wait_for(lock, timeout, [&]() { return !!response; }));
-  ASSERT_THAT(response->first, Eq(gossip::ErrorCode::kOK));
+  ASSERT_THAT(response->first, Eq(ErrorCode::kOK));
   ASSERT_THAT(response->second, Eq(pulled));
 }
