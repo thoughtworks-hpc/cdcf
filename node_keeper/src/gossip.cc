@@ -158,21 +158,19 @@ class Transport : public Transportable {
   }
 
   void StartAccept() {
+    auto onReceive = [this](tcp::socket *socket, const Address &address,
+                            const Message &message) {
+      const auto &buffer = message.Data();
+      if (message.Type() == Message::Type::kPush) {
+        pushHandler_(address, buffer.data(), buffer.size());
+      } else if (message.Type() == Message::Type::kPull) {
+        OnPull(socket, address, buffer);
+      }
+    };
     acceptor_.async_accept(
-        [this](const std::error_code &error, tcp::socket socket) {
+        [this, onReceive](const std::error_code &error, tcp::socket socket) {
           if (!error) {
-            std::make_shared<Connection>(
-                std::move(socket),
-                [this](tcp::socket *socket, const Address &address,
-                       const Message &message) {
-                  const auto &buffer = message.Data();
-                  if (message.Type() == Message::Type::kPush) {
-                    pushHandler_(address, buffer.data(), buffer.size());
-                  } else if (message.Type() == Message::Type::kPull) {
-                    OnPull(socket, address, buffer);
-                  }
-                })
-                ->Start();
+            std::make_shared<Connection>(std::move(socket), onReceive)->Start();
           }
           StartAccept();
         });
