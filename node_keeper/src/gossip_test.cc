@@ -201,3 +201,33 @@ TEST(Pull, ShouldPullDataFromRemotePeer) {
   ASSERT_THAT(result.first, Eq(gossip::ErrorCode::kOK));
   ASSERT_THAT(result.second, Eq(pulled));
 }
+
+TEST(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
+  gossip::Address addressA{"127.0.0.1", 5000};
+  auto peerA = gossip::CreateTransport(addressA, addressA);
+  gossip::Address addressB{"127.0.0.1", 5001};
+  auto peerB = gossip::CreateTransport(addressB, addressB);
+  const std::vector<uint8_t> pulled{5, 4, 3, 2, 1};
+  peerB->RegisterPullHandler([&pulled](const Address &address, const void *data,
+                                       size_t size) { return pulled; });
+
+  std::mutex mutex;
+  std::condition_variable cv;
+  using gossip::Pullable;
+  std::unique_ptr<Pullable::PullResult> response;
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+  auto didPull = [&](const Pullable::PullResult &result) {
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      response = std::make_unique<Pullable::PullResult>(result);
+    }
+    cv.notify_all();
+  };
+  auto result = peerA->Pull(addressB, sent.data(), sent.size(), didPull);
+
+  std::unique_lock<std::mutex> lock(mutex);
+  auto timeout = std::chrono::milliseconds(5000);
+  ASSERT_TRUE(cv.wait_for(lock, timeout, [&]() { return !!response; }));
+  ASSERT_THAT(response->first, Eq(gossip::ErrorCode::kOK));
+  ASSERT_THAT(response->second, Eq(pulled));
+}

@@ -85,7 +85,7 @@ class Pushable {
 class Pullable {
  public:
   typedef std::pair<ErrorCode, std::vector<uint8_t>> PullResult;
-  typedef std::function<void(PullResult &)> DidPullHandler;
+  typedef std::function<void(const PullResult &)> DidPullHandler;
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
                           DidPullHandler didPull = nullptr) = 0;
 

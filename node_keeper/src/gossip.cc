@@ -80,29 +80,59 @@ class Transport : public Transportable {
     PullResult result{ErrorCode::kUnknown, {}};
     tcp::resolver resolver(ioContext_);
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
-    tcp::socket socket(ioContext_);
-    asio::connect(socket, endpoints);
+    auto socket = std::make_shared<tcp::socket>(ioContext_);
+    asio::connect(*socket, endpoints);
     auto pointer = reinterpret_cast<const uint8_t *>(data);
     auto out = Message(Message::Type::kPull, pointer, size).Encode();
-    auto sent = socket.write_some(asio::buffer(out));
-    if (sent != out.size()) {
-      return result;
-    }
-    Message message;
-    auto buffer = std::vector<uint8_t>(1024, 0);
-    while (true) {
-      auto bytes_transferred = socket.read_some(asio::buffer(buffer, 1024));
-      if (bytes_transferred == 0) {
+    if (didPull) {
+      socket->async_write_some(
+          asio::buffer(out),
+          [didPull, result, socket](const std::error_code &err, size_t bytes) {
+            if (err) {
+              didPull(result);
+              return;
+            }
+            Message message;
+            auto buffer = std::vector<uint8_t>(1024, 0);
+            while (true) {
+              auto bytes_transferred =
+                  socket->read_some(asio::buffer(buffer, 1024));
+              if (bytes_transferred == 0) {
+                didPull(result);
+                return;
+              }
+              for (size_t decoded = 0; decoded < bytes_transferred;) {
+                decoded += message.Decode(&buffer[decoded],
+                                          bytes_transferred - decoded);
+                if (message.IsSatisfied()) {
+                  didPull(PullResult{ErrorCode::kOK, message.Data()});
+                  return;
+                }
+              }
+            }
+          });
+    } else {
+      auto sent = socket->write_some(asio::buffer(out));
+      if (sent != out.size()) {
         return result;
       }
-      for (size_t decoded = 0; decoded < bytes_transferred;) {
-        decoded +=
-            message.Decode(&buffer[decoded], bytes_transferred - decoded);
-        if (message.IsSatisfied()) {
-          return PullResult{ErrorCode::kOK, message.Data()};
+      Message message;
+      auto buffer = std::vector<uint8_t>(1024, 0);
+      while (true) {
+        auto bytes_transferred = socket->read_some(asio::buffer(buffer, 1024));
+        if (bytes_transferred == 0) {
+          return result;
+        }
+        for (size_t decoded = 0; decoded < bytes_transferred;) {
+          decoded +=
+              message.Decode(&buffer[decoded], bytes_transferred - decoded);
+          if (message.IsSatisfied()) {
+            return PullResult{ErrorCode::kOK, message.Data()};
+          }
         }
       }
     }
+    return result;
   } catch (const std::exception &) {
     return PullResult{ErrorCode::kUnknown, {}};
   }
