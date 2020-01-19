@@ -144,7 +144,7 @@ class Transport : public Transportable {
     auto remote = std::make_shared<udp::endpoint>();
     udpSocket_.async_receive_from(
         asio::buffer(*buffer), *remote,
-        [this, buffer, remote](const asio::error_code &error,
+        [this, buffer, remote](const std::error_code &error,
                                std::size_t bytes_transferred) {
           if (error) {
             return;
