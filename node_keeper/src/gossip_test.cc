@@ -10,6 +10,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <future>
 #include <mutex>
 #include <queue>
 
@@ -230,8 +231,6 @@ class Pull : public Gossip {
   Address addressRemote_{"127.0.0.1", 5001};
   std::unique_ptr<Transportable> local_;
   std::unique_ptr<Transportable> remote_;
-  std::mutex mutex_;
-  std::condition_variable cv_;
   static constexpr const std::chrono::milliseconds kTimeout{
       std::chrono::milliseconds(1000)};
   static const std::vector<uint8_t> kRequest;
@@ -249,22 +248,15 @@ TEST_F(Pull, ShouldPullDataFromRemotePeer) {
 }
 
 TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
-  std::mutex mutex;
-  std::condition_variable cv;
-  using gossip::Pullable;
-  std::unique_ptr<Pullable::PullResult> response;
-  auto didPull = [&](const Pullable::PullResult &result) {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      response = std::make_unique<Pullable::PullResult>(result);
-    }
-    cv.notify_all();
-  };
+  using PullResult = gossip::Pullable::PullResult;
+  std::promise<PullResult> promise;
+  std::future<PullResult> future = promise.get_future();
+  auto didPull = [&](const PullResult &result) { promise.set_value(result); };
   auto result =
       local_->Pull(addressRemote_, kRequest.data(), kRequest.size(), didPull);
 
-  std::unique_lock<std::mutex> lock(mutex);
-  ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return !!response; }));
-  ASSERT_THAT(response->first, Eq(ErrorCode::kOK));
-  ASSERT_THAT(response->second, Eq(kResponse));
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
+  auto response = future.get();
+  ASSERT_THAT(response.first, Eq(ErrorCode::kOK));
+  ASSERT_THAT(response.second, Eq(kResponse));
 }
