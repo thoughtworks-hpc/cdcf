@@ -35,7 +35,20 @@ class MockTransport : public Transportable {
                size_t size),
               (override));
 
-  MOCK_METHOD(void, RegisterGossipHandler, (GossipHandler handler), (override));
+  // MOCK_METHOD(void, RegisterGossipHandler, (GossipHandler handler),
+  // (override));
+  void RegisterGossipHandler(GossipHandler handler) override {
+    handler_ = handler;
+  }
+
+  void CallGossipHandler(const Address &address, const Payload &payload) {
+    handler_(address, payload);
+  }
+
+ private:
+  GossipHandler handler_;
+
+  //  void SetGossipMsg(const Address &address, )
 };
 
 #endif  // CDCF_MOCK_GOSSIP_H
