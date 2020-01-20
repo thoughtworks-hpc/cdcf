@@ -4,6 +4,7 @@
 
 #include <include/membership.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -21,10 +22,20 @@ int membership::Membership::Init(Config config) {
   }
   AddMember(member);
 
+  if (config.GetTransport() == nullptr) {
+    return MEMBERSHIP_INIT_TRANSPORT_EMPTY;
+  }
+
+  transport_ = config.GetTransport();
+
+  transport_->RegisterGossipHandler(
+      [&](const struct gossip::Address& node, const gossip::Payload& payload) {
+        std::cout << "hello" << std::endl;
+      });
   return 0;
 }
 int membership::Membership::AddMember(const membership::Member& member) {
-  // TODO considering nessicity of mutex here
+  // TODO considering necessity of mutex here
   members_.push_back(member);
 
   return 0;
@@ -39,11 +50,7 @@ bool membership::operator!=(const membership::Member& lhs,
   return !operator==(lhs, rhs);
 }
 bool membership::Member::IsEmptyMember() {
-  if (node_name_ == "" && ip_address_ == "" && port_ == 0) {
-    return true;
-  }
-
-  return false;
+  return node_name_.empty() && ip_address_.empty() && port_ == 0;
 }
 int membership::Config::AddHostMember(const std::string& node_name,
                                       const std::string& ip_address,

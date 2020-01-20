@@ -14,12 +14,11 @@
 
 namespace membership {
 
-// TODO Error Code
-
 enum ErrorCode {
   MEMBERSHIP_SUCCESS,
   MEMBERSHIP_FAILURE,
   MEMBERSHIP_INIT_HOSTMEMBER_EMPTY,
+  MEMBERSHIP_INIT_TRANSPORT_EMPTY
 };
 
 class Member {
@@ -33,8 +32,8 @@ class Member {
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
 
-  const std::string& GetNodeName() const { return node_name_; }
-  const std::string& GetIpAddress() const { return ip_address_; }
+  std::string GetNodeName() const { return node_name_; }
+  std::string GetIpAddress() const { return ip_address_; }
   short GetPort() const { return port_; }
 
   bool IsEmptyMember();
@@ -47,6 +46,8 @@ class Member {
 
 class Config {
  public:
+  Config() : transport_(nullptr) {}
+
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
                     short port);
   Member GetHostMember() { return host_; }
@@ -66,13 +67,15 @@ class Config {
 
 class Membership {
  public:
+  Membership() : transport_(nullptr) {}
   int Init(Config config);
   std::vector<Member> GetMembers();
 
  private:
   int AddMember(const Member& member);
-  int JoinCluster(const std::vector<Member>& seed_nodes);
+  // int JoinCluster(const std::vector<Member>& seed_nodes);
   std::vector<Member> members_;
+  gossip::Transportable* transport_;
 };
 
 };  // namespace membership
