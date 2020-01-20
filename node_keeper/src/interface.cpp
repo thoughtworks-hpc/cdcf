@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "src/gossip.h"
+#include "include/gossip.h"
 
 namespace node_keeper {
 

@@ -81,16 +81,30 @@ TEST(Membership, ConfigWithTransport) {
 }
 
 // Message
-TEST(Membership, CreateUpMessage) {
+TEST(Message, CreateUpMessage) {
   membership::Message message1;
   membership::Member member{"node2", "127.0.0.1", 28888};
-  message1.InitAsUpMessage(member);
+  message1.InitAsUpMessage(member, 1);
   std::string serialized_msg = message1.SerializeToString();
 
   membership::Message message2;
   message2.DeserializeFromString(serialized_msg);
   EXPECT_TRUE(message2.IsUpMessage());
   EXPECT_EQ(message2.GetMember(), member);
+  EXPECT_EQ(message2.GetIncarnation(), 1);
+}
+
+TEST(Message, MessageParseFromArray) {
+  membership::Message message1;
+  membership::Member member{"node2", "127.0.0.1", 28888};
+  message1.InitAsUpMessage(member, 1);
+  std::string serialized_msg = message1.SerializeToString();
+
+  membership::Message message2;
+  message2.DeserializeFromArray(serialized_msg.data(), serialized_msg.size());
+  EXPECT_TRUE(message2.IsUpMessage());
+  EXPECT_EQ(message2.GetMember(), member);
+  EXPECT_EQ(message2.GetIncarnation(), 100);
 }
 
 // Membership
@@ -138,25 +152,23 @@ int InitBasicMembership(membership::Membership &new_membership,
   return new_membership.Init(config);
 }
 
-// TEST(Membership, NewUpMemberReceived) {
-//  membership::Membership my_membership;
-//  MockTransport transport;
-//  InitBasicMembership(my_membership, transport);
-//
-//  gossip::Address address{"127.0.0.1", 28888};
-//  MemberStatus status;
-//  status.set_name("node2");
-//  status.set_ip("127.0.0.1");
-//  status.set_port(28888);
-//
-//  gossip::Payload payload{"hello"};
-//
-//  // imitate receiving this message
-//  transport.CallGossipHandler(address, payload);
-//
-//  std::vector<membership::Member> members{
-//    {"node1", "127.0.0.1", 27777},
-//    {"node1", "127.0.0.1", 28888}};
-//
-//  EXPECT_TRUE(CompareMembers(my_membership.GetMembers(), members));
-//}
+TEST(Membership, NewUpMessageReceived) {
+  membership::Membership my_membership;
+  MockTransport transport;
+  InitBasicMembership(my_membership, transport);
+
+  gossip::Address address{"127.0.0.1", 28888};
+  membership::Message message;
+  membership::Member member{"node2", "127.0.0.1", 28888};
+  message.InitAsUpMessage(member, 1);
+  std::string serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
+
+  // imitate receiving this message
+  transport.CallGossipHandler(address, payload);
+
+  std::vector<membership::Member> members{{"node1", "127.0.0.1", 27777},
+                                          {"node1", "127.0.0.1", 28888}};
+
+  EXPECT_TRUE(CompareMembers(my_membership.GetMembers(), members));
+}

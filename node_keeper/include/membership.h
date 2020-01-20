@@ -67,15 +67,20 @@ class Config {
 
 class Membership {
  public:
-  Membership() : transport_(nullptr) {}
+  Membership() : transport_(nullptr), incarnation_(0) {}
   int Init(Config config);
   std::vector<Member> GetMembers();
 
  private:
-  int AddMember(const Member& member);
-  // int JoinCluster(const std::vector<Member>& seed_nodes);
   std::vector<Member> members_;
   gossip::Transportable* transport_;
+  unsigned int incarnation_;
+
+  int AddMember(const Member& member);
+  Member* FindMember(const std::string& node_name);
+  void IncrementIncarnation();
+  void HandleGossip(const struct gossip::Address& node,
+                    const gossip::Payload& payload);
 };
 
 };  // namespace membership

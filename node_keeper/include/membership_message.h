@@ -16,15 +16,19 @@ namespace membership {
 
 class Message {
  public:
-  void InitAsUpMessage(const Member& member);
+  void InitAsUpMessage(const Member& member, unsigned int incarnation);
   bool IsUpMessage();
   Member GetMember();
 
+  unsigned int GetIncarnation() { return incarnation_; }
+
   std::string SerializeToString();
   void DeserializeFromString(const std::string& data);
+  void DeserializeFromArray(const void* data, int size);
 
  private:
   MemberUpdate msg_;
+  unsigned int incarnation_;
 };
 
 };      // namespace membership
