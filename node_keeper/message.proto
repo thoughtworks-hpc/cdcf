@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package membership;
+
+message MemberUpdate {
+    required string name = 1;
+    required string ip = 2;
+    required int32 port = 3;
+
+    enum MemberStatus {
+        UP = 0;
+        DOWN = 1;
+    }
+
+    required MemberStatus status = 4;
+    required int32 incarnation = 5;
+}
