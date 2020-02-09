@@ -17,7 +17,9 @@ namespace membership {
 class Message {
  public:
   void InitAsUpMessage(const Member& member, unsigned int incarnation);
+  void InitAsDownMessage(const Member& member, unsigned int incarnation);
   bool IsUpMessage();
+  bool IsDownMessage();
   Member GetMember();
 
   unsigned int GetIncarnation() { return incarnation_; }

@@ -13,6 +13,15 @@ void membership::Message::InitAsUpMessage(const Member& member,
   msg_.set_incarnation(incarnation);
 }
 
+void membership::Message::InitAsDownMessage(const Member& member,
+                                            unsigned int incarnation) {
+  msg_.set_name(member.GetNodeName());
+  msg_.set_ip(member.GetIpAddress());
+  msg_.set_port(member.GetPort());
+  msg_.set_status(MemberUpdate::DOWN);
+  msg_.set_incarnation(incarnation);
+}
+
 std::string membership::Message::SerializeToString() {
   return msg_.SerializeAsString();
 }
@@ -31,4 +40,8 @@ membership::Member membership::Message::GetMember() {
 
 bool membership::Message::IsUpMessage() {
   return !(!msg_.IsInitialized() || msg_.status() != MemberUpdate::UP);
+}
+
+bool membership::Message::IsDownMessage() {
+  return !(!msg_.IsInitialized() || msg_.status() != MemberUpdate::DOWN);
 }

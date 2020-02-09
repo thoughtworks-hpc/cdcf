@@ -10,11 +10,14 @@
 #include "include/membership_message.h"
 
 std::vector<membership::Member> membership::Membership::GetMembers() {
-  Member member("node1", "127.0.0.1", 27777);
-  return members_;
+  std::vector<Member> return_members;
+  for (auto& member : members_) {
+    return_members.push_back(member.first);
+  }
+  return return_members;
 }
 
-int membership::Membership::Init(Config config) {
+int membership::Membership::Init(const Config& config) {
   // TODO existence checking
   // TODO host member further checking
 
@@ -34,27 +37,33 @@ int membership::Membership::Init(Config config) {
       [&](const struct gossip::Address& node, const gossip::Payload& payload) {
         HandleGossip(node, payload);
       });
-  return 0;
+
+  retransmit_multiplier_ = config.GetRetransmitMultiplier();
+
+  if (!config.GetSeedMembers().empty()) {
+    std::vector<gossip::Address> addresses;
+    for (const auto& member : config.GetSeedMembers()) {
+      addresses.emplace_back(
+          gossip::Address{member.GetIpAddress(), member.GetPort()});
+    }
+
+    membership::Message message;
+    message.InitAsUpMessage(member, 1);
+    std::string serialized_msg = message.SerializeToString();
+    gossip::Payload payload(serialized_msg);
+
+    transport_->Gossip(addresses, payload);
+  }
+
+  return MEMBERSHIP_SUCCESS;
 }
 
 int membership::Membership::AddMember(const membership::Member& member) {
   // TODO considering necessity of mutex here
-  members_.push_back(member);
+  members_[member] = incarnation_;
   IncrementIncarnation();
 
   return 0;
-}
-
-membership::Member* membership::Membership::FindMember(
-    const std::string& node_name) {
-  // TODO refactor to use more efficient container for members
-
-  for (auto& member : members_) {
-    if (member.GetNodeName() == node_name) {
-      return &member;
-    }
-  }
-  return nullptr;
 }
 
 void membership::Membership::HandleGossip(const struct gossip::Address& node,
@@ -62,13 +71,34 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   membership::Message message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
 
+  int retrans_limit = retransmit_multiplier_ * ceil(log(members_.size()));
+
+  if (retrans_limit > 0) {
+    std::vector<gossip::Address> addresses;
+    for (const auto& member : members_) {
+      addresses.emplace_back(
+          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+    }
+    while (retrans_limit > 0) {
+      transport_->Gossip(addresses, payload);
+      retrans_limit--;
+    }
+  }
+
   // message validity check
 
   if (message.IsUpMessage()) {
-    Member* member_ptr = FindMember(message.GetMember().GetNodeName());
-    if (member_ptr == nullptr) {
-      AddMember(message.GetMember());
+    if (members_.find(message.GetMember()) != members_.end()) {
+      if (members_[message.GetMember()] < message.GetIncarnation()) {
+        members_[message.GetMember()] = message.GetIncarnation();
+      }
+    } else {
+      members_[message.GetMember()] = message.GetIncarnation();
     }
+  } else if (message.IsDownMessage()) {
+    members_.erase(message.GetMember());
+  } else {
+    return;
   }
 }
 
@@ -79,8 +109,12 @@ void membership::Membership::IncrementIncarnation() {
 
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
-  return !((lhs.GetIpAddress() != rhs.GetIpAddress()) ||
-           (lhs.GetPort() != rhs.GetPort()));
+  if (lhs.GetIpAddress() == rhs.GetIpAddress() &&
+      lhs.GetPort() == rhs.GetPort()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool membership::operator!=(const membership::Member& lhs,
@@ -118,4 +152,8 @@ int membership::Config::AddTransport(gossip::Transportable* transport) {
 
   transport_ = transport;
   return 0;
+}
+
+void membership::Config::AddRetransmitMultiplier(int multiplier) {
+  retransmit_multiplier_ = multiplier;
 }

@@ -24,15 +24,22 @@ using namespace gossip;
 //  virtual void RegisterGossipHandler(GossipHandler handler) = 0;
 //};
 
+namespace gossip {
+
+bool operator==(const gossip::Payload &lhs, const gossip::Payload &rhs) {
+  return lhs.data == rhs.data;
+}
+}  // namespace gossip
+
 class MockTransport : public Transportable {
   //  MOCK_METHOD(void, PenUp, (), (override));
   //  MOCK_METHOD(void, PenDown, (), (override));
   //  MOCK_METHOD(void, Forward, (int distance), (override));
   //  MOCK_METHOD(void, Turn, (int degrees), (override));
  public:
-  MOCK_METHOD(int, Gossip,
-              (const std::vector<Address> &nodes, const void *data,
-               size_t size),
+  MOCK_METHOD(ErrorCode, Gossip,
+              (const std::vector<Address> &nodes, const Payload &data,
+               DidGossipHandler didGossip),
               (override));
 
   // MOCK_METHOD(void, RegisterGossipHandler, (GossipHandler handler),

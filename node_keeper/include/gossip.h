@@ -11,9 +11,14 @@
 
 namespace gossip {
 
+enum ErrorCode {
+  kOK = 0,
+  kUnknown,
+};
+
 struct Address {
   std::string host;
-  unsigned short port;
+  uint16_t port;
 
   bool operator==(const Address &rhs) const {
     return host == rhs.host && port == rhs.port;
@@ -49,18 +54,20 @@ class Payload {
   }
 };
 
+// bool operator==(const Payload& lhs, const Payload& rhs) {
+//  return lhs.data == rhs.data;
+//}
+
 class Gossipable {
  public:
   // payload dissemination via gossip protocol
-  //  virtual int Gossip(const std::vector<Address> &nodes,
-  //                     const Payload &data) = 0;
-
-  virtual int Gossip(const std::vector<Address> &nodes, const void *data,
-                     size_t size) = 0;
+  typedef std::function<void(ErrorCode)> DidGossipHandler;
+  virtual ErrorCode Gossip(const std::vector<Address> &nodes,
+                           const Payload &data,
+                           DidGossipHandler didGossip = nullptr) = 0;
 
   typedef std::function<void(const struct Address &node, const Payload &data)>
       GossipHandler;
-
   virtual void RegisterGossipHandler(GossipHandler handler) = 0;
 };
 
