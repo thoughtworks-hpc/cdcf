@@ -13,9 +13,9 @@ jobs:
         libcxx: [libc++, libstdc++11]
         exclude:
         - os: macos-10.15
-          libcxx: libistdc++
+          libcxx: libistdc++11
         - os: ubuntu-latest
-          libcxx: libc++11
+          libcxx: libc++
 
     steps:
     - uses: actions/setup-python@v1
