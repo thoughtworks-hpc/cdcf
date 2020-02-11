@@ -12,10 +12,10 @@ jobs:
         os: [ubuntu-latest, macos-10.15]
         libcxx: [libc++, libstdc++11]
         include:
-          - os: macos-10.15
-            libcxx: libc++
-          - os: ubuntu-latest
-            libcxx: libstdc++11
+        - os: macos-10.15
+          libcxx: libc++
+        - os: ubuntu-latest
+          libcxx: libstdc++11
 
     steps:
     - uses: actions/setup-python@v1
