@@ -11,11 +11,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-10.15]
         libcxx: [libc++, libstdc++11]
-        include:
+        exclude:
         - os: macos-10.15
-          libcxx: libc++
+          libcxx: libistdc++
         - os: ubuntu-latest
-          libcxx: libstdc++11
+          libcxx: libc++11
 
     steps:
     - uses: actions/setup-python@v1
