@@ -5,7 +5,18 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-10.15]
+        include:
+          - os: macos-10.15
+            compiler:
+              libcxx: libc++
+          - os: ubuntu-latest
+            compiler:
+              libcxx: libstdc++11
 
     steps:
     - uses: actions/setup-python@v1
@@ -17,7 +28,7 @@ jobs:
     - uses: actions/checkout@v1
     - name: conan
       run: |
-        conan install . -s compiler.libcxx=libstdc++11
+        conan install . -s compiler.libcxx=${{ compiler.libcxx }}
     - name: cmake
       run: |
         cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
