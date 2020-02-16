@@ -4,44 +4,65 @@
 
 #include "include/membership_message.h"
 
-void membership::Message::InitAsUpMessage(const Member& member,
-                                          unsigned int incarnation) {
-  msg_.set_name(member.GetNodeName());
-  msg_.set_ip(member.GetIpAddress());
-  msg_.set_port(member.GetPort());
-  msg_.set_status(MemberUpdate::UP);
-  msg_.set_incarnation(incarnation);
-}
-
-void membership::Message::InitAsDownMessage(const Member& member,
-                                            unsigned int incarnation) {
-  msg_.set_name(member.GetNodeName());
-  msg_.set_ip(member.GetIpAddress());
-  msg_.set_port(member.GetPort());
-  msg_.set_status(MemberUpdate::DOWN);
-  msg_.set_incarnation(incarnation);
-}
-
 std::string membership::Message::SerializeToString() {
-  return msg_.SerializeAsString();
+  return BaseMessage().SerializeAsString();
 }
 
 void membership::Message::DeserializeFromString(const std::string& data) {
-  msg_.ParseFromString(data);
+  BaseMessage().ParseFromString(data);
 }
 
 void membership::Message::DeserializeFromArray(const void* data, int size) {
-  msg_.ParseFromArray(data, size);
+  BaseMessage().ParseFromArray(data, size);
 }
 
-membership::Member membership::Message::GetMember() {
-  return Member{msg_.name(), msg_.ip(), static_cast<short>(msg_.port())};
+void membership::UpdateMessage::InitAsUpMessage(const Member& member,
+                                                unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_status(MemberUpdate::UP);
+  update_.set_incarnation(incarnation);
 }
 
-bool membership::Message::IsUpMessage() {
-  return !(!msg_.IsInitialized() || msg_.status() != MemberUpdate::UP);
+void membership::UpdateMessage::InitAsDownMessage(const Member& member,
+                                                  unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_status(MemberUpdate::DOWN);
+  update_.set_incarnation(incarnation);
 }
 
-bool membership::Message::IsDownMessage() {
-  return !(!msg_.IsInitialized() || msg_.status() != MemberUpdate::DOWN);
+membership::Member membership::UpdateMessage::GetMember() {
+  return Member{update_.name(), update_.ip(),
+                static_cast<short>(update_.port())};
+}
+
+bool membership::UpdateMessage::IsUpMessage() {
+  return !(!update_.IsInitialized() || update_.status() != MemberUpdate::UP);
+}
+
+bool membership::UpdateMessage::IsDownMessage() {
+  return !(!update_.IsInitialized() || update_.status() != MemberUpdate::DOWN);
+}
+
+void membership::FullStateMessage::InitAsFullStateMessage(
+    const std::vector<Member>& members) {
+  for (auto member : members) {
+    auto new_state = state_.add_states();
+    new_state->set_name(member.GetNodeName());
+    new_state->set_ip(member.GetIpAddress());
+    new_state->set_port(member.GetPort());
+    new_state->set_status(MemberUpdate::UP);
+    new_state->set_incarnation(1);
+  }
+}
+
+std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
+  std::vector<Member> members;
+  for (auto state : state_.states()) {
+    members.emplace_back(state.name(), state.ip(), state.port());
+  }
+  return members;
 }

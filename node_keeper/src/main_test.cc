@@ -83,29 +83,43 @@ TEST(Membership, ConfigWithTransport) {
 
 // Message
 TEST(Message, CreateUpMessage) {
-  membership::Message message1;
+  membership::UpdateMessage message1;
   membership::Member member{"node2", "127.0.0.1", 28888};
   message1.InitAsUpMessage(member, 1);
   std::string serialized_msg = message1.SerializeToString();
 
-  membership::Message message2;
+  membership::UpdateMessage message2;
   message2.DeserializeFromString(serialized_msg);
   EXPECT_TRUE(message2.IsUpMessage());
   EXPECT_EQ(message2.GetMember(), member);
-  EXPECT_EQ(message2.GetIncarnation(), 1);
+  // EXPECT_EQ(message2.GetIncarnation(), 1);
 }
 
 TEST(Message, MessageParseFromArray) {
-  membership::Message message1;
+  membership::UpdateMessage message1;
   membership::Member member{"node2", "127.0.0.1", 28888};
   message1.InitAsUpMessage(member, 1);
   std::string serialized_msg = message1.SerializeToString();
 
-  membership::Message message2;
+  membership::UpdateMessage message2;
   message2.DeserializeFromArray(serialized_msg.data(), serialized_msg.size());
   EXPECT_TRUE(message2.IsUpMessage());
   EXPECT_EQ(message2.GetMember(), member);
-  EXPECT_EQ(message2.GetIncarnation(), 100);
+  // EXPECT_EQ(message2.GetIncarnation(), 1);
+}
+
+TEST(Message, CreateFullStateMessage) {
+  membership::FullStateMessage message_original;
+  std::vector<membership::Member> members{{"node1", "127.0.0.1", 27777},
+                                          {"node2", "127.0.0.1", 28888}};
+  message_original.InitAsFullStateMessage(members);
+
+  std::string serialized_msg = message_original.SerializeToString();
+
+  membership::FullStateMessage message_received;
+  message_received.DeserializeFromString(serialized_msg);
+  auto members_received = message_received.GetMembers();
+  EXPECT_TRUE(CompareMembers(members, members_received));
 }
 
 // Membership
@@ -157,7 +171,7 @@ void SimulateReceivingUpMessage(const membership::Member& member,
                                 MockTransport& transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
 
-  membership::Message message;
+  membership::UpdateMessage message;
   message.InitAsUpMessage(member, 1);
   std::string serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);
@@ -169,7 +183,7 @@ void SimulateReceivingDownMessage(const membership::Member& member,
                                   MockTransport& transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
 
-  membership::Message message;
+  membership::UpdateMessage message;
   message.InitAsDownMessage(member, 1);
   std::string serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);

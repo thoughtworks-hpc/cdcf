@@ -47,7 +47,7 @@ int membership::Membership::Init(const Config& config) {
           gossip::Address{member.GetIpAddress(), member.GetPort()});
     }
 
-    membership::Message message;
+    membership::UpdateMessage message;
     message.InitAsUpMessage(member, 1);
     std::string serialized_msg = message.SerializeToString();
     gossip::Payload payload(serialized_msg);
@@ -68,7 +68,7 @@ int membership::Membership::AddMember(const membership::Member& member) {
 
 void membership::Membership::HandleGossip(const struct gossip::Address& node,
                                           const gossip::Payload& payload) {
-  membership::Message message;
+  membership::UpdateMessage message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
 
   int retrans_limit = retransmit_multiplier_ * ceil(log(members_.size()));

@@ -15,3 +15,7 @@ message MemberUpdate {
     required MemberStatus status = 4;
     required int32 incarnation = 5;
 }
+
+message MemberFullState {
+    repeated MemberUpdate states = 1;
+}
