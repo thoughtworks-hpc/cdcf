@@ -33,26 +33,34 @@ int membership::Membership::Init(const Config& config) {
 
   transport_ = config.GetTransport();
 
-  transport_->RegisterGossipHandler(
-      [&](const struct gossip::Address& node, const gossip::Payload& payload) {
-        HandleGossip(node, payload);
-      });
+  auto gossip_handler = [this](const struct gossip::Address& node,
+                               const gossip::Payload& payload) {
+    HandleGossip(node, payload);
+  };
+  transport_->RegisterGossipHandler(gossip_handler);
+
+  auto push_handler = [this](const gossip::Address& address, const void* data,
+                             size_t size) { HandlePush(address, data, size); };
+  transport_->RegisterPushHandler(push_handler);
+
+  auto pull_handler = [this](const gossip::Address& address, const void* data,
+                             size_t size) -> std::vector<uint8_t> {
+    HandlePull(address, data, size);
+    return std::vector<uint8_t>{0};
+  };
+  transport_->RegisterPullHandler(pull_handler);
 
   retransmit_multiplier_ = config.GetRetransmitMultiplier();
 
   if (!config.GetSeedMembers().empty()) {
-    std::vector<gossip::Address> addresses;
-    for (const auto& member : config.GetSeedMembers()) {
-      addresses.emplace_back(
-          gossip::Address{member.GetIpAddress(), member.GetPort()});
-    }
+    auto peer = config.GetSeedMembers()[0];
+    gossip::Address address{peer.GetIpAddress(), peer.GetPort()};
 
-    membership::UpdateMessage message;
-    message.InitAsUpMessage(member, 1);
-    std::string serialized_msg = message.SerializeToString();
-    gossip::Payload payload(serialized_msg);
+    std::string pull_request_message = "pull";
+    auto pull_request = [](const gossip::Pullable::PullResult&) {};
 
-    transport_->Gossip(addresses, payload);
+    transport_->Pull(address, pull_request_message.data(),
+                     pull_request_message.size(), pull_request);
   }
 
   return MEMBERSHIP_SUCCESS;
@@ -79,8 +87,11 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       addresses.emplace_back(
           gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
     }
+
+    auto did_gossip = [](gossip::ErrorCode error) {};
+
     while (retrans_limit > 0) {
-      transport_->Gossip(addresses, payload);
+      transport_->Gossip(addresses, payload, did_gossip);
       retrans_limit--;
     }
   }
@@ -100,6 +111,37 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   } else {
     return;
   }
+}
+
+void membership::Membership::HandlePush(const gossip::Address& address,
+                                        const void* data, size_t size) {
+  FullStateMessage message;
+  message.DeserializeFromArray(data, size);
+
+  for (const auto& member : message.GetMembers()) {
+    AddMember(member);
+  }
+}
+
+void membership::Membership::HandlePull(const gossip::Address& address,
+                                        const void* data, size_t size) {
+  FullStateMessage message;
+  std::vector<Member> members;
+  for (const auto& member : members_) {
+    members.emplace_back(member.first.GetNodeName(),
+                         member.first.GetIpAddress(), member.first.GetPort());
+  }
+  message.InitAsFullStateMessage(members);
+  auto message_serialized = message.SerializeToString();
+
+  auto did_push = [this, address, message_serialized](gossip::ErrorCode error) {
+    if (error != gossip::ErrorCode::kOK) {
+      transport_->Push(address, message_serialized.data(),
+                       message_serialized.size());
+    }
+  };
+  transport_->Push(address, message_serialized.data(),
+                   message_serialized.size(), did_push);
 }
 
 void membership::Membership::IncrementIncarnation() {

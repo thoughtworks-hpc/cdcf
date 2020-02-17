@@ -14,8 +14,8 @@
 using namespace testing;
 
 // Member
-bool CompareMembers(const std::vector<membership::Member> &lhs,
-                    const std::vector<membership::Member> &rhs) {
+bool CompareMembers(const std::vector<membership::Member>& lhs,
+                    const std::vector<membership::Member>& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
   }
@@ -158,8 +158,8 @@ TEST(Membership, CreateHostMemberWithEmptyConfig) {
 //  my_membership.Init(config);
 //}
 
-int InitBasicMembership(membership::Membership &new_membership,
-                        gossip::Transportable &transport) {
+int InitBasicMembership(membership::Membership& new_membership,
+                        gossip::Transportable& transport) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
   config.AddTransport(&transport);
@@ -285,58 +285,69 @@ TEST(Membership, UpMessageRetransmitWithThreeMember) {
                                          {"node3", "127.0.0.1", 29999}}));
 }
 
-// TEST(Membership, Compare) {
-//
-//  std::string str1 = "127.0.0.1";
-//  std::string str2 = "127.0.0.2";
-//
-//  EXPECT_TRUE(str1 < str2);
-//
-//  std::string str3 = "128.0.0.1";
-//  std::string str4 = "127.0.0.2";
-//
-//  EXPECT_TRUE(str3 > str4);
-//}
+TEST(Membership, JoinWithSingleNodeCluster) {
+  // start a member
+  membership::Membership node;
+  membership::Config config;
+  MockTransport transport;
+  config.AddHostMember("node_a", "127.0.0.1", 27777);
+  config.AddTransport(&transport);
+  config.AddOneSeedMember("node_b", "127.0.0.1", 28888);
 
-// TEST(Membership, JoinWithSingleNodeCluster) {
-//
-//  // start a member
-//  membership::Membership node;
-//  membership::Config config;
-//  MockTransport transport;
-//  config.AddHostMember("node_a", "127.0.0.1", 27777);
-//  config.AddTransport(&transport);
-//  config.AddOneSeedMember("node_b", "127.0.0.1", 28888);
-//
-//  membership::Message message;
-//  message.InitAsUpMessage({"node_a", "127.0.0.1", 27777}, 1);
-//  std::string serialized_msg = message.SerializeToString();
-//  gossip::Payload payload(serialized_msg);
-//
-//  // should send an up message to seed member
-//  EXPECT_CALL(transport,
-//  Gossip(UnorderedElementsAre(gossip::Address{"127.0.0.1", 28888}), payload,
-//  _)).Times(AtLeast(1)); node.Init(config);
-//}
+  membership::UpdateMessage message;
+  message.InitAsUpMessage({"node_a", "127.0.0.1", 27777}, 1);
+  std::string serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
 
-// TEST(Membership, MessageDissemination) {
-//
-//  // start a member a
-//  membership::Membership node_a;
-//  membership::Config config_a;
-//  MockTransport transport_a;
-//  config_a.AddHostMember("node_a", "127.0.0.1", 27777);
-//  config_a.AddTransport(&transport_a);
-//  node_a.Init(config_a);
-//  // start another member b
-//  membership::Membership node_b;
-//  membership::Config config_b;
-//  MockTransport transport_b;
-//  config_b.AddHostMember("node_b", "127.0.0.1", 28888);
-//  config_b.AddTransport(&transport_b);
-//  node_a.Init(config_b);
-//  // send an up message to a
-//  membership::Member memberDowned{"node_c", "127.0.0.1", 29999};
-//  SimulateReceivingDownMessage(memberDowned, transport_a);
-//  // detect up being processed on both a & b
-//}
+  // should send an up message to seed member
+  EXPECT_CALL(transport, Pull(gossip::Address{"127.0.0.1", 28888}, _, _, _))
+      .Times(AtLeast(1));
+  node.Init(config);
+
+  membership::FullStateMessage fullstate_message;
+  fullstate_message.InitAsFullStateMessage({{"node_b", "127.0.0.1", 28888},
+                                            {"node_c", "127.0.0.1", 29999},
+                                            {"node_d", "127.0.0.1", 30000}});
+  auto fullstate_message_serialized = fullstate_message.SerializeToString();
+  transport.CallPushHandler(gossip::Address{"127.0.0.1", 28888},
+                            fullstate_message_serialized.data(),
+                            fullstate_message_serialized.size());
+
+  EXPECT_TRUE(
+      CompareMembers(node.GetMembers(), {{"node_a", "127.0.0.1", 27777},
+                                         {"node_b", "127.0.0.1", 28888},
+                                         {"node_c", "127.0.0.1", 29999},
+                                         {"node_d", "127.0.0.1", 30000}}));
+}
+
+MATCHER_P2(VoidStrEq, data, size,
+           negation
+               ? "does not match"
+               : "matches" +
+                     std::string(reinterpret_cast<const char*>(data), size)) {
+  return std::string(reinterpret_cast<const char*>(arg), size) ==
+         std::string(reinterpret_cast<const char*>(data), size);
+}
+
+TEST(Membership, ClusterResponseToPullRequst) {
+  membership::Membership node;
+  membership::Config config;
+  MockTransport transport;
+  config.AddHostMember("node_a", "127.0.0.1", 27777);
+  config.AddTransport(&transport);
+
+  membership::FullStateMessage message;
+  message.InitAsFullStateMessage({{"node_a", "127.0.0.1", 27777}});
+  auto message_serialized = message.SerializeToString();
+  EXPECT_CALL(transport, Push(gossip::Address{"127.0.0.1", 28888},
+                              VoidStrEq(message_serialized.data(),
+                                        message_serialized.size()),
+                              message_serialized.size(), _))
+      .Times(AtLeast(1));
+  node.Init(config);
+
+  std::string pull_request_message = "pull";
+  transport.CallPullHandler(gossip::Address{"127.0.0.1", 28888},
+                            pull_request_message.data(),
+                            pull_request_message.size());
+}

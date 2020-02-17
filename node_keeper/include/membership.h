@@ -100,6 +100,8 @@ class Membership {
   void IncrementIncarnation();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
+  void HandlePush(const gossip::Address&, const void* data, size_t size);
+  void HandlePull(const gossip::Address&, const void* data, size_t size);
 };
 
 };  // namespace membership

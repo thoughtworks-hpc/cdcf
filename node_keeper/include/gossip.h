@@ -54,10 +54,6 @@ class Payload {
   }
 };
 
-// bool operator==(const Payload& lhs, const Payload& rhs) {
-//  return lhs.data == rhs.data;
-//}
-
 class Gossipable {
  public:
   // payload dissemination via gossip protocol
@@ -72,21 +68,33 @@ class Gossipable {
 };
 
 class Pushable {
-  // public:
-  //  virtual int Push(const Address &node, const void *data, size_t size) = 0;
-  //
-  //  typedef std::function<void(const Address &, const void *, size_t)>
-  //      PushHandler;
-  //  virtual void RegisterPushHandler(PushHandler handler) = 0;
+ public:
+  typedef std::function<void(ErrorCode)> DidPushHandler;
+  virtual ErrorCode Push(const Address &node, const void *data, size_t size,
+                         DidPushHandler didPush = nullptr) = 0;
+
+  typedef std::function<void(const Address &, const void *, size_t)>
+      PushHandler;
+  virtual void RegisterPushHandler(PushHandler handler) = 0;
+
+ public:
+  virtual ~Pushable() = default;
 };
 
 class Pullable {
-  // public:
-  //  virtual int Pull(const Address &node, const void *data, size_t size) = 0;
-  //
-  //  typedef std::function<void(const Address &, const void *, size_t)>
-  //      PullHandler;
-  //  virtual void RegisterPullHandler(PullHandler handler) = 0;
+ public:
+  typedef std::pair<ErrorCode, std::vector<uint8_t>> PullResult;
+  typedef std::function<void(const PullResult &)> DidPullHandler;
+  virtual PullResult Pull(const Address &node, const void *data, size_t size,
+                          DidPullHandler didPull = nullptr) = 0;
+
+  typedef std::function<std::vector<uint8_t>(const Address &, const void *,
+                                             size_t)>
+      PullHandler;
+  virtual void RegisterPullHandler(PullHandler handler) = 0;
+
+ public:
+  virtual ~Pullable() = default;
 };
 
 class Transportable : public Gossipable, public Pushable, public Pullable {};
