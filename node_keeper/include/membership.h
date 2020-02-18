@@ -95,6 +95,8 @@ class Membership {
 
  private:
   int AddMember(const Member& member);
+  void MergeUpUpdate(const Member& member, unsigned int incarnation);
+  void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void Notify();
   void IncrementIncarnation();
   void HandleGossip(const struct gossip::Address& node,
@@ -102,10 +104,9 @@ class Membership {
   void HandlePush(const gossip::Address&, const void* data, size_t size);
   void HandlePull(const gossip::Address&, const void* data, size_t size);
 
-  // std::vector<Member> members_;
-  // TODO need to use a mutex to protect members_
   std::map<Member, int, MemberCompare> members_;
   std::mutex mutex_members_;
+  Member self_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;

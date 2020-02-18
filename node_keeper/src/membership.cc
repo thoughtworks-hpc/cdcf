@@ -26,6 +26,7 @@ int membership::Membership::Init(
   if (member.IsEmptyMember()) {
     return MEMBERSHIP_INIT_HOSTMEMBER_EMPTY;
   }
+  self_ = member;
   AddMember(member);
 
   if (transport == nullptr) {
@@ -68,7 +69,6 @@ int membership::Membership::Init(
 }
 
 int membership::Membership::AddMember(const membership::Member& member) {
-  // TODO considering necessity of mutex here
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
     members_[member] = incarnation_;
@@ -102,19 +102,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   }
 
   if (message.IsUpMessage()) {
-    if (members_.find(message.GetMember()) != members_.end()) {
-      if (members_[message.GetMember()] < message.GetIncarnation()) {
-        members_[message.GetMember()] = message.GetIncarnation();
-      }
-    } else {
-      members_[message.GetMember()] = message.GetIncarnation();
-    }
-    Notify();
+    MergeUpUpdate(message.GetMember(), message.GetIncarnation());
   } else if (message.IsDownMessage()) {
-    members_.erase(message.GetMember());
-    Notify();
-  } else {
-    return;
+    MergeDownUpdate(message.GetMember(), message.GetIncarnation());
   }
 }
 
@@ -159,6 +149,35 @@ void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
 void membership::Membership::Notify() {
   for (auto subscriber : subscribers_) {
     subscriber->Update();
+  }
+}
+
+void membership::Membership::MergeUpUpdate(const Member& member,
+                                           unsigned int incarnation) {
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+  if (members_.find(member) != members_.end()) {
+    if (members_[member] < incarnation) {
+      members_[member] = incarnation;
+      Notify();
+    }
+  } else {
+    members_[member] = incarnation;
+    Notify();
+  }
+}
+
+void membership::Membership::MergeDownUpdate(const Member& member,
+                                             unsigned int incarnation) {
+  if (member == self_) {
+    return;
+  }
+
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    if (members_.find(member) != members_.end()) {
+      members_.erase(member);
+      Notify();
+    }
   }
 }
 

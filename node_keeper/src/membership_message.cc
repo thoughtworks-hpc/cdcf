@@ -34,16 +34,16 @@ void membership::UpdateMessage::InitAsDownMessage(const Member& member,
   update_.set_incarnation(incarnation);
 }
 
-membership::Member membership::UpdateMessage::GetMember() {
+membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
                 static_cast<short>(update_.port())};
 }
 
-bool membership::UpdateMessage::IsUpMessage() {
+bool membership::UpdateMessage::IsUpMessage() const {
   return !(!update_.IsInitialized() || update_.status() != MemberUpdate::UP);
 }
 
-bool membership::UpdateMessage::IsDownMessage() {
+bool membership::UpdateMessage::IsDownMessage() const {
   return !(!update_.IsInitialized() || update_.status() != MemberUpdate::DOWN);
 }
 

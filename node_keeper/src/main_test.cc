@@ -228,7 +228,7 @@ TEST(Membership, NewDownMessageReceived) {
   SimulateReceivingDownMessage(memberDowned, transport);
 
   std::vector<membership::Member> membersAfterDown{
-      {"node1", "127.0.0.1", 28888}};
+      {"node1", "127.0.0.1", 27777}, {"node1", "127.0.0.1", 28888}};
   EXPECT_TRUE(CompareMembers(my_membership.GetMembers(), membersAfterDown));
 }
 
@@ -351,4 +351,21 @@ TEST(Membership, EventSubcriptionWithMemberJoin) {
   EXPECT_CALL(*subscriber, Update);
   // construct a new node joining
   SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
+}
+
+TEST(Membership, EventSubcriptionWithMemberLeave) {
+  membership::Membership node;
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  node.Init(transport, config);
+
+  auto subscriber = std::make_shared<MockSubscriber>();
+  node.Subscribe(subscriber);
+
+  EXPECT_CALL(*subscriber, Update).Times(0);
+
+  SimulateReceivingDownMessage({"node2", "127.0.0.1", 27777}, transport);
+  SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
 }
