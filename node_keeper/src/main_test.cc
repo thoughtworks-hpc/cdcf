@@ -139,14 +139,6 @@ TEST(Membership, CreateHostMemberWithEmptyConfig) {
             membership::MEMBERSHIP_INIT_HOSTMEMBER_EMPTY);
 }
 
-int InitBasicMembership(membership::Membership& new_membership,
-                        std::shared_ptr<MockTransport>& transport) {
-  membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
-
-  return new_membership.Init(transport, config);
-}
-
 void SimulateReceivingUpMessage(const membership::Member& member,
                                 std::shared_ptr<MockTransport> transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
@@ -177,7 +169,6 @@ TEST(Membership, NewUpMessageReceived) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
   my_membership.Init(transport, config);
-  //  InitBasicMembership(my_membership, transport);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
   SimulateReceivingUpMessage(member, transport);
@@ -185,6 +176,7 @@ TEST(Membership, NewUpMessageReceived) {
   std::vector<membership::Member> members{{"node1", "127.0.0.1", 27777},
                                           {"node2", "127.0.0.1", 28888}};
 
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   EXPECT_TRUE(CompareMembers(my_membership.GetMembers(), members));
 }
 
@@ -196,7 +188,7 @@ TEST(Membership, DuplicateUpMessageReceived) {
   my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
-  EXPECT_CALL(*transport, Gossip(_, _, _)).Times(AnyNumber());
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   SimulateReceivingUpMessage(member, transport);
   SimulateReceivingUpMessage(member, transport);
   SimulateReceivingUpMessage(member, transport);
@@ -215,7 +207,7 @@ TEST(Membership, NewDownMessageReceived) {
   my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
-  EXPECT_CALL(*transport, Gossip(_, _, _)).Times(AnyNumber());
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   SimulateReceivingUpMessage(member, transport);
 
   std::vector<membership::Member> members{{"node1", "127.0.0.1", 27777},
@@ -246,9 +238,9 @@ TEST(Membership, UpMessageRetransmitWithThreeMember) {
       config.GetRetransmitMultiplier() * ceil(log(2));
   int retransmit_limit_three_member =
       config.GetRetransmitMultiplier() * ceil(log(3));
-  EXPECT_CALL(*transport, Gossip(_, _, _))
+  EXPECT_CALL(*transport, Gossip)
       .Times(retransmit_limit_one_member + retransmit_limit_two_member +
-             retransmit_limit_three_member);
+             retransmit_limit_three_member * 2);
 
   node.Init(transport, config);
 
@@ -287,6 +279,7 @@ TEST(Membership, JoinWithSingleNodeCluster) {
   // should send an up message to seed member
   EXPECT_CALL(*transport, Pull(gossip::Address{"127.0.0.1", 28888}, _, _, _))
       .Times(AtLeast(1));
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   node.Init(transport, config);
 
   membership::FullStateMessage fullstate_message;
@@ -329,6 +322,7 @@ TEST(Membership, ClusterResponseToPullRequst) {
                                          message_serialized.size()),
                                message_serialized.size(), _))
       .Times(AtLeast(1));
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   node.Init(transport, config);
 
   std::string pull_request_message = "pull";
@@ -349,7 +343,8 @@ TEST(Membership, EventSubcriptionWithMemberJoin) {
   node.Subscribe(subscriber);
 
   EXPECT_CALL(*subscriber, Update);
-  // construct a new node joining
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+
   SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
 }
 
@@ -365,7 +360,48 @@ TEST(Membership, EventSubcriptionWithMemberLeave) {
   node.Subscribe(subscriber);
 
   EXPECT_CALL(*subscriber, Update).Times(0);
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
 
   SimulateReceivingDownMessage({"node2", "127.0.0.1", 27777}, transport);
   SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
+}
+
+TEST(Membership, MemberLeaveFromSingleNodeCluster) {
+  membership::Membership node;
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.AddRetransmitMultiplier(3);
+  int retransmit_limit = config.GetRetransmitMultiplier() * ceil(log(1));
+  auto transport = std::make_shared<MockTransport>();
+
+  membership::UpdateMessage message;
+  message.InitAsDownMessage({"node1", "127.0.0.1", 27777}, 1);
+  auto serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
+
+  EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(retransmit_limit);
+  node.Init(transport, config);
+}
+
+TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
+  membership::Membership node;
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.AddRetransmitMultiplier(3);
+  int retransmit_limit = config.GetRetransmitMultiplier() * ceil(log(2));
+  auto transport = std::make_shared<MockTransport>();
+
+  membership::UpdateMessage message;
+  message.InitAsDownMessage({"node1", "127.0.0.1", 27777}, 1);
+  auto serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
+
+  node.Init(transport, config);
+
+  SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
+  EXPECT_TRUE(CompareMembers(
+      node.GetMembers(),
+      {{"node1", "127.0.0.1", 27777}, {"node2", "127.0.0.1", 28888}}));
+
+  EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(retransmit_limit);
 }

@@ -16,7 +16,6 @@
 
 namespace membership {
 
-// TODO usage of MEMBERSHIP_INIT_TRANSPORT_EMPTY
 enum ErrorCode {
   MEMBERSHIP_SUCCESS,
   MEMBERSHIP_FAILURE,
@@ -84,10 +83,10 @@ class Subscriber {
   void virtual Update() = 0;
 };
 
-// TODO member leave scenario
 class Membership {
  public:
   Membership() : retransmit_multiplier_(1), incarnation_(0) {}
+  ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers();
@@ -98,7 +97,6 @@ class Membership {
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void Notify();
-  void IncrementIncarnation();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
   void HandlePush(const gossip::Address&, const void* data, size_t size);

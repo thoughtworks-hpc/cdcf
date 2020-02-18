@@ -12,8 +12,6 @@
 
 namespace membership {
 
-// TODO incarnation number presence
-
 class Message {
  public:
   virtual google::protobuf::Message& BaseMessage() = 0;

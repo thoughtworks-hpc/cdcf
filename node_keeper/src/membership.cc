@@ -9,6 +9,27 @@
 
 #include "include/membership_message.h"
 
+membership::Membership::~Membership() {
+  if (members_.size() > 1) {
+    UpdateMessage message;
+    message.InitAsDownMessage(self_, incarnation_ + 1);
+    auto message_serialized = message.SerializeToString();
+    gossip::Payload payload{message_serialized};
+
+    std::vector<gossip::Address> addresses;
+    for (const auto& member : members_) {
+      addresses.emplace_back(
+          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+    }
+
+    int retransmit_limit = retransmit_multiplier_ * ceil(log(members_.size()));
+    while (retransmit_limit > 0) {
+      transport_->Gossip(addresses, payload);
+      retransmit_limit--;
+    }
+  }
+}
+
 std::vector<membership::Member> membership::Membership::GetMembers() {
   std::vector<Member> return_members;
   for (auto& member : members_) {
@@ -73,7 +94,6 @@ int membership::Membership::AddMember(const membership::Member& member) {
     const std::lock_guard<std::mutex> lock(mutex_members_);
     members_[member] = incarnation_;
   }
-  IncrementIncarnation();
   Notify();
 
   return 0;
@@ -84,9 +104,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   membership::UpdateMessage message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
 
-  int retrans_limit = retransmit_multiplier_ * ceil(log(members_.size()));
+  int retransmit_limit = retransmit_multiplier_ * ceil(log(members_.size()));
 
-  if (retrans_limit > 0) {
+  if (retransmit_limit > 0) {
     std::vector<gossip::Address> addresses;
     for (const auto& member : members_) {
       addresses.emplace_back(
@@ -95,9 +115,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
     auto did_gossip = [](gossip::ErrorCode error) {};
 
-    while (retrans_limit > 0) {
+    while (retransmit_limit > 0) {
       transport_->Gossip(addresses, payload, did_gossip);
-      retrans_limit--;
+      retransmit_limit--;
     }
   }
 
@@ -114,7 +134,7 @@ void membership::Membership::HandlePush(const gossip::Address& address,
   message.DeserializeFromArray(data, size);
 
   for (const auto& member : message.GetMembers()) {
-    AddMember(member);
+    MergeUpUpdate(member, 0);
   }
 }
 
@@ -139,10 +159,6 @@ void membership::Membership::HandlePull(const gossip::Address& address,
                    message_serialized.size(), did_push);
 }
 
-void membership::Membership::IncrementIncarnation() {
-  // TODO refactor to use atomic increment
-  incarnation_++;
-}
 void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
   subscribers_.push_back(subscriber);
 }
@@ -215,7 +231,6 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
   Member seed(node_name, ip_address, port);
 
   // TODO existing member check
-
   seed_members_.push_back(seed);
 
   return 0;
