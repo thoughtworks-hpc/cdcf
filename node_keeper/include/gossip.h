@@ -99,5 +99,8 @@ class Pullable {
 
 class Transportable : public Gossipable, public Pushable, public Pullable {};
 
+std::unique_ptr<Transportable> CreateTransport(const Address &upd,
+                                               const Address &tcp);
+
 };      // namespace gossip
 #endif  // NODE_KEEPER_SRC_GOSSIP_H_

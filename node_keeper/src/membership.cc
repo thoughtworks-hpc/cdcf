@@ -17,7 +17,8 @@ std::vector<membership::Member> membership::Membership::GetMembers() {
   return return_members;
 }
 
-int membership::Membership::Init(const Config& config) {
+int membership::Membership::Init(
+    std::shared_ptr<gossip::Transportable> transport, const Config& config) {
   // TODO existence checking
   // TODO host member further checking
 
@@ -27,11 +28,11 @@ int membership::Membership::Init(const Config& config) {
   }
   AddMember(member);
 
-  if (config.GetTransport() == nullptr) {
+  if (transport == nullptr) {
     return MEMBERSHIP_INIT_TRANSPORT_EMPTY;
   }
 
-  transport_ = config.GetTransport();
+  transport_ = transport;
 
   auto gossip_handler = [this](const struct gossip::Address& node,
                                const gossip::Payload& payload) {
@@ -186,13 +187,6 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
 
   seed_members_.push_back(seed);
 
-  return 0;
-}
-
-int membership::Config::AddTransport(gossip::Transportable* transport) {
-  assert(transport != nullptr);
-
-  transport_ = transport;
   return 0;
 }
 

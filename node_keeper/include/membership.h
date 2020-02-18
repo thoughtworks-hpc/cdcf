@@ -6,12 +6,12 @@
 #define CDCF_MEMBERSHIP_H
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "include/gossip.h"
-//#include "include/membership_message.h"
 
 namespace membership {
 
@@ -59,7 +59,7 @@ struct MemberCompare {
 
 class Config {
  public:
-  Config() : transport_(nullptr), retransmit_multiplier_(1) {}
+  Config() : retransmit_multiplier_(1) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
                     short port);
@@ -69,30 +69,27 @@ class Config {
                        const std::string& ip_address, short port);
   std::vector<Member> GetSeedMembers() const { return seed_members_; }
 
-  int AddTransport(gossip::Transportable* transport);
-  gossip::Transportable* GetTransport() const { return transport_; }
-
   void AddRetransmitMultiplier(int multiplier);
   int GetRetransmitMultiplier() const { return retransmit_multiplier_; }
 
  private:
   Member host_;
   std::vector<Member> seed_members_;
-  gossip::Transportable* transport_;
   int retransmit_multiplier_;
 };
 
 class Membership {
  public:
-  Membership()
-      : transport_(nullptr), retransmit_multiplier_(1), incarnation_(0) {}
-  int Init(const Config& config);
+  Membership() : retransmit_multiplier_(1), incarnation_(0) {}
+  int Init(std::shared_ptr<gossip::Transportable> transport,
+           const Config& config);
   std::vector<Member> GetMembers();
 
  private:
   // std::vector<Member> members_;
+  // TODO need to use a mutex to protect members_
   std::map<Member, int, MemberCompare> members_;
-  gossip::Transportable* transport_;
+  std::shared_ptr<gossip::Transportable> transport_;
   unsigned int incarnation_;
   int retransmit_multiplier_;
 
@@ -103,6 +100,11 @@ class Membership {
   void HandlePush(const gossip::Address&, const void* data, size_t size);
   void HandlePull(const gossip::Address&, const void* data, size_t size);
 };
+
+// class Subscriber {
+// public:
+//  void virtual Update() = 0;
+//};
 
 };  // namespace membership
 

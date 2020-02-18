@@ -73,14 +73,6 @@ TEST(Membership, ConfigWithSeedMember) {
   EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
 }
 
-TEST(Membership, ConfigWithTransport) {
-  MockTransport transport;
-  membership::Config config;
-
-  config.AddTransport(&transport);
-  EXPECT_EQ(config.GetTransport(), &transport);
-}
-
 // Message
 TEST(Message, CreateUpMessage) {
   membership::UpdateMessage message1;
@@ -130,7 +122,7 @@ TEST(Membership, CreateHostMember) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
 
-  my_membership.Init(config);
+  my_membership.Init(std::make_shared<MockTransport>(), config);
 
   std::vector<membership::Member> members = my_membership.GetMembers();
   EXPECT_EQ(members.size(), 1);
@@ -143,32 +135,20 @@ TEST(Membership, CreateHostMemberWithEmptyConfig) {
 
   membership::Config config;
 
-  EXPECT_EQ(my_membership.Init(config),
+  EXPECT_EQ(my_membership.Init(std::make_shared<MockTransport>(), config),
             membership::MEMBERSHIP_INIT_HOSTMEMBER_EMPTY);
 }
 
-// TEST(Membership, CreateHostMemberWithTransport) {
-//  membership::Membership my_membership;
-//
-//  membership::Config config;
-//  config.AddHostMember("node1", "127.0.0.1", 27777);
-//  MockTransport transport;
-//  config.AddTransport(&transport);
-//
-//  my_membership.Init(config);
-//}
-
 int InitBasicMembership(membership::Membership& new_membership,
-                        gossip::Transportable& transport) {
+                        std::shared_ptr<MockTransport>& transport) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
-  config.AddTransport(&transport);
 
-  return new_membership.Init(config);
+  return new_membership.Init(transport, config);
 }
 
 void SimulateReceivingUpMessage(const membership::Member& member,
-                                MockTransport& transport) {
+                                std::shared_ptr<MockTransport> transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
 
   membership::UpdateMessage message;
@@ -176,11 +156,11 @@ void SimulateReceivingUpMessage(const membership::Member& member,
   std::string serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);
 
-  transport.CallGossipHandler(address, payload);
+  transport->CallGossipHandler(address, payload);
 }
 
 void SimulateReceivingDownMessage(const membership::Member& member,
-                                  MockTransport& transport) {
+                                  std::shared_ptr<MockTransport> transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
 
   membership::UpdateMessage message;
@@ -188,13 +168,16 @@ void SimulateReceivingDownMessage(const membership::Member& member,
   std::string serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);
 
-  transport.CallGossipHandler(address, payload);
+  transport->CallGossipHandler(address, payload);
 }
 
 TEST(Membership, NewUpMessageReceived) {
   membership::Membership my_membership;
-  MockTransport transport;
-  InitBasicMembership(my_membership, transport);
+  auto transport = std::make_shared<MockTransport>();
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  my_membership.Init(transport, config);
+  //  InitBasicMembership(my_membership, transport);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
   SimulateReceivingUpMessage(member, transport);
@@ -207,11 +190,13 @@ TEST(Membership, NewUpMessageReceived) {
 
 TEST(Membership, DuplicateUpMessageReceived) {
   membership::Membership my_membership;
-  MockTransport transport;
-  InitBasicMembership(my_membership, transport);
+  auto transport = std::make_shared<MockTransport>();
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
-  EXPECT_CALL(transport, Gossip(_, _, _)).Times(AnyNumber());
+  EXPECT_CALL(*transport, Gossip(_, _, _)).Times(AnyNumber());
   SimulateReceivingUpMessage(member, transport);
   SimulateReceivingUpMessage(member, transport);
   SimulateReceivingUpMessage(member, transport);
@@ -224,11 +209,13 @@ TEST(Membership, DuplicateUpMessageReceived) {
 
 TEST(Membership, NewDownMessageReceived) {
   membership::Membership my_membership;
-  MockTransport transport;
-  InitBasicMembership(my_membership, transport);
+  auto transport = std::make_shared<MockTransport>();
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
-  EXPECT_CALL(transport, Gossip(_, _, _)).Times(AnyNumber());
+  EXPECT_CALL(*transport, Gossip(_, _, _)).Times(AnyNumber());
   SimulateReceivingUpMessage(member, transport);
 
   std::vector<membership::Member> members{{"node1", "127.0.0.1", 27777},
@@ -249,11 +236,9 @@ TEST(Membership, UpMessageRetransmitWithThreeMember) {
   // start a member
   membership::Membership node;
   membership::Config config;
-  MockTransport transport;
+  auto transport = std::make_shared<MockTransport>();
   config.AddHostMember("node1", "127.0.0.1", 27777);
-  config.AddTransport(&transport);
   config.AddRetransmitMultiplier(3);
-  node.Init(config);
 
   int retransmit_limit_one_member =
       config.GetRetransmitMultiplier() * ceil(log(1));
@@ -261,10 +246,11 @@ TEST(Membership, UpMessageRetransmitWithThreeMember) {
       config.GetRetransmitMultiplier() * ceil(log(2));
   int retransmit_limit_three_member =
       config.GetRetransmitMultiplier() * ceil(log(3));
-
-  EXPECT_CALL(transport, Gossip(_, _, _))
+  EXPECT_CALL(*transport, Gossip(_, _, _))
       .Times(retransmit_limit_one_member + retransmit_limit_two_member +
              retransmit_limit_three_member);
+
+  node.Init(transport, config);
 
   SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
   EXPECT_TRUE(CompareMembers(
@@ -289,9 +275,8 @@ TEST(Membership, JoinWithSingleNodeCluster) {
   // start a member
   membership::Membership node;
   membership::Config config;
-  MockTransport transport;
+  auto transport = std::make_shared<MockTransport>();
   config.AddHostMember("node_a", "127.0.0.1", 27777);
-  config.AddTransport(&transport);
   config.AddOneSeedMember("node_b", "127.0.0.1", 28888);
 
   membership::UpdateMessage message;
@@ -300,18 +285,18 @@ TEST(Membership, JoinWithSingleNodeCluster) {
   gossip::Payload payload(serialized_msg);
 
   // should send an up message to seed member
-  EXPECT_CALL(transport, Pull(gossip::Address{"127.0.0.1", 28888}, _, _, _))
+  EXPECT_CALL(*transport, Pull(gossip::Address{"127.0.0.1", 28888}, _, _, _))
       .Times(AtLeast(1));
-  node.Init(config);
+  node.Init(transport, config);
 
   membership::FullStateMessage fullstate_message;
   fullstate_message.InitAsFullStateMessage({{"node_b", "127.0.0.1", 28888},
                                             {"node_c", "127.0.0.1", 29999},
                                             {"node_d", "127.0.0.1", 30000}});
   auto fullstate_message_serialized = fullstate_message.SerializeToString();
-  transport.CallPushHandler(gossip::Address{"127.0.0.1", 28888},
-                            fullstate_message_serialized.data(),
-                            fullstate_message_serialized.size());
+  transport->CallPushHandler(gossip::Address{"127.0.0.1", 28888},
+                             fullstate_message_serialized.data(),
+                             fullstate_message_serialized.size());
 
   EXPECT_TRUE(
       CompareMembers(node.GetMembers(), {{"node_a", "127.0.0.1", 27777},
@@ -320,6 +305,7 @@ TEST(Membership, JoinWithSingleNodeCluster) {
                                          {"node_d", "127.0.0.1", 30000}}));
 }
 
+// compare
 MATCHER_P2(VoidStrEq, data, size,
            negation
                ? "does not match"
@@ -332,22 +318,38 @@ MATCHER_P2(VoidStrEq, data, size,
 TEST(Membership, ClusterResponseToPullRequst) {
   membership::Membership node;
   membership::Config config;
-  MockTransport transport;
+  auto transport = std::make_shared<MockTransport>();
   config.AddHostMember("node_a", "127.0.0.1", 27777);
-  config.AddTransport(&transport);
 
   membership::FullStateMessage message;
   message.InitAsFullStateMessage({{"node_a", "127.0.0.1", 27777}});
   auto message_serialized = message.SerializeToString();
-  EXPECT_CALL(transport, Push(gossip::Address{"127.0.0.1", 28888},
-                              VoidStrEq(message_serialized.data(),
-                                        message_serialized.size()),
-                              message_serialized.size(), _))
+  EXPECT_CALL(*transport, Push(gossip::Address{"127.0.0.1", 28888},
+                               VoidStrEq(message_serialized.data(),
+                                         message_serialized.size()),
+                               message_serialized.size(), _))
       .Times(AtLeast(1));
-  node.Init(config);
+  node.Init(transport, config);
 
   std::string pull_request_message = "pull";
-  transport.CallPullHandler(gossip::Address{"127.0.0.1", 28888},
-                            pull_request_message.data(),
-                            pull_request_message.size());
+  transport->CallPullHandler(gossip::Address{"127.0.0.1", 28888},
+                             pull_request_message.data(),
+                             pull_request_message.size());
 }
+
+// TEST(Membership, EventSubcriptionWithMemberJoin) {
+//  auto node = std::make_unique<membership::Membership>();
+//  membership::Config config;
+//  config.AddHostMember("node_a", "127.0.0.1", 27777);
+//  auto transport = std::make_shared<MockTransport>();
+//
+//  node->Init(transport, config);
+//
+//  Subscriber subscriber(node);
+//  node.Subscribe(subscriber);
+//
+//  // construct a new node joining
+//
+//  EXPECT_CALL(observer, Update);
+//
+//}

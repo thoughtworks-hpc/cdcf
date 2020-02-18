@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "gossip.h"
+#include "membership.h"
 
 using namespace gossip;
 
@@ -72,5 +73,10 @@ class MockTransport : public Transportable {
   PushHandler push_handler_;
   PullHandler pull_handler_;
 };
+
+// class EventSubscriber : public membership::Subscriber {
+// public:
+//  MOCK_METHOD(void, Update, (), (override));
+//};
 
 #endif  // CDCF_MOCK_GOSSIP_H
