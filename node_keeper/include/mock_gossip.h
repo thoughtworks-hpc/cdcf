@@ -7,6 +7,7 @@
 
 #include <gmock/gmock.h>
 
+#include <utility>
 #include <vector>
 
 #include "gossip.h"
@@ -74,9 +75,9 @@ class MockTransport : public Transportable {
   PullHandler pull_handler_;
 };
 
-// class EventSubscriber : public membership::Subscriber {
-// public:
-//  MOCK_METHOD(void, Update, (), (override));
-//};
+class MockSubscriber : public membership::Subscriber {
+ public:
+  MOCK_METHOD(void, Update, (), (override));
+};
 
 #endif  // CDCF_MOCK_GOSSIP_H

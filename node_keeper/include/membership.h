@@ -78,33 +78,37 @@ class Config {
   int retransmit_multiplier_;
 };
 
+class Subscriber {
+ public:
+  void virtual Update() = 0;
+};
+
+// TODO member leave scenario
 class Membership {
  public:
   Membership() : retransmit_multiplier_(1), incarnation_(0) {}
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers();
+  void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
  private:
-  // std::vector<Member> members_;
-  // TODO need to use a mutex to protect members_
-  std::map<Member, int, MemberCompare> members_;
-  std::shared_ptr<gossip::Transportable> transport_;
-  unsigned int incarnation_;
-  int retransmit_multiplier_;
-
   int AddMember(const Member& member);
+  void Notify();
   void IncrementIncarnation();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
   void HandlePush(const gossip::Address&, const void* data, size_t size);
   void HandlePull(const gossip::Address&, const void* data, size_t size);
-};
 
-// class Subscriber {
-// public:
-//  void virtual Update() = 0;
-//};
+  // std::vector<Member> members_;
+  // TODO need to use a mutex to protect members_
+  std::map<Member, int, MemberCompare> members_;
+  std::shared_ptr<gossip::Transportable> transport_;
+  std::vector<std::shared_ptr<Subscriber>> subscribers_;
+  unsigned int incarnation_;
+  int retransmit_multiplier_;
+};
 
 };  // namespace membership
 

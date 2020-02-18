@@ -337,19 +337,18 @@ TEST(Membership, ClusterResponseToPullRequst) {
                              pull_request_message.size());
 }
 
-// TEST(Membership, EventSubcriptionWithMemberJoin) {
-//  auto node = std::make_unique<membership::Membership>();
-//  membership::Config config;
-//  config.AddHostMember("node_a", "127.0.0.1", 27777);
-//  auto transport = std::make_shared<MockTransport>();
-//
-//  node->Init(transport, config);
-//
-//  Subscriber subscriber(node);
-//  node.Subscribe(subscriber);
-//
-//  // construct a new node joining
-//
-//  EXPECT_CALL(observer, Update);
-//
-//}
+TEST(Membership, EventSubcriptionWithMemberJoin) {
+  membership::Membership node;
+  membership::Config config;
+  config.AddHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  node.Init(transport, config);
+
+  auto subscriber = std::make_shared<MockSubscriber>();
+  node.Subscribe(subscriber);
+
+  EXPECT_CALL(*subscriber, Update);
+  // construct a new node joining
+  SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
+}

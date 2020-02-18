@@ -71,6 +71,7 @@ int membership::Membership::AddMember(const membership::Member& member) {
   // TODO considering necessity of mutex here
   members_[member] = incarnation_;
   IncrementIncarnation();
+  Notify();
 
   return 0;
 }
@@ -97,8 +98,6 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
   }
 
-  // message validity check
-
   if (message.IsUpMessage()) {
     if (members_.find(message.GetMember()) != members_.end()) {
       if (members_[message.GetMember()] < message.GetIncarnation()) {
@@ -107,8 +106,10 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     } else {
       members_[message.GetMember()] = message.GetIncarnation();
     }
+    Notify();
   } else if (message.IsDownMessage()) {
     members_.erase(message.GetMember());
+    Notify();
   } else {
     return;
   }
@@ -148,6 +149,14 @@ void membership::Membership::HandlePull(const gossip::Address& address,
 void membership::Membership::IncrementIncarnation() {
   // TODO refactor to use atomic increment
   incarnation_++;
+}
+void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
+  subscribers_.push_back(subscriber);
+}
+void membership::Membership::Notify() {
+  for (auto subscriber : subscribers_) {
+    subscriber->Update();
+  }
 }
 
 bool membership::operator==(const membership::Member& lhs,
