@@ -69,7 +69,10 @@ int membership::Membership::Init(
 
 int membership::Membership::AddMember(const membership::Member& member) {
   // TODO considering necessity of mutex here
-  members_[member] = incarnation_;
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    members_[member] = incarnation_;
+  }
   IncrementIncarnation();
   Notify();
 

@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -104,6 +105,7 @@ class Membership {
   // std::vector<Member> members_;
   // TODO need to use a mutex to protect members_
   std::map<Member, int, MemberCompare> members_;
+  std::mutex mutex_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;
