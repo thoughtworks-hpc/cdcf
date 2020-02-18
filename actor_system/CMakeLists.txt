@@ -11,20 +11,14 @@ aux_source_directory(src ALL_SOURCES)
 
 set(LIB_SOURCES ${ALL_SOURCES})
 list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_test.cc$")
-list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_example.cc$")
-message("+++++++++++++="${LIB_SOURCES})
-add_library(${PROJECT_NAME} ${LIB_SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(TEST_SOURCES ${ALL_SOURCES})
 list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")
 
-add_executable(${PROJECT_NAME}_server_example src/server_example.cc src/comm_example.cc)
-target_link_libraries(${PROJECT_NAME}_server_example ${PROJECT_NAME})
+add_executable(${PROJECT_NAME}_server_example src/example/server_example.cc src/example/comm_example.cc)
 target_link_libraries(${PROJECT_NAME}_server_example caf::caf)
 
-add_executable(${PROJECT_NAME}_client_example src/client_example.cc src/comm_example.cc)
-target_link_libraries(${PROJECT_NAME}_client_example ${PROJECT_NAME})
+add_executable(${PROJECT_NAME}_client_example src/example/client_example.cc src/example/comm_example.cc)
 target_link_libraries(${PROJECT_NAME}_client_example caf::caf)
 
 if(NOT "${TEST_SOURCES}" STREQUAL "")

@@ -73,8 +73,8 @@ struct OperationInfo {
            << endl;                                                           \
       return;                                                                 \
     }                                                                         \
-    clientFunction(make_function_view(*worker));                              \
     cout << "spawn actor:" << type << " success." << endl;                    \
+    clientFunction(make_function_view(*worker));                              \
     anon_send_exit(*worker, caf::exit_reason::kill);                          \
   }                                                                           \
   CAF_MAIN(caf::io::middleman)
