@@ -22,7 +22,7 @@ membership::Membership::~Membership() {
           gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
     }
 
-    int retransmit_limit = retransmit_multiplier_ * ceil(log(members_.size()));
+    int retransmit_limit = GetRetransmitLimit();
     while (retransmit_limit > 0) {
       transport_->Gossip(addresses, payload);
       retransmit_limit--;
@@ -104,7 +104,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   membership::UpdateMessage message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
 
-  int retransmit_limit = retransmit_multiplier_ * ceil(log(members_.size()));
+  int retransmit_limit = GetRetransmitLimit();
 
   if (retransmit_limit > 0) {
     std::vector<gossip::Address> addresses;
@@ -195,6 +195,9 @@ void membership::Membership::MergeDownUpdate(const Member& member,
       Notify();
     }
   }
+}
+int membership::Membership::GetRetransmitLimit() {
+  return retransmit_multiplier_ * ceil(log(members_.size()));
 }
 
 bool membership::operator==(const membership::Member& lhs,

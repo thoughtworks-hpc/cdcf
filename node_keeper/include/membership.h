@@ -101,6 +101,7 @@ class Membership {
                     const gossip::Payload& payload);
   void HandlePush(const gossip::Address&, const void* data, size_t size);
   void HandlePull(const gossip::Address&, const void* data, size_t size);
+  int GetRetransmitLimit();
 
   std::map<Member, int, MemberCompare> members_;
   std::mutex mutex_members_;
