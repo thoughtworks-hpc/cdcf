@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
+
 #include "../include/membership.h"
 
 #include <cmath>
 #include <vector>
 
-#include "../include/gossip.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "include/membership_message.h"

@@ -1,6 +1,6 @@
-//
-// Created by Zhao Wenbo on 2020/1/15.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_MOCK_GOSSIP_H
 #define CDCF_MOCK_GOSSIP_H

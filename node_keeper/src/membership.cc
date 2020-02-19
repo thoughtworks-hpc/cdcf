@@ -1,6 +1,6 @@
-//
-// Created by Zhao Wenbo on 2020/1/14.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
 #include "include/membership.h"
 

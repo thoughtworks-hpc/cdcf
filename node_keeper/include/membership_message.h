@@ -1,6 +1,6 @@
-//
-// Created by Zhao Wenbo on 2020/1/19.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_MEMBERSHIP_MESSAGE_H
 #define CDCF_MEMBERSHIP_MESSAGE_H
