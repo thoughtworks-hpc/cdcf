@@ -196,8 +196,9 @@ void membership::Membership::MergeDownUpdate(const Member& member,
     }
   }
 }
+
 int membership::Membership::GetRetransmitLimit() {
-  return retransmit_multiplier_ * ceil(log(members_.size()));
+  return retransmit_multiplier_ * static_cast<int>(ceil(log(members_.size())));
 }
 
 bool membership::operator==(const membership::Member& lhs,
