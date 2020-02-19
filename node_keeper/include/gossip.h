@@ -4,9 +4,13 @@
 #ifndef NODE_KEEPER_SRC_GOSSIP_H_
 #define NODE_KEEPER_SRC_GOSSIP_H_
 
+#include <chrono>
+#include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace gossip {
@@ -62,9 +66,12 @@ class Gossipable {
                            const Payload &data,
                            DidGossipHandler didGossip = nullptr) = 0;
 
-  typedef std::function<void(const struct Address &node, const Payload &data)>
+  typedef std::function<void(const Address &node, const Payload &data)>
       GossipHandler;
   virtual void RegisterGossipHandler(GossipHandler handler) = 0;
+
+ public:
+  virtual ~Gossipable() = default;
 };
 
 class Pushable {
@@ -99,8 +106,13 @@ class Pullable {
 
 class Transportable : public Gossipable, public Pushable, public Pullable {};
 
+class PortOccupied : public std::runtime_error {
+ public:
+  explicit PortOccupied(const std::exception &e)
+      : std::runtime_error(e.what()) {}
+};
+
 std::unique_ptr<Transportable> CreateTransport(const Address &upd,
                                                const Address &tcp);
-
 };      // namespace gossip
 #endif  // NODE_KEEPER_SRC_GOSSIP_H_
