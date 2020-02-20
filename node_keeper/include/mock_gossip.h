@@ -2,18 +2,21 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_MOCK_GOSSIP_H
-#define CDCF_MOCK_GOSSIP_H
+#ifndef NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_
+#define NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_
 
 #include <gmock/gmock.h>
 
 #include <utility>
 #include <vector>
 
-#include "gossip.h"
-#include "membership.h"
+#include "./gossip.h"
+#include "./membership.h"
 
-using namespace gossip;
+using gossip::Address;
+using gossip::ErrorCode;
+using gossip::Payload;
+using gossip::Transportable;
 
 namespace gossip {
 
@@ -80,4 +83,4 @@ class MockSubscriber : public membership::Subscriber {
   MOCK_METHOD(void, Update, (), (override));
 };
 
-#endif  // CDCF_MOCK_GOSSIP_H
+#endif  // NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_

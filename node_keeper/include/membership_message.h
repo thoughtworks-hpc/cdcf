@@ -2,13 +2,14 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_MEMBERSHIP_MESSAGE_H
-#define CDCF_MEMBERSHIP_MESSAGE_H
+#ifndef NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_
+#define NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_
 
 #include <string>
+#include <vector>
 
+#include "./message.pb.h"
 #include "include/membership.h"
-#include "message.pb.h"
 
 namespace membership {
 
@@ -49,4 +50,4 @@ class FullStateMessage : public Message {
 };
 
 };      // namespace membership
-#endif  // CDCF_MEMBERSHIP_MESSAGE_H
+#endif  // NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_

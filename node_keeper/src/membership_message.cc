@@ -36,7 +36,7 @@ void membership::UpdateMessage::InitAsDownMessage(const Member& member,
 
 membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
-                static_cast<__uint16_t>(update_.port())};
+                static_cast<uint16_t>(update_.port())};
 }
 
 bool membership::UpdateMessage::IsUpMessage() const {

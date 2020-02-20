@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#ifndef NODE_KEEPER_SRC_GOSSIP_H_
-#define NODE_KEEPER_SRC_GOSSIP_H_
+#ifndef NODE_KEEPER_INCLUDE_GOSSIP_H_
+#define NODE_KEEPER_INCLUDE_GOSSIP_H_
 
 #include <chrono>
 #include <cstdint>
@@ -115,4 +115,4 @@ class PortOccupied : public std::runtime_error {
 std::unique_ptr<Transportable> CreateTransport(const Address &upd,
                                                const Address &tcp);
 };      // namespace gossip
-#endif  // NODE_KEEPER_SRC_GOSSIP_H_
+#endif  // NODE_KEEPER_INCLUDE_GOSSIP_H_

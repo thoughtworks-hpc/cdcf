@@ -222,7 +222,7 @@ bool membership::Member::IsEmptyMember() {
 
 int membership::Config::AddHostMember(const std::string& node_name,
                                       const std::string& ip_address,
-                                      unsigned short port) {
+                                      uint16_t port) {
   Member host(node_name, ip_address, port);
   host_ = host;
 
@@ -231,7 +231,7 @@ int membership::Config::AddHostMember(const std::string& node_name,
 
 int membership::Config::AddOneSeedMember(const std::string& node_name,
                                          const std::string& ip_address,
-                                         unsigned short port) {
+                                         uint16_t port) {
   Member seed(node_name, ip_address, port);
 
   // TODO(davidzwb): existing member check

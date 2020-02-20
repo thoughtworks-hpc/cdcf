@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_MEMBERSHIP_H
-#define CDCF_MEMBERSHIP_H
+#ifndef NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
+#define NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
 
 #include <map>
 #include <memory>
@@ -26,7 +26,7 @@ enum ErrorCode {
 class Member {
  public:
   Member() : node_name_(""), ip_address_(""), port_(0) {}
-  Member(std::string node_name, std::string ip_address, unsigned short port)
+  Member(std::string node_name, std::string ip_address, uint16_t port)
       : node_name_(std::move(node_name)),
         ip_address_(std::move(ip_address)),
         port_(port) {}
@@ -36,14 +36,14 @@ class Member {
 
   std::string GetNodeName() const { return node_name_; }
   std::string GetIpAddress() const { return ip_address_; }
-  unsigned short GetPort() const { return port_; }
+  uint16_t GetPort() const { return port_; }
 
   bool IsEmptyMember();
 
  private:
   std::string node_name_;
   std::string ip_address_;
-  unsigned short port_;
+  uint16_t port_;
 };
 
 struct MemberCompare {
@@ -62,11 +62,11 @@ class Config {
   Config() : retransmit_multiplier_(1) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
-                    unsigned short port);
+                    uint16_t port);
   Member GetHostMember() const { return host_; }
 
   int AddOneSeedMember(const std::string& node_name,
-                       const std::string& ip_address, unsigned short port);
+                       const std::string& ip_address, uint16_t port);
   std::vector<Member> GetSeedMembers() const { return seed_members_; }
 
   void AddRetransmitMultiplier(int multiplier);
@@ -114,4 +114,4 @@ class Membership {
 
 };  // namespace membership
 
-#endif  // CDCF_MEMBERSHIP_H
+#endif  // NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
