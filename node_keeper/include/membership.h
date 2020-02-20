@@ -26,7 +26,7 @@ enum ErrorCode {
 class Member {
  public:
   Member() : node_name_(""), ip_address_(""), port_(0) {}
-  Member(std::string node_name, std::string ip_address, short port)
+  Member(std::string node_name, std::string ip_address, unsigned short port)
       : node_name_(std::move(node_name)),
         ip_address_(std::move(ip_address)),
         port_(port) {}
@@ -62,11 +62,11 @@ class Config {
   Config() : retransmit_multiplier_(1) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
-                    short port);
+                    unsigned short port);
   Member GetHostMember() const { return host_; }
 
   int AddOneSeedMember(const std::string& node_name,
-                       const std::string& ip_address, short port);
+                       const std::string& ip_address, unsigned short port);
   std::vector<Member> GetSeedMembers() const { return seed_members_; }
 
   void AddRetransmitMultiplier(int multiplier);

@@ -12,7 +12,9 @@
 #include "include/membership_message.h"
 #include "include/mock_gossip.h"
 
-using namespace testing;
+using ::testing::_;
+using ::testing::AnyNumber;
+using ::testing::AtLeast;
 
 // Member
 bool CompareMembers(const std::vector<membership::Member>& lhs,
