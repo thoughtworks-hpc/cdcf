@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "./message.pb.h"
+#include "include/message.pb.h"
 #include "include/membership.h"
 
 namespace membership {
