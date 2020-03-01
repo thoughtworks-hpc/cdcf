@@ -28,6 +28,4 @@ jobs:
     - uses: actions/checkout@v1
     - name: Run cpplint
       run: |
-        cpplint --recursive .
-      with:
-        exclude: './node_keeper/protobuf'
+        cpplint --recursive --exclude=node_keeper/protobuf/* .
