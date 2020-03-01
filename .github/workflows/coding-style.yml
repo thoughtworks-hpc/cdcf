@@ -29,3 +29,5 @@ jobs:
     - name: Run cpplint
       run: |
         cpplint --recursive .
+      with:
+        exclude: './node_keeper/protobuf'
