@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "include/message.pb.h"
 #include "include/membership.h"
+#include "protobuf/message.pb.h"
 
 namespace membership {
 

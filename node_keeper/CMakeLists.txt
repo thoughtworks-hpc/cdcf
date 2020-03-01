@@ -8,7 +8,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 aux_source_directory(src ALL_SOURCES)
 aux_source_directory(src/gossip GOSSIP_SOURCES)
-list(APPEND ALL_SOURCES ${GOSSIP_SOURCES})
+aux_source_directory(protobuf PROTOBUF_SOURCES)
+list(APPEND ALL_SOURCES ${GOSSIP_SOURCES} ${PROTOBUF_SOURCES})
 
 find_package(asio REQUIRED)
 find_package(Protobuf REQUIRED)
@@ -21,7 +22,7 @@ set(PROTOBUF_IMPORT_DIRS ${PROTO_ROOT_DIR})
 set(EXE_SOURCES ${ALL_SOURCES})
 list(FILTER EXE_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_executable(${PROJECT_NAME} ${EXE_SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} PUBLIC include protobuf)
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 set(TEST_SOURCES ${ALL_SOURCES})
