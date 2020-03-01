@@ -4,6 +4,7 @@
 
 #include "include/membership.h"
 
+#include <cmath>
 #include <string>
 #include <vector>
 
