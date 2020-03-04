@@ -99,13 +99,17 @@ class Membership {
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
-  void HandlePush(const gossip::Address&, const void* data, size_t size);
-  void HandlePull(const gossip::Address&, const void* data, size_t size);
-  int GetRetransmitLimit();
+  void DisseminateGossip(const gossip::Payload& payload);
+  void PullFromSeedMember();
+  void HandleDidPull(const gossip::Transportable::PullResult& result);
+  std::vector<uint8_t> HandlePull(const gossip::Address&, const void* data,
+                                  size_t size);
+  int GetRetransmitLimit() const;
 
   std::map<Member, int, MemberCompare> members_;
   std::mutex mutex_members_;
   Member self_;
+  std::vector<Member> seed_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;

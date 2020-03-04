@@ -66,9 +66,12 @@ class MockTransport : public Transportable {
     }
   }
 
-  void CallPullHandler(const Address &address, const void *data, size_t size) {
+  std::vector<uint8_t> CallPullHandler(const Address &address, const void *data,
+                                       size_t size) {
     if (pull_handler_ != nullptr) {
-      pull_handler_(address, data, size);
+      return pull_handler_(address, data, size);
+    } else {
+      return std::vector<uint8_t>(0);
     }
   }
 

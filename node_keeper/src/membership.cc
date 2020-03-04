@@ -5,10 +5,12 @@
 #include "include/membership.h"
 
 #include <cmath>
+#include <random>
 #include <string>
 #include <vector>
 
 #include "include/membership_message.h"
+
 
 membership::Membership::~Membership() {
   if (members_.size() > 1) {
@@ -63,31 +65,41 @@ int membership::Membership::Init(
   };
   transport_->RegisterGossipHandler(gossip_handler);
 
-  auto push_handler = [this](const gossip::Address& address, const void* data,
-                             size_t size) { HandlePush(address, data, size); };
-  transport_->RegisterPushHandler(push_handler);
-
   auto pull_handler = [this](const gossip::Address& address, const void* data,
                              size_t size) -> std::vector<uint8_t> {
-    HandlePull(address, data, size);
-    return std::vector<uint8_t>{0};
+    return HandlePull(address, data, size);
   };
   transport_->RegisterPullHandler(pull_handler);
 
   retransmit_multiplier_ = config.GetRetransmitMultiplier();
 
   if (!config.GetSeedMembers().empty()) {
-    auto peer = config.GetSeedMembers()[0];
-    gossip::Address address{peer.GetIpAddress(), peer.GetPort()};
-
-    std::string pull_request_message = "pull";
-    auto pull_request = [](const gossip::Pullable::PullResult&) {};
-
-    transport_->Pull(address, pull_request_message.data(),
-                     pull_request_message.size(), pull_request);
+    seed_members_ = config.GetSeedMembers();
+    PullFromSeedMember();
   }
 
   return MEMBERSHIP_SUCCESS;
+}
+
+void membership::Membership::PullFromSeedMember() {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(0, seed_members_.size() - 1);
+
+  auto peer = seed_members_[dis(gen)];
+  gossip::Address address{peer.GetIpAddress(), peer.GetPort()};
+
+  std::string pull_request_message = "pull";
+
+  transport_->Pull(address, pull_request_message.data(),
+                   pull_request_message.size(),
+                   [this](const gossip::Transportable::PullResult& result) {
+                     if (result.first == gossip::ErrorCode::kOK) {
+                       HandleDidPull(result);
+                       return;
+                     }
+                     PullFromSeedMember();
+                   });
 }
 
 int membership::Membership::AddMember(const membership::Member& member) {
@@ -105,22 +117,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   membership::UpdateMessage message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
 
-  int retransmit_limit = GetRetransmitLimit();
-
-  if (retransmit_limit > 0) {
-    std::vector<gossip::Address> addresses;
-    for (const auto& member : members_) {
-      addresses.emplace_back(
-          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
-    }
-
-    auto did_gossip = [](gossip::ErrorCode error) {};
-
-    while (retransmit_limit > 0) {
-      transport_->Gossip(addresses, payload, did_gossip);
-      retransmit_limit--;
-    }
-  }
+  DisseminateGossip(payload);
 
   if (message.IsUpMessage()) {
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
@@ -129,18 +126,47 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   }
 }
 
-void membership::Membership::HandlePush(const gossip::Address& address,
-                                        const void* data, size_t size) {
-  FullStateMessage message;
-  message.DeserializeFromArray(data, size);
+void membership::Membership::HandleDidPull(
+    const gossip::Transportable::PullResult& result) {
+  if (result.first == gossip::ErrorCode::kOK) {
+    FullStateMessage message;
+    message.DeserializeFromArray(result.second.data(), result.second.size());
 
-  for (const auto& member : message.GetMembers()) {
-    MergeUpUpdate(member, 0);
+    for (const auto& member : message.GetMembers()) {
+      MergeUpUpdate(member, 0);
+    }
+
+    UpdateMessage update;
+    update.InitAsUpMessage(self_, incarnation_);
+    auto update_serialized = update.SerializeToString();
+    gossip::Payload payload(update_serialized.data(), update_serialized.size());
+
+    DisseminateGossip(payload);
   }
 }
 
-void membership::Membership::HandlePull(const gossip::Address& address,
-                                        const void* data, size_t size) {
+void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
+  int retransmit_limit = GetRetransmitLimit();
+  if (retransmit_limit <= 0) {
+    return;
+  }
+
+  std::vector<gossip::Address> addresses;
+  for (const auto& member : this->members_) {
+    addresses.emplace_back(
+        gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+  }
+
+  auto did_gossip = [](gossip::ErrorCode error) {};
+
+  while (retransmit_limit > 0) {
+    this->transport_->Gossip(addresses, payload, did_gossip);
+    retransmit_limit--;
+  }
+}
+
+std::vector<uint8_t> membership::Membership::HandlePull(
+    const gossip::Address& address, const void* data, size_t size) {
   FullStateMessage message;
   std::vector<Member> members;
   for (const auto& member : members_) {
@@ -150,14 +176,8 @@ void membership::Membership::HandlePull(const gossip::Address& address,
   message.InitAsFullStateMessage(members);
   auto message_serialized = message.SerializeToString();
 
-  auto did_push = [this, address, message_serialized](gossip::ErrorCode error) {
-    if (error != gossip::ErrorCode::kOK) {
-      transport_->Push(address, message_serialized.data(),
-                       message_serialized.size());
-    }
-  };
-  transport_->Push(address, message_serialized.data(),
-                   message_serialized.size(), did_push);
+  return std::vector<uint8_t>(message_serialized.begin(),
+                              message_serialized.end());
 }
 
 void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
@@ -198,7 +218,7 @@ void membership::Membership::MergeDownUpdate(const Member& member,
   }
 }
 
-int membership::Membership::GetRetransmitLimit() {
+int membership::Membership::GetRetransmitLimit() const {
   return retransmit_multiplier_ * static_cast<int>(ceil(log(members_.size())));
 }
 
