@@ -11,7 +11,6 @@
 
 #include "include/membership_message.h"
 
-
 membership::Membership::~Membership() {
   if (members_.size() > 1) {
     UpdateMessage message;
