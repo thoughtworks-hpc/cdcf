@@ -112,10 +112,10 @@ class Transport : public Transportable {
       return message ? PullResult{ErrorCode::kOK, message->Data()} : result;
     }
     return result;
-  } catch (const std::exception &) {
+  } catch (const std::exception &e) {
     PullResult result{ErrorCode::kUnknown, {}};
     if (didPull) {
-      std::async(std::launch::async, didPull, result);
+      asio::post(ioContext_, std::bind(didPull, result));
     }
     return result;
   }
