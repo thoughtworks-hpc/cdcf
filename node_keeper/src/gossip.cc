@@ -112,7 +112,11 @@ class Transport : public Transportable {
     }
     return result;
   } catch (const std::exception &) {
-    return PullResult{ErrorCode::kUnknown, {}};
+    PullResult result{ErrorCode::kUnknown, {}};
+    if (didPull) {
+      didPull(result);
+    }
+    return result;
   }
 
   virtual void RegisterPullHandler(PullHandler handler) {
