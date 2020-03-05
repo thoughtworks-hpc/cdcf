@@ -260,3 +260,18 @@ TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   ASSERT_THAT(response.first, Eq(ErrorCode::kOK));
   ASSERT_THAT(response.second, Eq(kResponse));
 }
+
+TEST_F(Pull, ShouldPullErrorFromDeadPeerAsynchronously) {
+  Address dead_peer{"127.0.0.1", 1};
+
+  using PullResult = gossip::Pullable::PullResult;
+  std::promise<PullResult> promise;
+  std::future<PullResult> future = promise.get_future();
+  auto didPull = [&](const PullResult &result) { promise.set_value(result); };
+  auto result =
+      local_->Pull(dead_peer, kRequest.data(), kRequest.size(), didPull);
+
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
+  auto response = future.get();
+  ASSERT_THAT(response.first, Eq(ErrorCode::kUnknown));
+}
