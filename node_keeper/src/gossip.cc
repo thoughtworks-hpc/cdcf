@@ -3,6 +3,7 @@
  */
 #include "src/gossip.h"
 
+#include <future>
 #include <optional>
 // anti clang-format sort
 #include <asio.hpp>
@@ -114,7 +115,7 @@ class Transport : public Transportable {
   } catch (const std::exception &) {
     PullResult result{ErrorCode::kUnknown, {}};
     if (didPull) {
-      didPull(result);
+      std::async(std::launch::async, didPull, result);
     }
     return result;
   }
