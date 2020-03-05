@@ -69,6 +69,8 @@ class Config {
                        const std::string& ip_address, uint16_t port);
   std::vector<Member> GetSeedMembers() const { return seed_members_; }
 
+  /* Retransmit a message to RetransmitMultiplier * log(N+1) nodes, to ensure
+     that messages are propagated through the entire cluster.*/
   void AddRetransmitMultiplier(int multiplier);
   int GetRetransmitMultiplier() const { return retransmit_multiplier_; }
 
@@ -85,7 +87,7 @@ class Subscriber {
 
 class Membership {
  public:
-  Membership() : retransmit_multiplier_(1), incarnation_(0) {}
+  Membership() : retransmit_multiplier_(2), incarnation_(0) {}
   ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);

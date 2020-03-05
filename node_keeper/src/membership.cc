@@ -81,7 +81,7 @@ int membership::Membership::Init(
 }
 
 void membership::Membership::PullFromSeedMember() {
-  std::random_device rd;
+  static std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> dis(0, seed_members_.size() - 1);
 
@@ -218,7 +218,8 @@ void membership::Membership::MergeDownUpdate(const Member& member,
 }
 
 int membership::Membership::GetRetransmitLimit() const {
-  return retransmit_multiplier_ * static_cast<int>(ceil(log(members_.size())));
+  return retransmit_multiplier_ *
+         static_cast<int>(ceil(log10(members_.size() + 1)));
 }
 
 bool membership::operator==(const membership::Member& lhs,

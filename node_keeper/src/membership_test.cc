@@ -237,11 +237,11 @@ TEST(Membership, UpMessageRetransmitWithThreeMember) {
   config.AddRetransmitMultiplier(3);
 
   int retransmit_limit_one_member =
-      config.GetRetransmitMultiplier() * ceil(log(1));
+      config.GetRetransmitMultiplier() * ceil(log10(1 + 1));
   int retransmit_limit_two_member =
-      config.GetRetransmitMultiplier() * ceil(log(2));
+      config.GetRetransmitMultiplier() * ceil(log10(2 + 1));
   int retransmit_limit_three_member =
-      config.GetRetransmitMultiplier() * ceil(log(3));
+      config.GetRetransmitMultiplier() * ceil(log10(3 + 1));
   EXPECT_CALL(*transport, Gossip)
       .Times(retransmit_limit_one_member + retransmit_limit_two_member +
              retransmit_limit_three_member * 2);
