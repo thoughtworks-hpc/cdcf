@@ -18,15 +18,9 @@ membership::Membership::~Membership() {
     auto message_serialized = message.SerializeToString();
     gossip::Payload payload{message_serialized};
 
-    std::vector<gossip::Address> addresses;
-    for (const auto& member : members_) {
-      addresses.emplace_back(
-          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
-    }
-
     int retransmit_limit = GetRetransmitLimit();
     while (retransmit_limit > 0) {
-      transport_->Gossip(addresses, payload);
+      transport_->Gossip(GetDisseminateAddress(), payload);
       retransmit_limit--;
     }
   }
@@ -111,16 +105,38 @@ int membership::Membership::AddMember(const membership::Member& member) {
   return 0;
 }
 
+std::vector<gossip::Address> membership::Membership::GetDisseminateAddress() {
+  std::vector<gossip::Address> addresses;
+  for (const auto& member : members_) {
+    if (member.first != self_) {
+      addresses.emplace_back(
+          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+    }
+  }
+
+  return addresses;
+}
+
 void membership::Membership::HandleGossip(const struct gossip::Address& node,
                                           const gossip::Payload& payload) {
   membership::UpdateMessage message;
   message.DeserializeFromArray(payload.data.data(), payload.data.size());
-
-  DisseminateGossip(payload);
+  Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
+    if (members_.find(member) != members_.end() &&
+        members_[member] == message.GetIncarnation()) {
+      return;
+    }
+
+    DisseminateGossip(payload);
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
   } else if (message.IsDownMessage()) {
+    if (members_.find(member) == members_.end()) {
+      return;
+    }
+
+    DisseminateGossip(payload);
     MergeDownUpdate(message.GetMember(), message.GetIncarnation());
   }
 }
@@ -150,16 +166,10 @@ void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
     return;
   }
 
-  std::vector<gossip::Address> addresses;
-  for (const auto& member : this->members_) {
-    addresses.emplace_back(
-        gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
-  }
-
   auto did_gossip = [](gossip::ErrorCode error) {};
 
   while (retransmit_limit > 0) {
-    this->transport_->Gossip(addresses, payload, did_gossip);
+    this->transport_->Gossip(GetDisseminateAddress(), payload, did_gossip);
     retransmit_limit--;
   }
 }

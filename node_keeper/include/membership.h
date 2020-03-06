@@ -101,6 +101,7 @@ class Membership {
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
+  std::vector<gossip::Address> GetDisseminateAddress();
   void DisseminateGossip(const gossip::Payload& payload);
   void PullFromSeedMember();
   void HandleDidPull(const gossip::Transportable::PullResult& result);
