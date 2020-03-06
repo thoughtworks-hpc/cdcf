@@ -20,6 +20,8 @@ class NodeKeeper {
   std::vector<membership::Member> GetMembers() const {
     return membership_.GetMembers();
   }
+
+  void Run();
 };
 }  // namespace node_keeper
 #endif  // NODE_KEEPER_SRC_NODE_KEEPER_H_

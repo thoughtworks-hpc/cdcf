@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "../include/membership.h"
-#include "./src/config.h"
+#include "src/config.h"
+#include "src/node_keeper.h"
 
 int main(int argc, char *argv[]) {
   node_keeper::Config config;
@@ -11,17 +11,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  membership::Config member_config;
-  member_config.AddHostMember("node1", config.host_, config.port);
-  gossip::Address address{config.host_, config.port_};
-  auto transport = gossip::CreateTransport(address, address);
-  membership::Membership membership;
-  membership.Init(transport, config);
-
-  std::vector<membership::Member> members = membership.GetMembers();
-  EXPECT_EQ(members.size(), 1);
-  EXPECT_EQ(members[0], member);
-  std::cout << "host: " << config.host_ << std::endl;
-  std::cout << "port: " << config.port_ << std::endl;
+  auto seeds = config.GetSeeds();
+  if (seeds.size()) {
+    std::cout << "seeding with: " << std::endl;
+    for (size_t i = 0; i < seeds.size(); ++i) {
+      std::cout << "\t" << seeds[i].host << ":" << seeds[i].port << std::endl;
+    }
+  }
+  node_keeper::NodeKeeper keeper(config.name_, {config.host_, config.port_},
+                                 seeds);
+  keeper.Run();
   return 0;
 }
