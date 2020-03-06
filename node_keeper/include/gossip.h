@@ -27,6 +27,10 @@ struct Address {
   bool operator==(const Address &rhs) const {
     return host == rhs.host && port == rhs.port;
   }
+
+  bool operator!=(const Address &rhs) const {
+    return host != rhs.host || port != rhs.port;
+  }
 };
 
 class Payload {

@@ -91,7 +91,7 @@ class Membership {
   ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
-  std::vector<Member> GetMembers();
+  std::vector<Member> GetMembers() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
  private:

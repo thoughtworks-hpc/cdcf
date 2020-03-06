@@ -26,7 +26,7 @@ membership::Membership::~Membership() {
   }
 }
 
-std::vector<membership::Member> membership::Membership::GetMembers() {
+std::vector<membership::Member> membership::Membership::GetMembers() const {
   std::vector<Member> return_members;
   for (auto& member : members_) {
     return_members.push_back(member.first);
