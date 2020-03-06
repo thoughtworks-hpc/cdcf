@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#include "include/membership_message.h"
+#include "src/membership_message.h"
 
 std::string membership::Message::SerializeToString() {
   return BaseMessage().SerializeAsString();

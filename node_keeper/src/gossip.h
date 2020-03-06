@@ -23,6 +23,14 @@ enum ErrorCode {
 struct Address {
   std::string host;
   uint16_t port;
+
+  bool operator==(const Address &rhs) const {
+    return host == rhs.host && port == rhs.port;
+  }
+
+  bool operator!=(const Address &rhs) const {
+    return host != rhs.host || port != rhs.port;
+  }
 };
 
 class Payload {

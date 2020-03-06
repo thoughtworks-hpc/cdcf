@@ -2,15 +2,15 @@
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
 
-#include "../include/membership.h"
+#include "src/membership.h"
 
 #include <cmath>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "include/membership_message.h"
-#include "include/mock_gossip.h"
+#include "src/membership_message.h"
+#include "src/mock_gossip.h"
 
 using ::testing::_;
 using ::testing::AnyNumber;

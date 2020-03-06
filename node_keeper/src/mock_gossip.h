@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_
-#define NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_
+#ifndef NODE_KEEPER_SRC_MOCK_GOSSIP_H_
+#define NODE_KEEPER_SRC_MOCK_GOSSIP_H_
 
 #include <gmock/gmock.h>
 
@@ -86,4 +86,4 @@ class MockSubscriber : public membership::Subscriber {
   MOCK_METHOD(void, Update, (), (override));
 };
 
-#endif  // NODE_KEEPER_INCLUDE_MOCK_GOSSIP_H_
+#endif  // NODE_KEEPER_SRC_MOCK_GOSSIP_H_

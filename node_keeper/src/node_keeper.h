@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "../include/membership.h"
+#include "src/membership.h"
 
 namespace node_keeper {
 

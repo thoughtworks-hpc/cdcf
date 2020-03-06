@@ -2,14 +2,14 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#include "include/membership.h"
+#include "src/membership.h"
 
 #include <cmath>
 #include <random>
 #include <string>
 #include <vector>
 
-#include "include/membership_message.h"
+#include "src/membership_message.h"
 
 membership::Membership::~Membership() {
   if (members_.size() > 1) {

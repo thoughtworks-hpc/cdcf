@@ -2,14 +2,14 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_
-#define NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_
+#ifndef NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_
+#define NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_
 
 #include <string>
 #include <vector>
 
-#include "include/membership.h"
 #include "protobuf/message.pb.h"
+#include "src/membership.h"
 
 namespace membership {
 
@@ -50,4 +50,4 @@ class FullStateMessage : public Message {
 };
 
 };      // namespace membership
-#endif  // NODE_KEEPER_INCLUDE_MEMBERSHIP_MESSAGE_H_
+#endif  // NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_

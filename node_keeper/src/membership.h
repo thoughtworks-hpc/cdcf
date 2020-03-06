@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
-#define NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
+#ifndef NODE_KEEPER_SRC_MEMBERSHIP_H_
+#define NODE_KEEPER_SRC_MEMBERSHIP_H_
 
 #include <map>
 #include <memory>
@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "include/gossip.h"
+#include "src/gossip.h"
 
 namespace membership {
 
@@ -121,4 +121,4 @@ class Membership {
 
 };  // namespace membership
 
-#endif  // NODE_KEEPER_INCLUDE_MEMBERSHIP_H_
+#endif  // NODE_KEEPER_SRC_MEMBERSHIP_H_

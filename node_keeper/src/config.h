@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "include/gossip.h"
+#include "src/gossip.h"
 
 namespace node_keeper {
 std::vector<std::string> split(const std::string& input, char delim) {
