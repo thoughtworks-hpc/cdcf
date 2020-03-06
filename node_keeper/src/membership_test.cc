@@ -88,7 +88,7 @@ TEST(Message, CreateUpMessage) {
   message2.DeserializeFromString(serialized_msg);
   EXPECT_TRUE(message2.IsUpMessage());
   EXPECT_EQ(message2.GetMember(), member);
-  // EXPECT_EQ(message2.GetIncarnation(), 1);
+  //   EXPECT_EQ(message2.GetIncarnation(), 1);
 }
 
 TEST(Message, MessageParseFromArray) {
@@ -172,6 +172,7 @@ TEST(Membership, NewUpMessageReceived) {
   auto transport = std::make_shared<MockTransport>();
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
@@ -378,7 +379,7 @@ TEST(Membership, MemberLeaveFromSingleNodeCluster) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
   config.AddRetransmitMultiplier(3);
-  int retransmit_limit = config.GetRetransmitMultiplier() * ceil(log(1));
+  int retransmit_limit = config.GetRetransmitMultiplier() * ceil(log10(1 + 1));
   auto transport = std::make_shared<MockTransport>();
 
   membership::UpdateMessage message;
@@ -386,7 +387,8 @@ TEST(Membership, MemberLeaveFromSingleNodeCluster) {
   auto serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);
 
-  EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(retransmit_limit);
+  SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
+  EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(0);
   node.Init(transport, config);
 }
 
@@ -395,14 +397,16 @@ TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
   membership::Config config;
   config.AddHostMember("node1", "127.0.0.1", 27777);
   config.AddRetransmitMultiplier(3);
-  int retransmit_limit = config.GetRetransmitMultiplier() * ceil(log(2));
+  int retransmit_limit_two_node =
+      config.GetRetransmitMultiplier() * ceil(log10(2 + 1));
   auto transport = std::make_shared<MockTransport>();
 
   membership::UpdateMessage message;
-  message.InitAsDownMessage({"node1", "127.0.0.1", 27777}, 1);
+  message.InitAsDownMessage({"node2", "127.0.0.1", 28888}, 1);
   auto serialized_msg = message.SerializeToString();
   gossip::Payload payload(serialized_msg);
 
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   node.Init(transport, config);
 
   SimulateReceivingUpMessage({"node2", "127.0.0.1", 28888}, transport);
@@ -410,5 +414,9 @@ TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
       node.GetMembers(),
       {{"node1", "127.0.0.1", 27777}, {"node2", "127.0.0.1", 28888}}));
 
-  EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(retransmit_limit);
+  EXPECT_CALL(*transport, Gossip(_, payload, _))
+      .Times(retransmit_limit_two_node);
+  SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
+  EXPECT_TRUE(
+      CompareMembers(node.GetMembers(), {{"node1", "127.0.0.1", 27777}}));
 }

@@ -192,6 +192,7 @@ std::vector<uint8_t> membership::Membership::HandlePull(
 void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
   subscribers_.push_back(subscriber);
 }
+
 void membership::Membership::Notify() {
   for (auto subscriber : subscribers_) {
     subscriber->Update();
