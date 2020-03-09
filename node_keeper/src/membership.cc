@@ -201,16 +201,15 @@ void membership::Membership::Notify() {
 
 void membership::Membership::MergeUpUpdate(const Member& member,
                                            unsigned int incarnation) {
-  const std::lock_guard<std::mutex> lock(mutex_members_);
-  if (members_.find(member) != members_.end()) {
-    if (members_[member] < incarnation) {
-      members_[member] = incarnation;
-      Notify();
-    }
-  } else {
-    members_[member] = incarnation;
-    Notify();
+  if (members_.find(member) != members_.end() &&
+      members_[member] >= incarnation) {
+    return;
   }
+
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+
+  members_[member] = incarnation;
+  Notify();
 }
 
 void membership::Membership::MergeDownUpdate(const Member& member,
