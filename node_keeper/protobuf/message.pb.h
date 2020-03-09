@@ -82,27 +82,58 @@ const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* MemberUpdate_MemberStatus_descrip
 template<typename T>
 inline const std::string& MemberUpdate_MemberStatus_Name(T enum_t_value) {
   static_assert(::std::is_same<T, MemberUpdate_MemberStatus>::value ||
-    ::std::is_integral<T>::value,
-    "Incorrect type passed to function MemberUpdate_MemberStatus_Name.");
+          ::std::is_integral<T>::value,
+      "Incorrect type passed to function MemberUpdate_MemberStatus_Name.");
   return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
-    MemberUpdate_MemberStatus_descriptor(), enum_t_value);
+      MemberUpdate_MemberStatus_descriptor(), enum_t_value);
 }
-inline bool MemberUpdate_MemberStatus_Parse(
-    const std::string& name, MemberUpdate_MemberStatus* value) {
-  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<MemberUpdate_MemberStatus>(
-    MemberUpdate_MemberStatus_descriptor(), name, value);
+inline bool MemberUpdate_MemberStatus_Parse(const std::string& name,
+                                            MemberUpdate_MemberStatus* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<
+      MemberUpdate_MemberStatus>(MemberUpdate_MemberStatus_descriptor(), name,
+                                 value);
+}
+enum MemberFullState_ErrorCode : int {
+  MemberFullState_ErrorCode_SUCCESS = 0,
+  MemberFullState_ErrorCode_FAILURE = 1,
+  MemberFullState_ErrorCode_REENTRY_REJECTED = 2
+};
+bool MemberFullState_ErrorCode_IsValid(int value);
+constexpr MemberFullState_ErrorCode MemberFullState_ErrorCode_ErrorCode_MIN =
+    MemberFullState_ErrorCode_SUCCESS;
+constexpr MemberFullState_ErrorCode MemberFullState_ErrorCode_ErrorCode_MAX =
+    MemberFullState_ErrorCode_REENTRY_REJECTED;
+constexpr int MemberFullState_ErrorCode_ErrorCode_ARRAYSIZE =
+    MemberFullState_ErrorCode_ErrorCode_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+MemberFullState_ErrorCode_descriptor();
+template <typename T>
+inline const std::string& MemberFullState_ErrorCode_Name(T enum_t_value) {
+  static_assert(
+      ::std::is_same<T, MemberFullState_ErrorCode>::value ||
+          ::std::is_integral<T>::value,
+      "Incorrect type passed to function MemberFullState_ErrorCode_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+      MemberFullState_ErrorCode_descriptor(), enum_t_value);
+}
+inline bool MemberFullState_ErrorCode_Parse(const std::string& name,
+                                            MemberFullState_ErrorCode* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<
+      MemberFullState_ErrorCode>(MemberFullState_ErrorCode_descriptor(), name,
+                                 value);
 }
 // ===================================================================
 
-class MemberUpdate :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:membership.MemberUpdate) */ {
+class MemberUpdate : public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:membership.MemberUpdate)
+                                                              */
+{
  public:
   MemberUpdate();
   virtual ~MemberUpdate();
 
   MemberUpdate(const MemberUpdate& from);
-  MemberUpdate(MemberUpdate&& from) noexcept
-    : MemberUpdate() {
+  MemberUpdate(MemberUpdate&& from) noexcept : MemberUpdate() {
     *this = ::std::move(from);
   }
 
@@ -418,41 +449,83 @@ class MemberFullState :
   public:
 
   ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
   private:
-  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
-    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_message_2eproto);
-    return ::descriptor_table_message_2eproto.file_level_metadata[kIndexInFileMessages];
-  }
+   static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+     ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+         &::descriptor_table_message_2eproto);
+     return ::descriptor_table_message_2eproto
+         .file_level_metadata[kIndexInFileMessages];
+   }
 
   public:
+   // nested types ----------------------------------------------------
 
-  // nested types ----------------------------------------------------
+   typedef MemberFullState_ErrorCode ErrorCode;
+   static constexpr ErrorCode SUCCESS = MemberFullState_ErrorCode_SUCCESS;
+   static constexpr ErrorCode FAILURE = MemberFullState_ErrorCode_FAILURE;
+   static constexpr ErrorCode REENTRY_REJECTED =
+       MemberFullState_ErrorCode_REENTRY_REJECTED;
+   static inline bool ErrorCode_IsValid(int value) {
+     return MemberFullState_ErrorCode_IsValid(value);
+   }
+   static constexpr ErrorCode ErrorCode_MIN =
+       MemberFullState_ErrorCode_ErrorCode_MIN;
+   static constexpr ErrorCode ErrorCode_MAX =
+       MemberFullState_ErrorCode_ErrorCode_MAX;
+   static constexpr int ErrorCode_ARRAYSIZE =
+       MemberFullState_ErrorCode_ErrorCode_ARRAYSIZE;
+   static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+   ErrorCode_descriptor() {
+     return MemberFullState_ErrorCode_descriptor();
+   }
+   template <typename T>
+   static inline const std::string& ErrorCode_Name(T enum_t_value) {
+     static_assert(
+         ::std::is_same<T, ErrorCode>::value || ::std::is_integral<T>::value,
+         "Incorrect type passed to function ErrorCode_Name.");
+     return MemberFullState_ErrorCode_Name(enum_t_value);
+   }
+   static inline bool ErrorCode_Parse(const std::string& name,
+                                      ErrorCode* value) {
+     return MemberFullState_ErrorCode_Parse(name, value);
+   }
 
-  // accessors -------------------------------------------------------
+   // accessors -------------------------------------------------------
 
-  enum : int {
-    kStatesFieldNumber = 1,
-  };
-  // repeated .membership.MemberUpdate states = 1;
-  int states_size() const;
-  void clear_states();
-  ::membership::MemberUpdate* mutable_states(int index);
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::membership::MemberUpdate >*
-      mutable_states();
-  const ::membership::MemberUpdate& states(int index) const;
-  ::membership::MemberUpdate* add_states();
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::membership::MemberUpdate >&
-      states() const;
+   enum : int {
+     kStatesFieldNumber = 2,
+     kErrorFieldNumber = 1,
+   };
+   // repeated .membership.MemberUpdate states = 2;
+   int states_size() const;
+   void clear_states();
+   ::membership::MemberUpdate* mutable_states(int index);
+   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::membership::MemberUpdate>*
+   mutable_states();
+   const ::membership::MemberUpdate& states(int index) const;
+   ::membership::MemberUpdate* add_states();
+   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::membership::MemberUpdate>&
+   states() const;
 
-  // @@protoc_insertion_point(class_scope:membership.MemberFullState)
- private:
-  class _Internal;
+   // required .membership.MemberFullState.ErrorCode error = 1;
+   bool has_error() const;
+   void clear_error();
+   ::membership::MemberFullState_ErrorCode error() const;
+   void set_error(::membership::MemberFullState_ErrorCode value);
 
-  ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
-  ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::membership::MemberUpdate > states_;
-  friend struct ::TableStruct_message_2eproto;
+   // @@protoc_insertion_point(class_scope:membership.MemberFullState)
+  private:
+   class _Internal;
+
+   ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena
+       _internal_metadata_;
+   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<::membership::MemberUpdate>
+       states_;
+   int error_;
+   friend struct ::TableStruct_message_2eproto;
 };
 // ===================================================================
 
@@ -630,7 +703,8 @@ inline ::PROTOBUF_NAMESPACE_ID::int32 MemberUpdate::incarnation() const {
   // @@protoc_insertion_point(field_get:membership.MemberUpdate.incarnation)
   return incarnation_;
 }
-inline void MemberUpdate::set_incarnation(::PROTOBUF_NAMESPACE_ID::int32 value) {
+inline void MemberUpdate::set_incarnation(
+    ::PROTOBUF_NAMESPACE_ID::int32 value) {
   _has_bits_[0] |= 0x00000010u;
   incarnation_ = value;
   // @@protoc_insertion_point(field_set:membership.MemberUpdate.incarnation)
@@ -640,13 +714,29 @@ inline void MemberUpdate::set_incarnation(::PROTOBUF_NAMESPACE_ID::int32 value) 
 
 // MemberFullState
 
-// repeated .membership.MemberUpdate states = 1;
-inline int MemberFullState::states_size() const {
-  return states_.size();
+// required .membership.MemberFullState.ErrorCode error = 1;
+inline bool MemberFullState::has_error() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void MemberFullState::clear_states() {
-  states_.Clear();
+inline void MemberFullState::clear_error() {
+  error_ = 0;
+  _has_bits_[0] &= ~0x00000001u;
 }
+inline ::membership::MemberFullState_ErrorCode MemberFullState::error() const {
+  // @@protoc_insertion_point(field_get:membership.MemberFullState.error)
+  return static_cast<::membership::MemberFullState_ErrorCode>(error_);
+}
+inline void MemberFullState::set_error(
+    ::membership::MemberFullState_ErrorCode value) {
+  assert(::membership::MemberFullState_ErrorCode_IsValid(value));
+  _has_bits_[0] |= 0x00000001u;
+  error_ = value;
+  // @@protoc_insertion_point(field_set:membership.MemberFullState.error)
+}
+
+// repeated .membership.MemberUpdate states = 2;
+inline int MemberFullState::states_size() const { return states_.size(); }
+inline void MemberFullState::clear_states() { states_.Clear(); }
 inline ::membership::MemberUpdate* MemberFullState::mutable_states(int index) {
   // @@protoc_insertion_point(field_mutable:membership.MemberFullState.states)
   return states_.Mutable(index);
@@ -682,10 +772,21 @@ MemberFullState::states() const {
 
 PROTOBUF_NAMESPACE_OPEN
 
-template <> struct is_proto_enum< ::membership::MemberUpdate_MemberStatus> : ::std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::membership::MemberUpdate_MemberStatus>() {
+struct is_proto_enum<::membership::MemberUpdate_MemberStatus>
+    : ::std::true_type {};
+template <>
+inline const EnumDescriptor*
+GetEnumDescriptor<::membership::MemberUpdate_MemberStatus>() {
   return ::membership::MemberUpdate_MemberStatus_descriptor();
+}
+template <>
+struct is_proto_enum<::membership::MemberFullState_ErrorCode>
+    : ::std::true_type {};
+template <>
+inline const EnumDescriptor*
+GetEnumDescriptor<::membership::MemberFullState_ErrorCode>() {
+  return ::membership::MemberFullState_ErrorCode_descriptor();
 }
 
 PROTOBUF_NAMESPACE_CLOSE

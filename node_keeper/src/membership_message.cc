@@ -50,6 +50,7 @@ bool membership::UpdateMessage::IsDownMessage() const {
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
   for (auto member : members) {
+    state_.set_error(MemberFullState::SUCCESS);
     auto new_state = state_.add_states();
     new_state->set_name(member.GetNodeName());
     new_state->set_ip(member.GetIpAddress());
@@ -59,10 +60,17 @@ void membership::FullStateMessage::InitAsFullStateMessage(
   }
 }
 
+void membership::FullStateMessage::InitAsReentryRejected() {
+  state_.set_error(MemberFullState::REENTRY_REJECTED);
+}
+
 std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
   std::vector<Member> members;
   for (auto state : state_.states()) {
     members.emplace_back(state.name(), state.ip(), state.port());
   }
   return members;
+}
+bool membership::FullStateMessage::IsSuccess() {
+  return state_.error() == MemberFullState::SUCCESS;
 }

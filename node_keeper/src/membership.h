@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -33,6 +34,7 @@ class Member {
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
+  friend bool operator<(const Member& lhs, const Member& rhs);
 
   std::string GetNodeName() const { return node_name_; }
   std::string GetIpAddress() const { return ip_address_; }
@@ -113,6 +115,7 @@ class Membership {
   std::mutex mutex_members_;
   Member self_;
   std::vector<Member> seed_members_;
+  std::set<Member> left_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;

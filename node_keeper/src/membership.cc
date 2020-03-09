@@ -124,6 +124,11 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
+    // Ignore left members
+    if (left_members_.find(member) != left_members_.end()) {
+      return;
+    }
+
     if (members_.find(member) != members_.end() &&
         members_[member] == message.GetIncarnation()) {
       return;
@@ -147,16 +152,21 @@ void membership::Membership::HandleDidPull(
     FullStateMessage message;
     message.DeserializeFromArray(result.second.data(), result.second.size());
 
-    for (const auto& member : message.GetMembers()) {
-      MergeUpUpdate(member, 0);
+    if (message.IsSuccess()) {
+      for (const auto& member : message.GetMembers()) {
+        MergeUpUpdate(member, 0);
+      }
+
+      UpdateMessage update;
+      update.InitAsUpMessage(self_, incarnation_);
+      auto update_serialized = update.SerializeToString();
+      gossip::Payload payload(update_serialized.data(),
+                              update_serialized.size());
+
+      DisseminateGossip(payload);
+    } else {
+      // Rejected from reentry
     }
-
-    UpdateMessage update;
-    update.InitAsUpMessage(self_, incarnation_);
-    auto update_serialized = update.SerializeToString();
-    gossip::Payload payload(update_serialized.data(), update_serialized.size());
-
-    DisseminateGossip(payload);
   }
 }
 
@@ -177,12 +187,19 @@ void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
 std::vector<uint8_t> membership::Membership::HandlePull(
     const gossip::Address& address, const void* data, size_t size) {
   FullStateMessage message;
-  std::vector<Member> members;
-  for (const auto& member : members_) {
-    members.emplace_back(member.first.GetNodeName(),
-                         member.first.GetIpAddress(), member.first.GetPort());
+
+  if (left_members_.find({"", address.host, address.port}) !=
+      left_members_.end()) {
+    message.InitAsReentryRejected();
+  } else {
+    std::vector<Member> members;
+    for (const auto& member : members_) {
+      members.emplace_back(member.first.GetNodeName(),
+                           member.first.GetIpAddress(), member.first.GetPort());
+    }
+    message.InitAsFullStateMessage(members);
   }
-  message.InitAsFullStateMessage(members);
+
   auto message_serialized = message.SerializeToString();
 
   return std::vector<uint8_t>(message_serialized.begin(),
@@ -201,8 +218,12 @@ void membership::Membership::Notify() {
 
 void membership::Membership::MergeUpUpdate(const Member& member,
                                            unsigned int incarnation) {
-  if (members_.find(member) != members_.end() &&
-      members_[member] >= incarnation) {
+  if (left_members_.find(member) != left_members_.end()) {
+    return;
+  }
+
+  if ((members_.find(member) != members_.end() &&
+       members_[member] >= incarnation)) {
     return;
   }
 
@@ -218,12 +239,13 @@ void membership::Membership::MergeDownUpdate(const Member& member,
     return;
   }
 
-  {
-    const std::lock_guard<std::mutex> lock(mutex_members_);
-    if (members_.find(member) != members_.end()) {
-      members_.erase(member);
-      Notify();
-    }
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+
+  if (members_.find(member) != members_.end()) {
+    // Add to left members list
+    left_members_.insert(member);
+    members_.erase(member);
+    Notify();
   }
 }
 
@@ -245,6 +267,16 @@ bool membership::operator==(const membership::Member& lhs,
 bool membership::operator!=(const membership::Member& lhs,
                             const membership::Member& rhs) {
   return !operator==(lhs, rhs);
+}
+
+bool membership::operator<(const membership::Member& lhs,
+                           const membership::Member& rhs) {
+  if (lhs.GetIpAddress() < rhs.GetIpAddress() &&
+      lhs.GetPort() < rhs.GetPort()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool membership::Member::IsEmptyMember() {

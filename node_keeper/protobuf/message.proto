@@ -17,5 +17,11 @@ message MemberUpdate {
 }
 
 message MemberFullState {
-    repeated MemberUpdate states = 1;
+    enum ErrorCode {
+        SUCCESS = 0;
+        FAILURE = 1;
+        REENTRY_REJECTED = 2;
+    }
+    required ErrorCode error = 1;
+    repeated MemberUpdate states = 2;
 }
