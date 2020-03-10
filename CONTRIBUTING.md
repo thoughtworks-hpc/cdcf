@@ -34,15 +34,14 @@ Writing good commit logs is important.  A commit log should describe what
 changed and why.  Follow these guidelines when writing one:
 
 1. The first line should be 50 characters or less and contain a short
-   description of the change prefixed with the name of the changed
-   subsystem (e.g. "net: add localAddress and localPort to Socket").
+   description of the change with the first letter capitalized.
 2. Keep the second line blank.
 3. Wrap all other lines at 72 columns.
 
 A good commit log looks like this:
 
 ```
-subsystem: explaining the commit in one line
+Explaining the commit in one line
 
 Body of commit message is a few lines of text, explaining things
 in more detail, possibly giving some background about the issue
@@ -62,4 +61,5 @@ what subsystem (or subsystems) your changes touch.
 
 ## Style Guide
 
-To keep the source consistent, readable, diffable and easy to merge, we use a coding style as defined by the [google-styleguide](https://github.com/google/styleguide) project. All patches will be expected to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html). Use [.clang-format](https://github.com/google/googletest/blob/master/.clang-format) to check your formatting.
+To keep the source consistent, readable, diffable and easy to merge, we use a coding style as defined by the [google-styleguide](https://github.com/google/styleguide) project. All patches will be expected to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html). Use [.clang-format](https://github.com/thoughtworks-hpc/cdcf/blob/develop/.clang-format) to check your formatting.
+
