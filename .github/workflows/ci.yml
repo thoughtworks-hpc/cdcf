@@ -17,7 +17,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: conan
       run: |
-        conan install . -s compiler.libcxx=libstdc++11
+        conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
+        conan install . -s compiler.libcxx=libstdc++11 --build missing
     - name: cmake
       run: |
         cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
