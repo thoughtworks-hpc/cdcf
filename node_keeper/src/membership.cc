@@ -36,9 +36,6 @@ std::vector<membership::Member> membership::Membership::GetMembers() const {
 
 int membership::Membership::Init(
     std::shared_ptr<gossip::Transportable> transport, const Config& config) {
-  // TODO(davidzwb): existence checking
-  // TODO(davidzwb): host member further checking
-
   Member member = config.GetHostMember();
   if (member.IsEmptyMember()) {
     return MEMBERSHIP_INIT_HOSTMEMBER_EMPTY;
@@ -297,7 +294,7 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
                                          uint16_t port) {
   Member seed(node_name, ip_address, port);
 
-  for (auto member : seed_members_) {
+  for (const auto& member : seed_members_) {
     if (member == seed) {
       return MEMBERSHIP_FAILURE;
     }
