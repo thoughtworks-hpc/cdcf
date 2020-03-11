@@ -11,7 +11,10 @@
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
 
+#include <chrono>
+#include <future>
 #include <memory>
+#include <thread>
 
 using node_keeper::GRPCImpl;
 using testing::Eq;
@@ -34,7 +37,10 @@ class GRPCTest : public ::testing::Test {
     ResetStub();
   }
 
-  void TearDown() override { server_->Shutdown(); }
+  void TearDown() override {
+    service_.Close();
+    server_->Shutdown();
+  }
 
   void ResetStub() {
     std::shared_ptr<grpc::Channel> channel = grpc::CreateChannel(
@@ -92,4 +98,36 @@ TEST_F(GRPCTest, ShouldReturnOneMemberByGetMembersAfterDifferentNodeUpAndDown) {
 
   EXPECT_TRUE(status.ok());
   EXPECT_THAT(reply.members().size(), Eq(1));
+}
+
+TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
+  bool server_done = false, client_done = false;
+  grpc::ClientContext context;
+  std::unique_ptr<grpc::ClientReader<::Event>> reader(
+      stub_->Subscribe(&context, {}));
+  auto future = std::async([&]() {
+    std::vector<::Event> events;
+    client_done = true;
+    for (::Event event; !server_done && reader->Read(&event);) {
+      events.push_back(event);
+    }
+    return events;
+  });
+  while (!client_done) {
+  }
+
+  /* FIXME: sleep 1s to wait for client invoke `Read`, should find a better
+   * alternative to solve uncertain sequence issue */
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  server_done = true;
+  auto events = future.get();
+
+  EXPECT_THAT(events.size(), Eq(1));
+  EXPECT_THAT(events[0].type(), Eq(Event_Type_MEMBER_CHANGED));
+  ::Member member;
+  events[0].data().UnpackTo(&member);
+  EXPECT_THAT(member.name(), Eq(node_a_.GetNodeName()));
+  EXPECT_THAT(member.host(), Eq(node_a_.GetIpAddress()));
+  EXPECT_THAT(member.port(), Eq(node_a_.GetPort()));
 }

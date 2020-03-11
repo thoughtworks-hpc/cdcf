@@ -25,8 +25,8 @@ namespace node_keeper {
 ::grpc::Status GRPCImpl::Subscribe(::grpc::ServerContext* context,
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer) {
-  auto& channel = AddChannel();
-  for (auto item = channel.Get(); item.first;) {
+  auto channel = AddChannel();
+  for (auto item = channel->Get(); item.first; item = channel->Get()) {
     ::Member member;
     UpdateMember(&member, item.second.member);
     ::Event event;
@@ -34,6 +34,27 @@ namespace node_keeper {
     event.mutable_data()->PackFrom(member);
     writer->Write(event);
   }
+  RemoveChannel(channel);
   return ::grpc::Status::OK;
+}
+
+void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
+  for (auto& event : events) {
+    switch (event.type) {
+      case MemberEvent::kMemberUp:
+        members_.insert(event.member);
+        break;
+      case MemberEvent::kMemberDown:
+        members_.erase(event.member);
+        break;
+    }
+  }
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  for (auto& channel : channels_) {
+    for (auto& event : events) {
+      channel.Put(event);
+    }
+  }
 }
 }  // namespace node_keeper
