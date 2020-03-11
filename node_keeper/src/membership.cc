@@ -289,7 +289,7 @@ int membership::Config::AddHostMember(const std::string& node_name,
   Member host(node_name, ip_address, port);
   host_ = host;
 
-  return 0;
+  return MEMBERSHIP_SUCCESS;
 }
 
 int membership::Config::AddOneSeedMember(const std::string& node_name,
@@ -297,10 +297,15 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
                                          uint16_t port) {
   Member seed(node_name, ip_address, port);
 
-  // TODO(davidzwb): existing member check
+  for (auto member : seed_members_) {
+    if (member == seed) {
+      return MEMBERSHIP_FAILURE;
+    }
+  }
+
   seed_members_.push_back(seed);
 
-  return 0;
+  return MEMBERSHIP_SUCCESS;
 }
 
 void membership::Config::AddRetransmitMultiplier(int multiplier) {

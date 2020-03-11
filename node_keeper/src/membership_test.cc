@@ -70,9 +70,22 @@ TEST(Membership, ConfigWithSeedMember) {
   config.AddOneSeedMember("node1", "127.0.0.1", 27777);
   std::vector<membership::Member> seed_members = config.GetSeedMembers();
 
-  membership::Member seed_member1("node1", "127.0.0.1", 27777);
   std::vector<membership::Member> seed_members_compare;
-  seed_members_compare.push_back(seed_member1);
+  seed_members_compare.emplace_back("node1", "127.0.0.1", 27777);
+
+  EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
+}
+
+TEST(Membership, ConfigWithDuplicateSeedMember) {
+  membership::Config config;
+  EXPECT_EQ(config.AddOneSeedMember("node1", "127.0.0.1", 27777),
+            membership::ErrorCode::MEMBERSHIP_SUCCESS);
+  EXPECT_EQ(config.AddOneSeedMember("node1", "127.0.0.1", 27777),
+            membership::ErrorCode::MEMBERSHIP_FAILURE);
+
+  std::vector<membership::Member> seed_members = config.GetSeedMembers();
+  std::vector<membership::Member> seed_members_compare;
+  seed_members_compare.emplace_back("node1", "127.0.0.1", 27777);
 
   EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
 }
