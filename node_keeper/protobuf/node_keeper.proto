@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/any.proto";
+
+service NodeKeeper {
+  rpc GetMembers(google.protobuf.Empty) returns (GetMembersReply) {}
+  rpc Subscribe(SubscribeRequest) returns (stream Event) {}
+}
+
+message Member {
+  string name = 1;
+  string host = 2;
+  uint32 port = 3;
+}
+
+message GetMembersReply {
+  repeated Member members = 1;
+}
+
+message SubscribeRequest {
+  google.protobuf.FieldMask mask = 1;
+}
+
+message Event {
+  enum Type {
+    UNKNOWN = 0;
+    MEMBER_CHANGED = 1;
+  }
+  Type type = 1;
+  google.protobuf.Any data = 2;
+}
+
+message MemberEvent {
+  Member member = 1;
+  enum Status {
+    UNKNOWN = 0;
+    UP = 1;
+    DOWN = 2;
+  }
+  Status status = 2;
+}

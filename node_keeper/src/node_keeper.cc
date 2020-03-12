@@ -10,6 +10,9 @@
 #include <thread>
 #include <utility>
 
+#include "src/event.h"
+#include "src/grpc.h"
+
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
                        const std::vector<gossip::Address>& seeds)
@@ -33,34 +36,29 @@ NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
 }
 
 void NodeKeeper::Run() {
-  using membership::Member;
-  std::vector<Member> older_members;
+  std::string server_address("0.0.0.0:50051");
+  GRPCImpl service;
+  GRPCServer server(server_address, {&service});
+  std::cout << "gRPC Server listening on " << server_address << std::endl;
 
-  auto comparator = [](const Member& lhs, const Member& rhs) {
-    return lhs.GetNodeName() < rhs.GetNodeName();
-  };
+  MemberEventGenerator generator;
   auto interval = std::chrono::seconds(1);
   for (;; std::this_thread::sleep_for(interval)) {
-    auto newer_members = membership_.GetMembers();
-
-    std::vector<Member> up_members;
-    std::set_difference(newer_members.begin(), newer_members.end(),
-                        older_members.begin(), older_members.end(),
-                        std::back_inserter(up_members), comparator);
-    for (auto& member : up_members) {
-      std::cout << "node [" << member.GetNodeName() << "] is up." << std::endl;
+    auto events = generator.Update(membership_.GetMembers());
+    for (auto& event : events) {
+      std::cout << "node [" << event.member.GetNodeName();
+      switch (event.type) {
+        case MemberEvent::kMemberUp:
+          std::cout << "] is up." << std::endl;
+          service.Notify({{node_keeper::MemberEvent::kMemberUp, event.member}});
+          break;
+        case MemberEvent::kMemberDown:
+          std::cout << "] is down." << std::endl;
+          service.Notify(
+              {{node_keeper::MemberEvent::kMemberDown, event.member}});
+          break;
+      }
     }
-
-    std::vector<Member> down_members;
-    std::set_difference(older_members.begin(), older_members.end(),
-                        newer_members.begin(), newer_members.end(),
-                        std::back_inserter(down_members), comparator);
-    for (auto& member : down_members) {
-      std::cout << "node [" << member.GetNodeName() << "] is down."
-                << std::endl;
-    }
-
-    older_members = std::move(newer_members);
   }
 }
 }  // namespace node_keeper

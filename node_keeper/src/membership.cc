@@ -268,12 +268,7 @@ bool membership::operator!=(const membership::Member& lhs,
 
 bool membership::operator<(const membership::Member& lhs,
                            const membership::Member& rhs) {
-  if (lhs.GetIpAddress() < rhs.GetIpAddress() &&
-      lhs.GetPort() < rhs.GetPort()) {
-    return true;
-  } else {
-    return false;
-  }
+  return (lhs.ip_address_ <= rhs.ip_address_ && lhs.port_ < rhs.port_);
 }
 
 bool membership::Member::IsEmptyMember() {

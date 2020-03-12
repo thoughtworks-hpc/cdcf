@@ -48,17 +48,6 @@ class Member {
   uint16_t port_;
 };
 
-struct MemberCompare {
-  bool operator()(const Member& lhs, const Member& rhs) const {
-    if (lhs.GetIpAddress() < rhs.GetIpAddress()) {
-      return true;
-    } else if (lhs.GetPort() < rhs.GetPort()) {
-      return true;
-    }
-    return false;
-  }
-};
-
 class Config {
  public:
   Config() : retransmit_multiplier_(1) {}
@@ -111,7 +100,7 @@ class Membership {
                                   size_t size);
   int GetRetransmitLimit() const;
 
-  std::map<Member, int, MemberCompare> members_;
+  std::map<Member, int> members_;
   std::mutex mutex_members_;
   Member self_;
   std::vector<Member> seed_members_;

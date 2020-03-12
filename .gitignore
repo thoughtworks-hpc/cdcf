@@ -14,3 +14,8 @@ cmake_install.cmake
 Makefile
 cmake-build-debug
 .idea
+
+**/*.grpc.pb.cc
+**/*.grpc.pb.h
+**/*.pb.cc
+**/*.pb.h
