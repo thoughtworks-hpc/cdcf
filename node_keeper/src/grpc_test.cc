@@ -7,9 +7,6 @@
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
-#include <grpcpp/security/server_credentials.h>
-#include <grpcpp/server.h>
-#include <grpcpp/server_builder.h>
 
 #include <chrono>
 #include <future>
@@ -17,6 +14,7 @@
 #include <thread>
 
 using node_keeper::GRPCImpl;
+using node_keeper::GRPCServer;
 using testing::Eq;
 
 class GRPCTest : public ::testing::Test {
@@ -24,34 +22,28 @@ class GRPCTest : public ::testing::Test {
   GRPCTest() {}
 
   void SetUp() override {
-    /* FIXME: It would be better to find a unused port dynamically like
-     * `grpc_pick_unused_port_or_die`. */
-    int port = 30002;
-    server_address_ << "localhost:" << port;
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address_.str(),
-                             grpc::InsecureServerCredentials());
-    builder.RegisterService(&service_);
-    server_ = builder.BuildAndStart();
-
+    std::vector<grpc::Service*> services = {&service_};
+    server_ = std::make_unique<GRPCServer>(server_address_, services);
     ResetStub();
   }
 
   void TearDown() override {
     service_.Close();
-    server_->Shutdown();
+    server_.reset();
   }
 
   void ResetStub() {
     std::shared_ptr<grpc::Channel> channel = grpc::CreateChannel(
-        server_address_.str(), grpc::InsecureChannelCredentials());
+        server_address_, grpc::InsecureChannelCredentials());
     stub_ = NodeKeeper::NewStub(channel);
   }
 
   std::unique_ptr<NodeKeeper::Stub> stub_;
-  std::unique_ptr<grpc::Server> server_;
-  std::ostringstream server_address_;
+  /* FIXME: It would be better to find a unused port dynamically like
+   * `grpc_pick_unused_port_or_die`. */
+  const std::string server_address_{"localhost:30002"};
   GRPCImpl service_;
+  std::unique_ptr<GRPCServer> server_;
   membership::Member node_a_ = {"node_a", "localhost", 8834};
   membership::Member node_b_ = {"node_b", "localhost", 8835};
 };
