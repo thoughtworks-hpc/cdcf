@@ -48,6 +48,10 @@ class Member {
   uint16_t port_;
 };
 
+bool operator==(const Member& lhs, const Member& rhs);
+bool operator!=(const Member& lhs, const Member& rhs);
+bool operator<(const Member& lhs, const Member& rhs);
+
 class Config {
  public:
   Config() : retransmit_multiplier_(1) {}
