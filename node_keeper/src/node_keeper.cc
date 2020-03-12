@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "src/event.h"
+#include "src/grpc.h"
 
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
@@ -35,6 +36,11 @@ NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
 }
 
 void NodeKeeper::Run() {
+  std::string server_address("0.0.0.0:50051");
+  GRPCImpl service;
+  GRPCServer server(server_address, {&service});
+  std::cout << "gRPC Server listening on " << server_address << std::endl;
+
   MemberEventGenerator generator;
   auto interval = std::chrono::seconds(1);
   for (;; std::this_thread::sleep_for(interval)) {
@@ -44,9 +50,12 @@ void NodeKeeper::Run() {
       switch (event.type) {
         case MemberEvent::kMemberUp:
           std::cout << "] is up." << std::endl;
+          service.Notify({{node_keeper::MemberEvent::kMemberUp, event.member}});
           break;
         case MemberEvent::kMemberDown:
           std::cout << "] is down." << std::endl;
+          service.Notify(
+              {{node_keeper::MemberEvent::kMemberDown, event.member}});
           break;
       }
     }

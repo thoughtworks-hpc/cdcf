@@ -19,7 +19,7 @@
 #include "src/node_keeper.grpc.pb.h"
 
 namespace node_keeper {
-class GRPCImpl final : public NodeKeeper::Service {
+class GRPCImpl final : public ::NodeKeeper::Service {
  public:
   virtual ~GRPCImpl() { Close(); }
   virtual ::grpc::Status GetMembers(::grpc::ServerContext* context,
