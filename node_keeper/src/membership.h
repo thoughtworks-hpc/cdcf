@@ -96,12 +96,15 @@ class Membership {
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
-  std::vector<gossip::Address> GetDisseminateAddress();
+  gossip::Address GetRandomSeedAddress() const;
+  std::vector<gossip::Address> GetRandomMemberAddress() const;
+  std::vector<gossip::Address> GetAllMemberAddress();
   void DisseminateGossip(const gossip::Payload& payload);
   void PullFromSeedMember();
   void HandleDidPull(const gossip::Transportable::PullResult& result);
   std::vector<uint8_t> HandlePull(const gossip::Address&, const void* data,
                                   size_t size);
+  bool IsLeftMember(const gossip::Address& address);
   int GetRetransmitLimit() const;
 
   std::map<Member, int> members_;

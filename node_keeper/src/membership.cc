@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-
 #include "src/membership.h"
 
 #include <cmath>
@@ -20,7 +19,7 @@ membership::Membership::~Membership() {
 
     int retransmit_limit = GetRetransmitLimit();
     while (retransmit_limit > 0) {
-      transport_->Gossip(GetDisseminateAddress(), payload);
+      transport_->Gossip(GetAllMemberAddress(), payload);
       retransmit_limit--;
     }
   }
@@ -72,16 +71,9 @@ int membership::Membership::Init(
 }
 
 void membership::Membership::PullFromSeedMember() {
-  static std::random_device rd;
-  std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(0, seed_members_.size() - 1);
-
-  auto peer = seed_members_[dis(gen)];
-  gossip::Address address{peer.GetIpAddress(), peer.GetPort()};
-
   std::string pull_request_message = "pull";
 
-  transport_->Pull(address, pull_request_message.data(),
+  transport_->Pull(GetRandomSeedAddress(), pull_request_message.data(),
                    pull_request_message.size(),
                    [this](const gossip::Transportable::PullResult& result) {
                      if (result.first == gossip::ErrorCode::kOK) {
@@ -90,6 +82,36 @@ void membership::Membership::PullFromSeedMember() {
                      }
                      PullFromSeedMember();
                    });
+}
+
+gossip::Address membership::Membership::GetRandomSeedAddress() const {
+  static std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(0, this->seed_members_.size() - 1);
+
+  auto peer = this->seed_members_[dis(gen)];
+  return gossip::Address{peer.GetIpAddress(), peer.GetPort()};
+}
+
+std::vector<gossip::Address> membership::Membership::GetRandomMemberAddress()
+    const {
+  static std::random_device rd;
+  std::vector<gossip::Address> addresses;
+  for (const auto& member : members_) {
+    if (member.first != self_) {
+      addresses.emplace_back(
+          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+    }
+  }
+
+  if (addresses.size() == 0) {
+    return std::vector<gossip::Address>();
+  }
+
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(0, addresses.size() - 1);
+
+  return std::vector<gossip::Address>{addresses[dis(gen)]};
 }
 
 int membership::Membership::AddMember(const membership::Member& member) {
@@ -102,7 +124,7 @@ int membership::Membership::AddMember(const membership::Member& member) {
   return 0;
 }
 
-std::vector<gossip::Address> membership::Membership::GetDisseminateAddress() {
+std::vector<gossip::Address> membership::Membership::GetAllMemberAddress() {
   std::vector<gossip::Address> addresses;
   for (const auto& member : members_) {
     if (member.first != self_) {
@@ -176,17 +198,26 @@ void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
   auto did_gossip = [](gossip::ErrorCode error) {};
 
   while (retransmit_limit > 0) {
-    this->transport_->Gossip(GetDisseminateAddress(), payload, did_gossip);
+    this->transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
     retransmit_limit--;
   }
+}
+
+bool membership::Membership::IsLeftMember(const gossip::Address& address) {
+  for (auto member : left_members_) {
+    if (member.GetPort() == address.port &&
+        member.GetIpAddress() == address.host) {
+      return true;
+    }
+  }
+  return false;
 }
 
 std::vector<uint8_t> membership::Membership::HandlePull(
     const gossip::Address& address, const void* data, size_t size) {
   FullStateMessage message;
 
-  if (left_members_.find({"", address.host, address.port}) !=
-      left_members_.end()) {
+  if (IsLeftMember(address)) {
     message.InitAsReentryRejected();
   } else {
     std::vector<Member> members;
