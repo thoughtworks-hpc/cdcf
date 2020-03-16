@@ -106,22 +106,13 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
 
 TEST_F(Gossip, ShouldReceiveGossipWhenWasGossipAsynchronously) {
   const Payload sent("hello world!");
-  std::mutex mutex;
-  std::condition_variable cv;
-  bool done = false;
 
-  peers_[0]->Gossip({addresses_[1]}, sent, [&](ErrorCode error) {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      done = true;
-    }
-    cv.notify_all();
-  });
+  std::promise<void> promise;
+  peers_[0]->Gossip({addresses_[1]}, sent,
+                    [&](ErrorCode error) { promise.set_value(); });
 
-  {
-    std::unique_lock<std::mutex> lock(mutex);
-    ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
-  }
+  auto future = promise.get_future();
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
   auto &queue = received_queues_[1];
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
@@ -192,16 +183,8 @@ TEST_F(Push, ShouldPushTwoDataToRemotePeerSeparately) {
 TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
 
-  std::mutex mutex;
-  std::condition_variable cv;
-  bool done = false;
-  auto didPush = [&](ErrorCode) {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      done = true;
-    }
-    cv.notify_all();
-  };
+  std::promise<void> promise;
+  auto didPush = [&](auto) { promise.set_value(); };
   auto result = local_->Push(addressRemote_, sent.data(), sent.size(), didPush);
 
   {
@@ -211,10 +194,8 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   }
   EXPECT_THAT(queue_.front(), Eq(sent));
   ASSERT_THAT(result, Eq(ErrorCode::kOK));
-  {
-    std::unique_lock<std::mutex> lock(mutex);
-    ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
-  }
+  auto future = promise.get_future();
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
 }
 
 class Pull : public Gossip {
