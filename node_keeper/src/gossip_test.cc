@@ -244,7 +244,7 @@ TEST_F(Pull, ShouldPullDataFromRemotePeer) {
   auto result = local_->Pull(addressRemote_, kRequest.data(), kRequest.size());
 
   ASSERT_THAT(result.first, Eq(ErrorCode::kOK));
-  ASSERT_THAT(result.second, Eq(kResponse));
+  EXPECT_THAT(result.second, Eq(kResponse));
 }
 
 TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
@@ -258,7 +258,7 @@ TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
   auto response = future.get();
   ASSERT_THAT(response.first, Eq(ErrorCode::kOK));
-  ASSERT_THAT(response.second, Eq(kResponse));
+  EXPECT_THAT(response.second, Eq(kResponse));
 }
 
 TEST_F(Pull, ShouldPullErrorFromDeadPeerAsynchronously) {
