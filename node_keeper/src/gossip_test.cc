@@ -49,7 +49,7 @@ class Gossip : public testing::Test {
     for (size_t i = 0; i < peers_.size(); ++i) {
       auto &mutex = mutexes_[i];
       auto &cv = cvs_[i];
-      auto &queue = receivedQueues_[i];
+      auto &queue = received_queues_[i];
       peers_[i]->RegisterGossipHandler(
           [&](const Address &node, const Payload &data) {
             {
@@ -66,7 +66,7 @@ class Gossip : public testing::Test {
   std::array<std::unique_ptr<Transportable>, 5> peers_;
   std::array<std::mutex, 5> mutexes_;
   std::array<std::condition_variable, 5> cvs_;
-  std::array<std::queue<std::vector<uint8_t>>, 5> receivedQueues_;
+  std::array<std::queue<std::vector<uint8_t>>, 5> received_queues_;
   static constexpr const std::chrono::milliseconds kTimeout{
       std::chrono::milliseconds(1000)};
 };
@@ -76,7 +76,7 @@ TEST_F(Gossip, ShouldReceiveGossipOnTheRightPeer) {
 
   peers_[0]->Gossip({addresses_[1]}, sent);
 
-  auto &queue = receivedQueues_[1];
+  auto &queue = received_queues_[1];
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
     ASSERT_TRUE(
@@ -93,15 +93,15 @@ TEST_F(Gossip, ShouldReceiveGossipOnAllRightPeers) {
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
     ASSERT_TRUE(cvs_[1].wait_for(
-        lock, kTimeout, [&]() { return !receivedQueues_[1].empty(); }));
+        lock, kTimeout, [&]() { return !received_queues_[1].empty(); }));
   }
-  EXPECT_THAT(receivedQueues_[1].front(), Eq(sent.data));
+  EXPECT_THAT(received_queues_[1].front(), Eq(sent.data));
   {
     std::unique_lock<std::mutex> lock(mutexes_[2]);
     ASSERT_TRUE(cvs_[2].wait_for(
-        lock, kTimeout, [&]() { return !receivedQueues_[2].empty(); }));
+        lock, kTimeout, [&]() { return !received_queues_[2].empty(); }));
   }
-  EXPECT_THAT(receivedQueues_[2].front(), Eq(sent.data));
+  EXPECT_THAT(received_queues_[2].front(), Eq(sent.data));
 }
 
 TEST_F(Gossip, ShouldReceiveGossipWhenWasGossipAsynchronously) {
@@ -122,7 +122,7 @@ TEST_F(Gossip, ShouldReceiveGossipWhenWasGossipAsynchronously) {
     std::unique_lock<std::mutex> lock(mutex);
     ASSERT_TRUE(cv.wait_for(lock, kTimeout, [&]() { return done; }));
   }
-  auto &queue = receivedQueues_[1];
+  auto &queue = received_queues_[1];
   {
     std::unique_lock<std::mutex> lock(mutexes_[1]);
     ASSERT_TRUE(
