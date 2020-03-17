@@ -9,7 +9,7 @@
 
 using testing::ContainerEq, testing::Eq;
 
-TEST(Config, should_parse_seeds_right) {
+TEST(Config, ShouldParseSeedsRight) {
   std::vector<gossip::Address> seeds{
       {"127.0.0.1", 3000}, {"127.0.0.2", 4000}, {"127.0.0.3", 5000}};
   std::string seeds_arg{"--seeds="};
