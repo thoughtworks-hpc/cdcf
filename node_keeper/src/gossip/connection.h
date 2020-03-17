@@ -19,8 +19,8 @@ class Connection : public std::enable_shared_from_this<Connection> {
                              const Message &)>
       ReceiveHandler;
 
-  Connection(asio::ip::tcp::socket &&socket, ReceiveHandler onReceive)
-      : socket_(std::move(socket)), onReceive_(onReceive) {}
+  Connection(asio::ip::tcp::socket &&socket, ReceiveHandler on_receive)
+      : socket_(std::move(socket)), on_receive_(on_receive) {}
 
   asio::ip::tcp::socket &Socket() { return socket_; }
 
@@ -43,7 +43,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
           if (message_.IsSatisfied()) {
             auto remote = socket_.remote_endpoint();
             const Address address{remote.address().to_string(), remote.port()};
-            onReceive_(&socket_, address, message_);
+            on_receive_(&socket_, address, message_);
             message_.Reset();
           }
         }
@@ -54,7 +54,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
 
  private:
   asio::ip::tcp::socket socket_;
-  ReceiveHandler onReceive_;
+  ReceiveHandler on_receive_;
   Message message_;
 };
 }  // namespace gossip

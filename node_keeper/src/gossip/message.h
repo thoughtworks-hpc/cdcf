@@ -32,10 +32,10 @@ class Message {
     }
     size_t consumed = 0;
     if (!IsHeaderOut()) {
-      consumed = decodeHeader(data, data + size);
+      consumed = DecodeHeader(data, data + size);
     }
     if (IsHeaderOut() && size > consumed) {
-      consumed += decodeBody(data + consumed, data + size);
+      consumed += DecodeBody(data + consumed, data + size);
     }
     return consumed;
   }
@@ -60,24 +60,24 @@ class Message {
   }
 
  private:
-  size_t decodeHeader(const uint8_t *begin, const uint8_t *end) {
-    size_t consumedBytes = 0;
+  size_t DecodeHeader(const uint8_t *begin, const uint8_t *end) {
+    size_t consumed_bytes = 0;
     const size_t size = end - begin;
     if (buffer_.size() + size < kHeaderBytes) {
-      consumedBytes = size;
+      consumed_bytes = size;
     } else {
-      consumedBytes = kHeaderBytes - buffer_.size();
+      consumed_bytes = kHeaderBytes - buffer_.size();
     }
-    std::copy(begin, begin + consumedBytes, std::back_inserter(buffer_));
+    std::copy(begin, begin + consumed_bytes, std::back_inserter(buffer_));
     if (Length() > 0) {
       buffer_.reserve(kHeaderBytes + Length());
     }
-    return consumedBytes;
+    return consumed_bytes;
   }
 
-  size_t decodeBody(const uint8_t *begin, const uint8_t *end) {
-    auto expectedBytes = Length() + kHeaderBytes - buffer_.size();
-    auto last = std::min(begin + expectedBytes, end);
+  size_t DecodeBody(const uint8_t *begin, const uint8_t *end) {
+    auto expected_bytes = Length() + kHeaderBytes - buffer_.size();
+    auto last = std::min(begin + expected_bytes, end);
     std::copy(begin, last, std::back_inserter(buffer_));
     return last - begin;
   }

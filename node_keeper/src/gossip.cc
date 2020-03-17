@@ -18,37 +18,38 @@ using asio::ip::tcp, asio::ip::udp;
 class Transport : public Transportable {
  public:
   Transport(const Address &udp, const Address &tcp) try
-      : udpSocket_(ioContext_, udp::endpoint(udp::v4(), udp.port)),
-        acceptor_(ioContext_, tcp::endpoint(tcp::v4(), tcp.port)) {
+      : upd_socket_(io_context_, udp::endpoint(udp::v4(), udp.port)),
+        acceptor_(io_context_, tcp::endpoint(tcp::v4(), tcp.port)) {
     StartReceiveGossip();
     StartAccept();
-    ioThread_ = std::thread(&Transport::IORoutine, this);
+    io_thread_ = std::thread(&Transport::IORoutine, this);
   } catch (const std::exception &e) {
     throw PortOccupied(e);
   }
 
   virtual ~Transport() {
-    ioContext_.stop();
-    if (ioThread_.joinable()) {
-      ioThread_.join();
+    io_context_.stop();
+    if (io_thread_.joinable()) {
+      io_thread_.join();
     }
   }
 
  public:
   virtual ErrorCode Gossip(const std::vector<Address> &nodes,
-                           const Payload &payload, DidGossipHandler didGossip) {
-    udp::resolver resolver(ioContext_);
+                           const Payload &payload,
+                           DidGossipHandler did_gossip) {
+    udp::resolver resolver(io_context_);
     for (const auto &node : nodes) {
       auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
       const auto &endpoint = *endpoints.begin();
-      if (didGossip) {
-        udpSocket_.async_send_to(
+      if (did_gossip) {
+        upd_socket_.async_send_to(
             asio::buffer(payload.data), endpoint,
-            [didGossip](std::error_code error, std::size_t) {
-              didGossip(error ? ErrorCode::kUnknown : ErrorCode::kOK);
+            [did_gossip](std::error_code error, std::size_t) {
+              did_gossip(error ? ErrorCode::kUnknown : ErrorCode::kOK);
             });
       } else {
-        auto sent = udpSocket_.send_to(asio::buffer(payload.data), endpoint);
+        auto sent = upd_socket_.send_to(asio::buffer(payload.data), endpoint);
         assert(sent == payload.data.size() && "all bytes should be sent");
       }
     }
@@ -56,20 +57,20 @@ class Transport : public Transportable {
   }
 
   virtual void RegisterGossipHandler(GossipHandler handler) {
-    gossipHandler_ = handler;
+    gossip_handler_ = handler;
   }
 
   virtual ErrorCode Push(const Address &node, const void *data, size_t size,
-                         DidPushHandler didPush) {
-    tcp::resolver resolver(ioContext_);
+                         DidPushHandler did_push) {
+    tcp::resolver resolver(io_context_);
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
-    tcp::socket socket(ioContext_);
+    tcp::socket socket(io_context_);
     asio::connect(socket, endpoints);
     auto buffer = Message(Message::Type::kPush, data, size).Encode();
-    if (didPush) {
+    if (did_push) {
       socket.async_write_some(asio::buffer(buffer),
-                              [didPush](const std::error_code &error, size_t) {
-                                didPush(ErrorCode::kOK);
+                              [did_push](const std::error_code &error, size_t) {
+                                did_push(ErrorCode::kOK);
                               });
       return ErrorCode::kOK;
     } else {
@@ -79,28 +80,28 @@ class Transport : public Transportable {
   }
 
   virtual void RegisterPushHandler(PushHandler handler) {
-    pushHandler_ = handler;
+    push_handler_ = handler;
   }
 
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
-                          DidPullHandler didPull) try {
+                          DidPullHandler did_pull) try {
     PullResult result{ErrorCode::kUnknown, {}};
-    tcp::resolver resolver(ioContext_);
+    tcp::resolver resolver(io_context_);
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
-    auto socket = std::make_shared<tcp::socket>(ioContext_);
+    auto socket = std::make_shared<tcp::socket>(io_context_);
     asio::connect(*socket, endpoints);
     auto out = Message(Message::Type::kPull, data, size).Encode();
-    if (didPull) {
-      auto onDidPull = [this, didPull, result, socket](
+    if (did_pull) {
+      auto onDidPull = [this, did_pull, result, socket](
                            const std::error_code &err, size_t) mutable {
         if (err) {
-          didPull(result);
+          did_pull(result);
           return;
         }
         if (auto message = ReadMessage(&*socket)) {
           result = PullResult{ErrorCode::kOK, message->Data()};
         }
-        didPull(result);
+        did_pull(result);
       };
       socket->async_write_some(asio::buffer(out), onDidPull);
     } else {
@@ -114,14 +115,14 @@ class Transport : public Transportable {
     return result;
   } catch (const std::exception &e) {
     PullResult result{ErrorCode::kUnknown, {}};
-    if (didPull) {
-      asio::post(ioContext_, std::bind(didPull, result));
+    if (did_pull) {
+      asio::post(io_context_, std::bind(did_pull, result));
     }
     return result;
   }
 
   virtual void RegisterPullHandler(PullHandler handler) {
-    pullHandler_ = handler;
+    pull_handler_ = handler;
   }
 
  private:
@@ -147,17 +148,18 @@ class Transport : public Transportable {
     auto buffer =
         std::make_shared<std::vector<uint8_t>>(Payload::kMaxPayloadSize);
     auto remote = std::make_shared<udp::endpoint>();
-    udpSocket_.async_receive_from(
+    upd_socket_.async_receive_from(
         asio::buffer(*buffer), *remote,
         [this, buffer, remote](const std::error_code &error,
                                std::size_t bytes_transferred) {
           if (error) {
             return;
           }
-          if (gossipHandler_) {
+          if (gossip_handler_) {
             const Address address{remote->address().to_string(),
                                   remote->port()};
-            gossipHandler_(address, Payload(buffer->data(), bytes_transferred));
+            gossip_handler_(address,
+                            Payload(buffer->data(), bytes_transferred));
           }
           StartReceiveGossip();
         });
@@ -165,47 +167,47 @@ class Transport : public Transportable {
 
   void IORoutine() {
     try {
-      ioContext_.run();
+      io_context_.run();
     } catch (...) {
     }
   }
 
   void StartAccept() {
-    auto onReceive = [this](tcp::socket *socket, const Address &address,
-                            const Message &message) {
+    auto on_receive = [this](tcp::socket *socket, const Address &address,
+                             const Message &message) {
       const auto &buffer = message.Data();
       if (message.Type() == Message::Type::kPush) {
-        pushHandler_(address, buffer.data(), buffer.size());
+        push_handler_(address, buffer.data(), buffer.size());
       } else if (message.Type() == Message::Type::kPull) {
         OnPull(socket, address, buffer);
       }
     };
-    acceptor_.async_accept(
-        [this, onReceive](const std::error_code &error, tcp::socket socket) {
-          if (!error) {
-            std::make_shared<Connection>(std::move(socket), onReceive)->Start();
-          }
-          StartAccept();
-        });
+    acceptor_.async_accept([this, on_receive](const std::error_code &error,
+                                              tcp::socket socket) {
+      if (!error) {
+        std::make_shared<Connection>(std::move(socket), on_receive)->Start();
+      }
+      StartAccept();
+    });
   }
 
  private:
   void OnPull(tcp::socket *socket, const Address &address,
               const std::vector<uint8_t> &request) {
-    auto response = pullHandler_(address, request.data(), request.size());
+    auto response = pull_handler_(address, request.data(), request.size());
     Message respondMessage(Message::Type::kPullResponse, response.data(),
                            response.size());
     auto out = respondMessage.Encode();
     socket->write_some(asio::buffer(out));
   }
 
-  asio::io_context ioContext_;
-  udp::socket udpSocket_;
-  std::thread ioThread_;
-  GossipHandler gossipHandler_;
+  asio::io_context io_context_;
+  udp::socket upd_socket_;
+  std::thread io_thread_;
+  GossipHandler gossip_handler_;
   tcp::acceptor acceptor_;
-  PushHandler pushHandler_;
-  PullHandler pullHandler_;
+  PushHandler push_handler_;
+  PullHandler pull_handler_;
 };  // namespace gossip
 
 std::unique_ptr<Transportable> CreateTransport(const Address &udp,
