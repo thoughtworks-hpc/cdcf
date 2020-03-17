@@ -48,6 +48,9 @@ int membership::Membership::Init(
 
   transport_ = transport;
 
+  gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
+      std::chrono::milliseconds(config.GetGossipInterval()));
+
   auto gossip_handler = [this](const struct gossip::Address& node,
                                const gossip::Payload& payload) {
     HandleGossip(node, payload);
@@ -153,14 +156,16 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       return;
     }
 
-    DisseminateGossip(payload);
+    gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                        GetRetransmitLimit());
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
   } else if (message.IsDownMessage()) {
     if (members_.find(member) == members_.end()) {
       return;
     }
 
-    DisseminateGossip(payload);
+    gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                        GetRetransmitLimit());
     MergeDownUpdate(message.GetMember(), message.GetIncarnation());
   }
 }
@@ -182,7 +187,9 @@ void membership::Membership::HandleDidPull(
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
 
-      DisseminateGossip(payload);
+      // DisseminateGossip(payload);
+      gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                          GetRetransmitLimit());
     } else {
       // Rejected from reentry
     }
@@ -190,17 +197,9 @@ void membership::Membership::HandleDidPull(
 }
 
 void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
-  int retransmit_limit = GetRetransmitLimit();
-  if (retransmit_limit <= 0) {
-    return;
-  }
-
   auto did_gossip = [](gossip::ErrorCode error) {};
 
-  while (retransmit_limit > 0) {
-    this->transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
-    retransmit_limit--;
-  }
+  transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
 }
 
 bool membership::Membership::IsLeftMember(const gossip::Address& address) {
@@ -279,7 +278,7 @@ void membership::Membership::MergeDownUpdate(const Member& member,
 
 int membership::Membership::GetRetransmitLimit() const {
   return retransmit_multiplier_ *
-         static_cast<int>(ceil(log10(members_.size() + 1)));
+         static_cast<int>(ceil(log10(members_.size())));
 }
 
 bool membership::operator==(const membership::Member& lhs,
@@ -333,4 +332,8 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
 
 void membership::Config::AddRetransmitMultiplier(int multiplier) {
   retransmit_multiplier_ = multiplier;
+}
+
+void membership::Config::AddGossipInterval(unsigned int interval) {
+  gossip_interval_ = interval;
 }

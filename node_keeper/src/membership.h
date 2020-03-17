@@ -5,6 +5,7 @@
 #ifndef NODE_KEEPER_SRC_MEMBERSHIP_H_
 #define NODE_KEEPER_SRC_MEMBERSHIP_H_
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -14,6 +15,7 @@
 #include <vector>
 
 #include "src/gossip.h"
+#include "src/queue.h"
 
 namespace membership {
 
@@ -54,7 +56,7 @@ bool operator<(const Member& lhs, const Member& rhs);
 
 class Config {
  public:
-  Config() : retransmit_multiplier_(1) {}
+  Config() : retransmit_multiplier_(3), gossip_interval_(500) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
@@ -69,10 +71,14 @@ class Config {
   void AddRetransmitMultiplier(int multiplier);
   int GetRetransmitMultiplier() const { return retransmit_multiplier_; }
 
+  void AddGossipInterval(unsigned int interval);
+  unsigned int GetGossipInterval() const { return gossip_interval_; }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
   int retransmit_multiplier_;
+  unsigned int gossip_interval_;
 };
 
 class Subscriber {
@@ -82,7 +88,7 @@ class Subscriber {
 
 class Membership {
  public:
-  Membership() : retransmit_multiplier_(2), incarnation_(0) {}
+  Membership() : retransmit_multiplier_(3), incarnation_(0) {}
   ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
@@ -116,6 +122,7 @@ class Membership {
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;
   int retransmit_multiplier_;
+  std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
 };
 
 };  // namespace membership
