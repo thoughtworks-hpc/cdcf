@@ -62,11 +62,12 @@ class Message {
  private:
   size_t DecodeHeader(const uint8_t *begin, const uint8_t *end) {
     size_t consumed_bytes = 0;
-    const size_t size = end - begin;
-    if (buffer_.size() + size < kHeaderBytes) {
-      consumed_bytes = size;
+    const size_t legacy = buffer_.size();
+    const size_t current = end - begin;
+    if (legacy + current < kHeaderBytes) {
+      consumed_bytes = current;
     } else {
-      consumed_bytes = kHeaderBytes - buffer_.size();
+      consumed_bytes = kHeaderBytes - legacy;
     }
     std::copy(begin, begin + consumed_bytes, std::back_inserter(buffer_));
     if (Length() > 0) {
