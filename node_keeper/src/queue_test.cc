@@ -46,8 +46,8 @@ TEST(Queue, OneFunctorCalledThreeTimes) {
                                   [&]() { return store.size() == 3; }));
 }
 
-TEST(Queue, TwoFunctorCalledOneTime) {
-  queue::TimedFunctorQueue queue(std::chrono::milliseconds(500));
+TEST(Queue, TwoFunctorCalledOneTimeEach) {
+  queue::TimedFunctorQueue queue(std::chrono::milliseconds(100));
 
   std::promise<std::string> promise1;
   auto future1 = promise1.get_future();
@@ -59,9 +59,9 @@ TEST(Queue, TwoFunctorCalledOneTime) {
   queue.Push(functor1, 1);
   queue.Push(functor2, 1);
 
-  auto status = future1.wait_for(std::chrono::seconds(2));
+  auto status = future1.wait_for(std::chrono::seconds(1));
   ASSERT_EQ(status, std::future_status::ready);
-  status = future2.wait_for(std::chrono::seconds(2));
+  status = future2.wait_for(std::chrono::seconds(1));
   ASSERT_EQ(status, std::future_status::ready);
 
   ASSERT_EQ(future1.get(), "hello");
@@ -69,7 +69,7 @@ TEST(Queue, TwoFunctorCalledOneTime) {
 }
 
 TEST(Queue, OneFunctorCalledZeroTime) {
-  queue::TimedFunctorQueue queue(std::chrono::milliseconds(500));
+  queue::TimedFunctorQueue queue(std::chrono::milliseconds(100));
 
   std::promise<std::string> promise;
   auto future = promise.get_future();
@@ -77,7 +77,8 @@ TEST(Queue, OneFunctorCalledZeroTime) {
 
   queue.Push(functor, 0);
 
-  auto status = future.wait_for(std::chrono::seconds(1));
+  auto status = future.wait_for(std::chrono::milliseconds(200));
+  promise.set_value("won't have any value");
 
   ASSERT_EQ(status, std::future_status::timeout);
 }
