@@ -77,7 +77,8 @@ class Message {
   }
 
   size_t DecodeBody(const uint8_t *begin, const uint8_t *end) {
-    auto expected_bytes = Length() + kHeaderBytes - buffer_.size();
+    const auto package_length = kHeaderBytes + Length();
+    auto expected_bytes = package_length - buffer_.size();
     auto last = std::min(begin + expected_bytes, end);
     std::copy(begin, last, std::back_inserter(buffer_));
     return last - begin;
