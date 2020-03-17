@@ -33,7 +33,7 @@ struct Address {
   }
 };
 
-class Payload {
+struct Payload {
  public:
   class MaxPayloadExceeded : public std::runtime_error {
    public:
