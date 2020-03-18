@@ -37,7 +37,7 @@ class Transport : public Transportable {
  public:
   virtual ErrorCode Gossip(const std::vector<Address> &nodes,
                            const Payload &payload,
-                           DidGossipHandler did_gossip) {
+                           DidGossipHandler did_gossip) try {
     udp::resolver resolver(io_context_);
     for (const auto &node : nodes) {
       auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
@@ -54,6 +54,14 @@ class Transport : public Transportable {
       }
     }
     return ErrorCode::kOK;
+  } catch (const asio::system_error &e) {
+    auto error = ExtractError(e);
+    if (did_gossip) {
+      did_gossip(error);
+      return ErrorCode::kOK;
+    } else {
+      return error;
+    }
   }
 
   virtual void RegisterGossipHandler(GossipHandler handler) {
@@ -61,7 +69,7 @@ class Transport : public Transportable {
   }
 
   virtual ErrorCode Push(const Address &node, const void *data, size_t size,
-                         DidPushHandler did_push) {
+                         DidPushHandler did_push) try {
     tcp::resolver resolver(io_context_);
     auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
     tcp::socket socket(io_context_);
@@ -76,6 +84,14 @@ class Transport : public Transportable {
     } else {
       auto sent = socket.write_some(asio::buffer(buffer));
       return sent == buffer.size() ? ErrorCode::kOK : ErrorCode::kUnknown;
+    }
+  } catch (const asio::system_error &e) {
+    auto result = ExtractError(e);
+    if (did_push) {
+      asio::post(io_context_, std::bind(did_push, result));
+      return ErrorCode::kOK;
+    } else {
+      return result;
     }
   }
 
@@ -113,10 +129,11 @@ class Transport : public Transportable {
       return message ? PullResult{ErrorCode::kOK, message->Data()} : result;
     }
     return result;
-  } catch (const std::exception &e) {
-    PullResult result{ErrorCode::kUnknown, {}};
+  } catch (const asio::system_error &e) {
+    PullResult result{ExtractError(e), {}};
     if (did_pull) {
       asio::post(io_context_, std::bind(did_pull, result));
+      return {ErrorCode::kOK, {}};
     }
     return result;
   }
@@ -199,6 +216,16 @@ class Transport : public Transportable {
                            response.size());
     auto out = respondMessage.Encode();
     socket->write_some(asio::buffer(out));
+  }
+
+  ErrorCode ExtractError(const asio::system_error &e) {
+    switch (e.code().value()) {
+      case asio::error::netdb_errors::host_not_found:
+      case asio::error::netdb_errors::host_not_found_try_again:
+        return ErrorCode::kHostNotFound;
+      default:
+        return ErrorCode::kUnknown;
+    }
   }
 
   asio::io_context io_context_;

@@ -18,6 +18,7 @@ namespace gossip {
 enum ErrorCode {
   kOK = 0,
   kUnknown,
+  kHostNotFound,
 };
 
 struct Address {

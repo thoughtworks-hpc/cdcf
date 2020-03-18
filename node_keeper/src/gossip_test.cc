@@ -122,6 +122,29 @@ TEST_F(Gossip, ShouldReceiveGossipWhenWasGossipAsynchronously) {
   EXPECT_THAT(queue.front(), Eq(sent.data));
 }
 
+TEST_F(Gossip, ShouldReturnErrorGivenUnresolvedHost) {
+  const Payload sent("hello world!");
+  Address address{"unresolved_host", 10086};
+
+  auto result = peers_[0]->Gossip({address}, sent);
+
+  EXPECT_THAT(result, Eq(ErrorCode::kHostNotFound));
+}
+
+TEST_F(Gossip, ShouldCallbackWithErrorGivenUnresolvedHostAsynchronously) {
+  const Payload sent("hello world!");
+  Address address{"unresolved_host", 10086};
+
+  std::promise<ErrorCode> promise;
+  auto result = peers_[0]->Gossip({address}, sent,
+                                  [&](auto code) { promise.set_value(code); });
+
+  ASSERT_THAT(result, Eq(ErrorCode::kOK));
+  auto future = promise.get_future();
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
+  EXPECT_THAT(future.get(), Eq(ErrorCode::kHostNotFound));
+}
+
 class Push : public Gossip {
  public:
   void SetUp() {
@@ -198,6 +221,29 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
 }
 
+TEST_F(Push, ShouldReturnErrorGivenUnresolvedHost) {
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+  Address address{"unresolved_host", 10086};
+
+  auto result = local_->Push(address, sent.data(), sent.size());
+
+  ASSERT_THAT(result, Eq(ErrorCode::kHostNotFound));
+}
+
+TEST_F(Push, ShouldReturnErrorGivenUnresolvedHostAsynchronously) {
+  const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
+  Address address{"unresolved_host", 10086};
+
+  std::promise<ErrorCode> promise;
+  auto didPush = [&](auto code) { promise.set_value(code); };
+  auto result = local_->Push(address, sent.data(), sent.size(), didPush);
+
+  ASSERT_THAT(result, Eq(ErrorCode::kOK));
+  auto future = promise.get_future();
+  ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
+  EXPECT_THAT(future.get(), Eq(ErrorCode::kHostNotFound));
+}
+
 class Pull : public Gossip {
  public:
   void SetUp() {
@@ -242,17 +288,23 @@ TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   EXPECT_THAT(response.second, Eq(kResponse));
 }
 
-TEST_F(Pull, ShouldPullErrorFromDeadPeerAsynchronously) {
-  Address dead_peer{"127.0.0.1", 1};
+TEST_F(Pull, ShouldReturnErrorGivenUnresolvedHost) {
+  Address address{"unresolved_host", 10086};
 
-  using PullResult = gossip::Pullable::PullResult;
-  std::promise<PullResult> promise;
-  std::future<PullResult> future = promise.get_future();
-  auto didPull = [&](const PullResult &result) { promise.set_value(result); };
+  auto result = local_->Pull(address, kRequest.data(), kRequest.size());
+
+  ASSERT_THAT(result.first, Eq(ErrorCode::kHostNotFound));
+}
+
+TEST_F(Pull, ShouldPullErrorGivenUnresolvedHostAsynchronously) {
+  Address address{"unresolved_host", 10086};
+
+  std::promise<gossip::Pullable::PullResult> promise;
+  auto did_pull = [&](auto &result) { promise.set_value(result); };
   auto result =
-      local_->Pull(dead_peer, kRequest.data(), kRequest.size(), didPull);
+      local_->Pull(address, kRequest.data(), kRequest.size(), did_pull);
 
+  auto future = promise.get_future();
   ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
-  auto response = future.get();
-  ASSERT_THAT(response.first, Eq(ErrorCode::kUnknown));
+  ASSERT_THAT(future.get().first, Eq(ErrorCode::kHostNotFound));
 }
