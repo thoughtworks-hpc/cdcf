@@ -18,12 +18,12 @@ using ::testing::AtLeast;
 using ::testing::Return;
 
 TEST(Member, ShouldOverwriteCompareOperatorRight) {
-    membership::Member a("1", "node_a", 4445);
-    membership::Member b("1", "node_b", 4445);
-    EXPECT_TRUE(a < b);
-    EXPECT_FALSE(b < a);
-    EXPECT_NE(a, b);
-    EXPECT_EQ(a, a);
+  membership::Member a("1", "node_a", 4445);
+  membership::Member b("1", "node_b", 4445);
+  EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
+  EXPECT_NE(a, b);
+  EXPECT_EQ(a, a);
 }
 
 // Member
