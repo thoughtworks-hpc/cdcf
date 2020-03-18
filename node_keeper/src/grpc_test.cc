@@ -41,7 +41,7 @@ class GRPCTest : public ::testing::Test {
   std::unique_ptr<NodeKeeper::Stub> stub_;
   /* FIXME: It would be better to find a unused port dynamically like
    * `grpc_pick_unused_port_or_die`. */
-  const std::string server_address_{"localhost:30002"};
+  const std::string server_address_{"127.0.0.1:30002"};
   GRPCImpl service_;
   std::unique_ptr<GRPCServer> server_;
   membership::Member node_a_ = {"node_a", "localhost", 8834};
