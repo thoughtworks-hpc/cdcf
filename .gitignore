@@ -1,4 +1,8 @@
 **/.*.swp
+**/*.a
+**/*.so
+**/*.dylib
+**/*_test
 build
 
 conan.lock
@@ -9,6 +13,7 @@ graph_info.json
 
 CMakeCache.txt
 CMakeFiles
+Testing
 *.cmake
 cmake_install.cmake
 Makefile
@@ -19,3 +24,5 @@ cmake-build-debug
 **/*.grpc.pb.h
 **/*.pb.cc
 **/*.pb.h
+
+tags
