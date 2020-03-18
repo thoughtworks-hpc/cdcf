@@ -298,7 +298,8 @@ bool membership::operator!=(const membership::Member& lhs,
 
 bool membership::operator<(const membership::Member& lhs,
                            const membership::Member& rhs) {
-  return (lhs.ip_address_ <= rhs.ip_address_ && lhs.port_ < rhs.port_);
+  return (lhs.ip_address_ < rhs.ip_address_) ||
+         (lhs.ip_address_ == rhs.ip_address_ && lhs.port_ < rhs.port_);
 }
 
 bool membership::Member::IsEmptyMember() {
