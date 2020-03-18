@@ -207,8 +207,8 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
 
   std::promise<void> promise;
-  auto didPush = [&](auto) { promise.set_value(); };
-  auto result = local_->Push(addressRemote_, sent.data(), sent.size(), didPush);
+  auto result = local_->Push(addressRemote_, sent.data(), sent.size(),
+                             [&](auto) { promise.set_value(); });
 
   {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -235,8 +235,8 @@ TEST_F(Push, ShouldReturnErrorGivenUnresolvedHostAsynchronously) {
   Address address{"unresolved_host", 10086};
 
   std::promise<ErrorCode> promise;
-  auto didPush = [&](auto code) { promise.set_value(code); };
-  auto result = local_->Push(address, sent.data(), sent.size(), didPush);
+  auto result = local_->Push(address, sent.data(), sent.size(),
+                             [&](auto code) { promise.set_value(code); });
 
   ASSERT_THAT(result, Eq(ErrorCode::kOK));
   auto future = promise.get_future();
@@ -278,9 +278,8 @@ TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   using PullResult = gossip::Pullable::PullResult;
   std::promise<PullResult> promise;
   std::future<PullResult> future = promise.get_future();
-  auto didPull = [&](const PullResult &result) { promise.set_value(result); };
-  auto result =
-      local_->Pull(addressRemote_, kRequest.data(), kRequest.size(), didPull);
+  auto result = local_->Pull(addressRemote_, kRequest.data(), kRequest.size(),
+                             [&](auto &result) { promise.set_value(result); });
 
   ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
   auto response = future.get();
