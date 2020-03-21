@@ -92,28 +92,23 @@ TEST_F(GRPCTest, ShouldReturnOneMemberByGetMembersAfterDifferentNodeUpAndDown) {
   EXPECT_THAT(reply.members().size(), Eq(1));
 }
 
-/* FIXME: This test fail casually, due to schedule between threads, try to
- * implement it by using async gRPC API. */
-#if 0
 TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
-  bool server_done = false, client_done = false;
+  bool server_done = false;
   grpc::ClientContext context;
   std::unique_ptr<grpc::ClientReader<::Event>> reader(
       stub_->Subscribe(&context, {}));
   auto future = std::async([&]() {
     std::vector<::Event> events;
-    client_done = true;
     for (::Event event; !server_done && reader->Read(&event);) {
       events.push_back(event);
     }
     return events;
   });
-  while (!client_done) {
-  }
 
-  /* FIXME: sleep 1s to wait for client invoke `Read`, should find a better
-   * alternative to solve uncertain sequence issue */
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  for (size_t i = 0; i < 5 && service_.GetSubscribersCount() != 1;
+       std::this_thread::sleep_for(std::chrono::milliseconds(100))) {
+  }
+  ASSERT_THAT(service_.GetSubscribersCount(), Eq(1));
   service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
   server_done = true;
   auto events = future.get();
@@ -126,4 +121,3 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
   EXPECT_THAT(member.host(), Eq(node_a_.GetIpAddress()));
   EXPECT_THAT(member.port(), Eq(node_a_.GetPort()));
 }
-#endif

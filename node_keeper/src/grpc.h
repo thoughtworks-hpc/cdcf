@@ -38,6 +38,11 @@ class GRPCImpl final : public ::NodeKeeper::Service {
     }
   }
 
+  size_t GetSubscribersCount() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return channels_.size();
+  }
+
  private:
   using channels_type = std::list<Channel<MemberEvent>>;
 
