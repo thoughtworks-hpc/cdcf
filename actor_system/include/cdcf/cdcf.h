@@ -1,6 +1,0 @@
-/*
- * Copyright (c) 2019 ThoughtWorks Inc.
- */
-#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_CDCF_H_
-#define ACTOR_SYSTEM_INCLUDE_CDCF_CDCF_H_
-#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_CDCF_H_
