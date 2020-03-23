@@ -9,7 +9,13 @@
 
 #include "caf/scoped_actor.hpp"
 
-using namespace caf;
+using caf::actor;
+using caf::actor_system;
+using caf::behavior;
+using caf::blocking_actor;
+using caf::error;
+using caf::event_based_actor;
+using caf::scoped_actor;
 
 behavior Additon(event_based_actor*) {
   return {[=](const int& what) -> int {
@@ -30,12 +36,12 @@ void Sum(blocking_actor* self) {
   self->receive_while(running)(
       [=](const actor& buddy, const int& what) -> int {
         int sum_value = 0;
-        self->request(buddy, infinite, what)
+        self->request(buddy, caf::infinite, what)
             .receive([=, &sum_value](const int& a) { sum_value = a; },
                      handle_err);
         return sum_value;
       },
-      [&](exit_msg& em) {
+      [&](caf::exit_msg& em) {
         if (em.reason) {
           self->fail_state(std::move(em.reason));
           running = false;
@@ -46,8 +52,8 @@ void Sum(blocking_actor* self) {
 int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2,
                  const int& number, const int& id) {
   auto handle_err = [&](const error& err) {
-    aout(self) << "AUT (actor under test) failed: "
-               << self->system().render(err) << std::endl;
+    caf::aout(self) << "AUT (actor under test) failed: "
+                    << self->system().render(err) << std::endl;
   };
 
   int sum_value = 0;
@@ -59,12 +65,12 @@ int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2,
 int main(int argc, char** argv) {
   cdcf_config cfg;
   cfg.parse_config(argc, argv);
-  actor_system system{cfg};
+  caf::actor_system system{cfg};
 
   auto addtion_actor = system.spawn(Additon);
   auto sum_actor = system.spawn(Sum);
   scoped_actor self{system};
-  scheduler::abstract_coordinator& sch = system.scheduler();
+  caf::scheduler::abstract_coordinator& sch = system.scheduler();
   std::cout << "workers num:" << sch.num_workers() << std::endl;
 
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
@@ -78,6 +84,6 @@ int main(int argc, char** argv) {
       std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
   std::cout << "time used:" << time_used.count() << "(S)" << std::endl;
 
-  self->send_exit(sum_actor, exit_reason::user_shutdown);
+  self->send_exit(sum_actor, caf::exit_reason::user_shutdown);
   return 0;
 }
