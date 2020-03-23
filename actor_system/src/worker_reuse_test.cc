@@ -45,7 +45,7 @@ TEST(TestScheduler, load_from_file) {
   EXPECT_THAT(0, ret);
   EXPECT_TRUE(floor(std::thread::hardware_concurrency() *
                     config.threads_proportion) == sch.num_workers() ||
-              4 * config.threads_proportion == sch.num_workers());
+              (4 * config.threads_proportion) == sch.num_workers());
 }
 
 TEST(TestScheduler, load_default) {
