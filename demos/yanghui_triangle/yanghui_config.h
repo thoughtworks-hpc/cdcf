@@ -18,17 +18,6 @@ typename Inspector::result_type inspect(Inspector& f, NumberCompareData& x) {
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
-struct foo {
-  std::vector<int> a;
-  int b;
-};
-
-// foo needs to be serializable
-template <class Inspector>
-typename Inspector::result_type inspect(Inspector& f, foo& x) {
-  return f(caf::meta::type_name("foo"), x.a, x.b);
-}
-
 class config : public cdcf_config {
  public:
   uint16_t port = 0;
@@ -49,7 +38,6 @@ class config : public cdcf_config {
              "set compare result group name@host:port")
         .add(worker_port, "instance, i", "set instance id");
     add_message_type<NumberCompareData>("NumberCompareData");
-    add_message_type<foo>("foo");
   }
 };
 
