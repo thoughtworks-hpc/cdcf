@@ -9,7 +9,7 @@ if("${CONAN_COMPILER}" STREQUAL "gcc")
 endif()
 
 include(CTest)
+add_subdirectory(config_manager)
 add_subdirectory(node_keeper)
 add_subdirectory(actor_system)
 add_subdirectory(demos)
-add_subdirectory(config_manager)
