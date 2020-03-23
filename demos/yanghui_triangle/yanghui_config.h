@@ -11,25 +11,25 @@
 using namespace caf;
 using namespace std;
 
-struct NumberCompareData{
+struct NumberCompareData {
   vector<int> numbers;
   int index;
 };
 
-template <class Inspector >
+template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f, NumberCompareData& x) {
   return f(meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
 struct foo {
-    std::vector<int> a;
-    int b;
+  std::vector<int> a;
+  int b;
 };
 
 // foo needs to be serializable
 template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f, foo& x) {
-    return f(meta::type_name("foo"), x.a, x.b);
+  return f(meta::type_name("foo"), x.a, x.b);
 }
 
 class config : public cdcf_config {
@@ -37,8 +37,7 @@ class config : public cdcf_config {
   uint16_t port = 0;
   string host = "localhost";
   string worker_group = "";
-  string
-  count_result_group = "";
+  string count_result_group = "";
   string compare_group = "";
   uint16_t worker_port = 0;
 
@@ -47,8 +46,10 @@ class config : public cdcf_config {
         .add(port, "port,p", "set port")
         .add(host, "host,H", "set node")
         .add(worker_group, "group,g", "set worker group name@host:port")
-        .add(count_result_group, "result,r", "set count result group name@host:port")
-        .add(compare_group, "compare, c", "set compare result group name@host:port")
+        .add(count_result_group, "result,r",
+             "set count result group name@host:port")
+        .add(compare_group, "compare, c",
+             "set compare result group name@host:port")
         .add(worker_port, "instance, i", "set instance id");
     add_message_type<NumberCompareData>("NumberCompareData");
     add_message_type<foo>("foo");
