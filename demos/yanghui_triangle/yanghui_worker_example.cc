@@ -1,9 +1,9 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
+#include "./yanghui_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
-#include "./yanghui_config.h"
 
 caf::behavior countAdd(caf::event_based_actor* self,
                        const caf::group& result_group,

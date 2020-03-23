@@ -1,9 +1,9 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
+#include "./yanghui_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
-#include "./yanghui_config.h"
 
 void caf_main(caf::actor_system& system, const config& cfg) {
   auto res = system.middleman().publish_local_groups(cfg.port);
