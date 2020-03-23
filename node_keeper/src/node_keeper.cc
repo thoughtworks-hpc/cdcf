@@ -5,8 +5,10 @@
 
 #include <algorithm>
 #include <chrono>
+#include <condition_variable>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <utility>
 
@@ -35,15 +37,34 @@ NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
   membership_.Init(transport, config);
 }
 
+class Subscriber : public membership::Subscriber {
+ public:
+  void Update() override {
+    { std::lock_guard lock(mutex_); }
+    condition_variable_.notify_all();
+  }
+
+  void Wait() {
+    std::unique_lock lock(mutex_);
+    condition_variable_.wait(lock);
+  }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable condition_variable_;
+};
+
 void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
   GRPCImpl service;
   GRPCServer server(server_address, {&service});
   std::cout << "gRPC Server listening on " << server_address << std::endl;
 
+  auto subscriber = std::make_shared<Subscriber>();
+  membership_.Subscribe(subscriber);
   MemberEventGenerator generator;
-  auto interval = std::chrono::seconds(1);
-  for (;; std::this_thread::sleep_for(interval)) {
+  for (;;) {
+    /* FIXME: Is GetMembers thread safe? */
     auto events = generator.Update(membership_.GetMembers());
     for (auto& event : events) {
       std::cout << "node [" << event.member.GetNodeName();
@@ -59,6 +80,7 @@ void NodeKeeper::Run() {
           break;
       }
     }
+    subscriber->Wait();
   }
 }
 }  // namespace node_keeper
