@@ -5,15 +5,18 @@
 #ifndef CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
 #define CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
 
+#include <algorithm>
+
 #include "caf/all.hpp"
 
 class cdcf_config : public caf::actor_system_config {
  public:
-  cdcf_config() = default;
+  cdcf_config();
   cdcf_config(cdcf_config&& config) = default;
   cdcf_config(const cdcf_config& config) = delete;
   cdcf_config& operator=(const cdcf_config&) = delete;
 
+  double threads_proportion = 1.0;
   enum RET_VALUE {
     SUCCESS = 0,
     FAILURE = 1,
