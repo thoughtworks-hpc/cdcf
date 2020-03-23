@@ -1,10 +1,9 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
+#include "./yanghui_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
-#include "./yanghui_config.h"
-
 
 std::vector<std::vector<int> > kYanghuiData = {
     {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
@@ -20,7 +19,8 @@ struct GetMinState {
   std::map<int, int> current_result;
 };
 
-caf::behavior getMin(caf::stateful_actor<GetMinState>* self, const caf::actor worker) {
+caf::behavior getMin(caf::stateful_actor<GetMinState>* self,
+                     const caf::actor worker) {
   const int batch = 3;
   return {[=](const std::vector<int>& data) {
             int len = data.size();
@@ -70,12 +70,13 @@ caf::behavior getMin(caf::stateful_actor<GetMinState>* self, const caf::actor wo
             }
 
             self->join(what);
-            std::cout << "compare joined a group:" << to_string(what) << std::endl;
+            std::cout << "compare joined a group:" << to_string(what)
+                      << std::endl;
           }};
 }
 
-caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self, const caf::actor worker,
-                 const caf::actor compare) {
+caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self,
+                      const caf::actor worker, const caf::actor compare) {
   return {[=](const std::vector<std::vector<int> >& data) {
             const int len = data.size();
             self->state.data = data;
@@ -125,7 +126,8 @@ caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self, const caf::actor 
             }
 
             self->join(what);
-            std::cout << "yanghui joined a group:" << to_string(what) << std::endl;
+            std::cout << "yanghui joined a group:" << to_string(what)
+                      << std::endl;
           }};
 }
 
@@ -133,13 +135,14 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   auto result_group_exp = system.groups().get("remote", cfg.count_result_group);
   if (!result_group_exp) {
     std::cerr << "failed to get count result group: " << cfg.count_result_group
-         << std::endl;
+              << std::endl;
     return;
   }
 
   auto compare_group_exp = system.groups().get("remote", cfg.compare_group);
   if (!compare_group_exp) {
-    std::cerr << "failed to get compare result group: " << cfg.compare_group << std::endl;
+    std::cerr << "failed to get compare result group: " << cfg.compare_group
+              << std::endl;
     return;
   }
 

@@ -8,7 +8,6 @@
 #include "caf/io/all.hpp"
 #include "cdcf_config.h"
 
-
 struct NumberCompareData {
   std::vector<int> numbers;
   int index;
