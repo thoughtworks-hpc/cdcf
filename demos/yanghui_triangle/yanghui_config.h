@@ -17,7 +17,8 @@ struct NumberCompareData {
 };
 
 template <class Inspector>
-typename Inspector::result_type inspect(Inspector& f, NumberCompareData& x) {
+typename Inspector::result_type inspect(Inspector& f,
+                                        const NumberCompareData& x) {
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
