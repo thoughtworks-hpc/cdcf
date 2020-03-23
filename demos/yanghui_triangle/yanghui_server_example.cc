@@ -5,10 +5,9 @@
 #include "caf/io/all.hpp"
 #include "yanghui_config.h"
 
-using namespace caf;
 using namespace std;
 
-void caf_main(actor_system& system, const config& cfg) {
+void caf_main(caf::actor_system& system, const config& cfg) {
   auto res = system.middleman().publish_local_groups(cfg.port);
   if (!res) {
     std::cerr << "*** publishing local groups failed: "

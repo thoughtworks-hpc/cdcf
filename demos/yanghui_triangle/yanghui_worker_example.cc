@@ -5,19 +5,17 @@
 #include "caf/io/all.hpp"
 #include "yanghui_config.h"
 
-using namespace caf;
-using namespace std;
 
-behavior countAdd(event_based_actor* self, const group& result_group,
-                  const group& compare_result_group) {
+caf::behavior countAdd(caf::event_based_actor* self, const caf::group& result_group,
+                  const caf::group& compare_result_group) {
   return {
       [=](int a, int b, int id) {
-        aout(self) << "receive:" << a << " " << b << " " << id << " " << endl;
+        aout(self) << "receive:" << a << " " << b << " " << id << " " << std::endl;
         anon_send(result_group, a + b, id);
       },
       [=](int a, int b, int c, int id) {
         aout(self) << "receive:" << a << " " << b << " " << c << " " << id
-                   << " " << endl;
+                   << " " << std::endl;
         anon_send(result_group, a < b ? a + c : b + c, id);
       },
       [=](NumberCompareData& a) {
@@ -25,7 +23,7 @@ behavior countAdd(event_based_actor* self, const group& result_group,
           return;
         }
 
-        aout(self) << "receive:" << a << endl;
+        aout(self) << "receive:" << a << std::endl;
 
         int result = a.numbers[0];
         for (int num : a.numbers) {
@@ -40,17 +38,17 @@ behavior countAdd(event_based_actor* self, const group& result_group,
   };
 }
 
-void caf_main(actor_system& system, const config& cfg) {
+void caf_main(caf::actor_system& system, const config& cfg) {
   auto result_group_exp = system.groups().get("remote", cfg.count_result_group);
   if (!result_group_exp) {
-    cerr << "failed to get count result group: " << cfg.count_result_group
-         << endl;
+    std::cerr << "failed to get count result group: " << cfg.count_result_group
+         << std::endl;
     return;
   }
 
   auto compare_group_exp = system.groups().get("remote", cfg.compare_group);
   if (!compare_group_exp) {
-    cerr << "failed to get compare result group: " << cfg.compare_group << endl;
+    std::cerr << "failed to get compare result group: " << cfg.compare_group << std::endl;
     return;
   }
 
@@ -58,18 +56,18 @@ void caf_main(actor_system& system, const config& cfg) {
   auto compare_group = std::move(*compare_group_exp);
   auto worker_actor = system.spawn(countAdd, result_group, compare_group);
 
-  auto expected_port = io::publish(worker_actor, cfg.worker_port);
+  auto expected_port = caf::io::publish(worker_actor, cfg.worker_port);
   if (!expected_port) {
     std::cerr << "*** publish failed: " << system.render(expected_port.error())
-              << endl;
+              << std::endl;
     return;
   }
 
-  cout << "worker started at port:" << expected_port << endl
-       << "*** press [enter] to quit" << endl;
-  string dummy;
+  std::cout << "worker started at port:" << expected_port << std::endl
+       << "*** press [enter] to quit" << std::endl;
+  std::string dummy;
   std::getline(std::cin, dummy);
-  cout << "... cya" << endl;
+  std::cout << "... cya" << std::endl;
 }
 
-CAF_MAIN(io::middleman)
+CAF_MAIN(caf::io::middleman)

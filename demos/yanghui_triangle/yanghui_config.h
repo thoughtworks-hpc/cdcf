@@ -8,17 +8,15 @@
 #include "caf/io/all.hpp"
 #include "cdcf_config.h"
 
-using namespace caf;
-using namespace std;
 
 struct NumberCompareData {
-  vector<int> numbers;
+  std::vector<int> numbers;
   int index;
 };
 
 template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f, NumberCompareData& x) {
-  return f(meta::type_name("NumberCompareData"), x.numbers, x.index);
+  return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
 struct foo {
@@ -29,16 +27,16 @@ struct foo {
 // foo needs to be serializable
 template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f, foo& x) {
-  return f(meta::type_name("foo"), x.a, x.b);
+  return f(caf::meta::type_name("foo"), x.a, x.b);
 }
 
 class config : public cdcf_config {
  public:
   uint16_t port = 0;
-  string host = "localhost";
-  string worker_group = "";
-  string count_result_group = "";
-  string compare_group = "";
+  std::string host = "localhost";
+  std::string worker_group = "";
+  std::string count_result_group = "";
+  std::string compare_group = "";
   uint16_t worker_port = 0;
 
   config() {

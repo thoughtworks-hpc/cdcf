@@ -3,31 +3,29 @@
  */
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
-#include "yanghui_config.h"
+#include "./yanghui_config.h"
 
-using namespace caf;
-using namespace std;
 
-vector<vector<int> > kYanghuiData = {
+std::vector<std::vector<int> > kYanghuiData = {
     {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
 
 struct YanghuiState {
   int index = 0;
-  map<int, int> current_result;
-  vector<vector<int> > data;
+  std::map<int, int> current_result;
+  std::vector<std::vector<int> > data;
 };
 
 struct GetMinState {
   int count = 0;
-  map<int, int> current_result;
+  std::map<int, int> current_result;
 };
 
-behavior getMin(stateful_actor<GetMinState>* self, const actor worker) {
+caf::behavior getMin(caf::stateful_actor<GetMinState>* self, const caf::actor worker) {
   const int batch = 3;
-  return {[=](const vector<int>& data) {
+  return {[=](const std::vector<int>& data) {
             int len = data.size();
             if (1 == len) {
-              cout << "final result:" << data[0] << endl;
+              std::cout << "final result:" << data[0] << std::endl;
               return;
             }
 
@@ -45,7 +43,7 @@ behavior getMin(stateful_actor<GetMinState>* self, const actor worker) {
               int endIndex = i + batch < len ? i + batch : len;
               NumberCompareData send_data;
               send_data.numbers =
-                  vector<int>(data.begin() + i, data.begin() + endIndex);
+                  std::vector<int>(data.begin() + i, data.begin() + endIndex);
               send_data.index = count;
               self->send(worker, send_data);
               // self->send(worker_group, 1, 2, 3);
@@ -57,7 +55,7 @@ behavior getMin(stateful_actor<GetMinState>* self, const actor worker) {
               self->state.current_result.emplace(id, result);
             }
             if (self->state.count == self->state.current_result.size()) {
-              vector<int> newData;
+              std::vector<int> newData;
               for (auto& mapMember : self->state.current_result) {
                 newData.emplace_back(mapMember.second);
               }
@@ -65,20 +63,20 @@ behavior getMin(stateful_actor<GetMinState>* self, const actor worker) {
               self->send(self, newData);
             }
           },
-          [=](const group& what) {
+          [=](const caf::group& what) {
             for (const auto& g : self->joined_groups()) {
-              cout << "*** leave " << to_string(g) << endl;
+              std::cout << "*** leave " << to_string(g) << std::endl;
               self->leave(g);
             }
 
             self->join(what);
-            cout << "compare joined a group:" << to_string(what) << endl;
+            std::cout << "compare joined a group:" << to_string(what) << std::endl;
           }};
 }
 
-behavior yanghui(stateful_actor<YanghuiState>* self, const actor worker,
-                 const actor compare) {
-  return {[=](const vector<vector<int> >& data) {
+caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self, const caf::actor worker,
+                 const caf::actor compare) {
+  return {[=](const std::vector<std::vector<int> >& data) {
             const int len = data.size();
             self->state.data = data;
             self->state.current_result[0] = data[0][0];
@@ -90,7 +88,7 @@ behavior yanghui(stateful_actor<YanghuiState>* self, const actor worker,
             }
 
             if (index == self->state.data.size()) {
-              cout << "count task finish." << endl;
+              std::cout << "count task finish." << std::endl;
               self->send(compare, self->state.data[index - 1]);
               return;
             }
@@ -120,37 +118,37 @@ behavior yanghui(stateful_actor<YanghuiState>* self, const actor worker,
               self->send(self, self->state.index + 1);
             }
           },
-          [=](const group& what) {
+          [=](const caf::group& what) {
             for (const auto& g : self->joined_groups()) {
-              cout << "*** leave " << to_string(g) << endl;
+              std::cout << "*** leave " << to_string(g) << std::endl;
               self->leave(g);
             }
 
             self->join(what);
-            cout << "yanghui joined a group:" << to_string(what) << endl;
+            std::cout << "yanghui joined a group:" << to_string(what) << std::endl;
           }};
 }
 
-void caf_main(actor_system& system, const config& cfg) {
+void caf_main(caf::actor_system& system, const config& cfg) {
   auto result_group_exp = system.groups().get("remote", cfg.count_result_group);
   if (!result_group_exp) {
-    cerr << "failed to get count result group: " << cfg.count_result_group
-         << endl;
+    std::cerr << "failed to get count result group: " << cfg.count_result_group
+         << std::endl;
     return;
   }
 
   auto compare_group_exp = system.groups().get("remote", cfg.compare_group);
   if (!compare_group_exp) {
-    cerr << "failed to get compare result group: " << cfg.compare_group << endl;
+    std::cerr << "failed to get compare result group: " << cfg.compare_group << std::endl;
     return;
   }
 
   auto result_group = std::move(*result_group_exp);
   auto compare_group = std::move(*compare_group_exp);
 
-  scoped_actor self{system};
-  scoped_execution_unit context(&system);
-  auto pool = actor_pool::make(&context, actor_pool::round_robin());
+  caf::scoped_actor self{system};
+  caf::scoped_execution_unit context(&system);
+  auto pool = caf::actor_pool::make(&context, caf::actor_pool::round_robin());
 
   auto worker1_exp = system.middleman().remote_actor("localhost", 51563);
   auto worker1 = std::move(*worker1_exp);
@@ -158,8 +156,8 @@ void caf_main(actor_system& system, const config& cfg) {
   auto worker2_exp = system.middleman().remote_actor("localhost", 51566);
   auto worker2 = std::move(*worker2_exp);
 
-  self->send(pool, sys_atom::value, put_atom::value, worker1);
-  self->send(pool, sys_atom::value, put_atom::value, worker2);
+  self->send(pool, caf::sys_atom::value, caf::put_atom::value, worker1);
+  self->send(pool, caf::sys_atom::value, caf::put_atom::value, worker2);
 
   auto min_actor = system.spawn(getMin, pool);
   auto min_actor_fun = make_function_view(min_actor);
