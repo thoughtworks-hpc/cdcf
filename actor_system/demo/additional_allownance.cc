@@ -49,19 +49,6 @@ void Sum(blocking_actor* self) {
       });
 }
 
-int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2,
-                 const int& number, const int& id) {
-  auto handle_err = [&](const error& err) {
-    caf::aout(self) << "AUT (actor under test) failed: "
-                    << self->system().render(err) << std::endl;
-  };
-
-  int sum_value = 0;
-  self->request(a1, std::chrono::seconds(10), a2, number)
-      .receive([=, &sum_value](const int& a) { sum_value = a; }, handle_err);
-  return sum_value;
-}
-
 int main(int argc, char** argv) {
   cdcf_config cfg;
   cfg.parse_config(argc, argv);
@@ -73,10 +60,18 @@ int main(int argc, char** argv) {
   caf::scheduler::abstract_coordinator& sch = system.scheduler();
   std::cout << "workers num:" << sch.num_workers() << std::endl;
 
+  auto handle_err = [&](const error& err) {
+    caf::aout(self) << "AUT (actor under test) failed: "
+                    << self->system().render(err) << std::endl;
+  };
+
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
   for (int i = 1; i < 5; i++) {
-    int value = ImplementSum(self, sum_actor, addtion_actor, i, i);
-    std::cout << "sigma(1-" << i << ")=" << value << std::endl;
+    int sum_value = 0;
+    self->request(sum_actor, std::chrono::seconds(10), addtion_actor, i)
+        .receive([=, &sum_value](const int& a) { sum_value = a; }, handle_err);
+
+    std::cout << "sigma(1-" << i << ")=" << sum_value << std::endl;
   }
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
