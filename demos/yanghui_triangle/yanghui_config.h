@@ -4,6 +4,9 @@
 
 #ifndef CDCF_YANGHUI_CONFIG_H
 #define CDCF_YANGHUI_CONFIG_H
+#include <string>
+#include <vector>
+
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 #include "cdcf_config.h"

@@ -8,35 +8,32 @@
 caf::behavior countAdd(caf::event_based_actor* self,
                        const caf::group& result_group,
                        const caf::group& compare_result_group) {
-  return {
-      [=](int a, int b, int id) {
-        aout(self) << "receive:" << a << " " << b << " " << id << " "
-                   << std::endl;
-        anon_send(result_group, a + b, id);
-      },
-      [=](int a, int b, int c, int id) {
-        aout(self) << "receive:" << a << " " << b << " " << c << " " << id
-                   << " " << std::endl;
-        anon_send(result_group, a < b ? a + c : b + c, id);
-      },
-      [=](NumberCompareData& a) {
-        if (0 == a.numbers.size()) {
-          return;
-        }
+  return {[=](int a, int b, int id) {
+            aout(self) << "receive:" << a << " " << b << " " << id << " "
+                       << std::endl;
+            anon_send(result_group, a + b, id);
+          },
+          [=](int a, int b, int c, int id) {
+            aout(self) << "receive:" << a << " " << b << " " << c << " " << id
+                       << " " << std::endl;
+            anon_send(result_group, a < b ? a + c : b + c, id);
+          },
+          [=](NumberCompareData& a) {
+            if (0 == a.numbers.size()) {
+              return;
+            }
 
-        aout(self) << "receive:" << a << std::endl;
+            aout(self) << "receive:" << a << std::endl;
 
-        int result = a.numbers[0];
-        for (int num : a.numbers) {
-          if (num < result) {
-            result = num;
-          }
-        }
+            int result = a.numbers[0];
+            for (int num : a.numbers) {
+              if (num < result) {
+                result = num;
+              }
+            }
 
-        anon_send(compare_result_group, result, a.index);
-      },
-
-  };
+            anon_send(compare_result_group, result, a.index);
+          }};
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
