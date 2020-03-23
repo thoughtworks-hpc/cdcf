@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/2/21.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_YANGHUI_CONFIG_H
 #define CDCF_YANGHUI_CONFIG_H

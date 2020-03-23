@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/2/19.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 #include "yanghui_config.h"
