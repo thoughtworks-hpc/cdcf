@@ -43,8 +43,8 @@ void Sum(blocking_actor* self) {
       });
 }
 
-int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2, const int& number,
-                 const int& id) {
+int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2,
+                 const int& number, const int& id) {
   auto handle_err = [&](const error& err) {
     aout(self) << "AUT (actor under test) failed: "
                << self->system().render(err) << std::endl;
