@@ -2,14 +2,14 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_YANGHUI_CONFIG_H
-#define CDCF_YANGHUI_CONFIG_H
+#ifndef DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
+#define DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
 #include <string>
 #include <vector>
 
+#include "../../config_manager/include/cdcf_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
-#include "cdcf_config.h"
 
 struct NumberCompareData {
   std::vector<int> numbers;
@@ -44,4 +44,4 @@ class config : public cdcf_config {
   }
 };
 
-#endif  // CDCF_YANGHUI_CONFIG_H
+#endif  // DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
