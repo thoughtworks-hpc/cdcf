@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 #include <cdcf_config.h>
 #include <math.h>
 
@@ -5,9 +8,6 @@
 #include <string>
 
 #include "caf/scoped_actor.hpp"
-
-using std::endl;
-using std::string;
 
 using namespace caf;
 
@@ -23,7 +23,7 @@ behavior Additon(event_based_actor*) {
 void Sum(blocking_actor* self) {
   auto handle_err = [&](const error& err) {
     aout(self) << "AUT (actor under test) failed: "
-               << self->system().render(err) << endl;
+               << self->system().render(err) << std::endl;
   };
   bool running = true;
 
@@ -43,11 +43,11 @@ void Sum(blocking_actor* self) {
       });
 }
 
-int ImplementSum(scoped_actor& self, actor& a1, actor& a2, const int& number,
+int ImplementSum(scoped_actor& self, const actor& a1, const actor& a2, const int& number,
                  const int& id) {
   auto handle_err = [&](const error& err) {
     aout(self) << "AUT (actor under test) failed: "
-               << self->system().render(err) << endl;
+               << self->system().render(err) << std::endl;
   };
 
   int sum_value = 0;
