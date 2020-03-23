@@ -8,7 +8,6 @@
 using namespace caf;
 using namespace std;
 
-
 behavior countAdd(event_based_actor* self, const group& result_group, const group& compare_result_group) {
   return {
     [=](int a, int b, int id){
@@ -35,25 +34,11 @@ behavior countAdd(event_based_actor* self, const group& result_group, const grou
 
       anon_send(compare_result_group, result, a.index);
     },
-//    [=](const group& what){
-//      for (const auto& g : self->joined_groups()) {
-//        cout << "*** leave " << to_string(g) << endl;
-//        self->leave(g);
-//      }
-//
-//      self->join(what);
-//      cout << "joined a group:" << to_string(what) << endl;
-//    }
+
   };
 }
 
 void caf_main(actor_system& system, const config& cfg) {
-//  auto worker_group_exp = system.groups().get("remote", cfg.worker_group);
-//  if (!worker_group_exp){
-//    cerr << "failed to get worker group: " << cfg.worker_group << endl;
-//    return;
-//  }
-
   auto result_group_exp = system.groups().get("remote", cfg.count_result_group);
   if (!result_group_exp){
     cerr << "failed to get count result group: " << cfg.count_result_group << endl;
@@ -66,14 +51,9 @@ void caf_main(actor_system& system, const config& cfg) {
     return;
   }
 
-  //auto worker_group = std::move(*worker_group_exp);
   auto result_group = std::move(*result_group_exp);
   auto compare_group = std::move(*compare_group_exp);
   auto worker_actor = system.spawn(countAdd, result_group, compare_group);
-  //auto worker_actor_fun = make_function_view(worker_actor);
-
-  //worker_actor_fun(worker_group);
-  //scoped_actor self{system};
 
   auto expected_port = io::publish(worker_actor, cfg.worker_port);
   if (!expected_port) {

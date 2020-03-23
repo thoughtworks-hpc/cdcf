@@ -8,20 +8,20 @@
 using namespace caf;
 using namespace std;
 
-vector<vector<int> > yanghui_data = {{5},{7,8},{2,1,4},{4,2,6,1},{2,7,3,4,5},{2,3,7,6,8,3}};
+vector<vector<int> > kYanghuiData = {{5},{7,8},{2,1,4},{4,2,6,1},{2,7,3,4,5},{2,3,7,6,8,3}};
 
-struct yanghui_state {
+struct YanghuiState {
   int index = 0;
   map<int,int> current_result;
   vector<vector<int> > data;
 };
 
-struct getMin_state {
+struct GetMinState {
   int count = 0;
   map<int,int> current_result;
 };
 
-behavior getMin(stateful_actor<getMin_state>* self, const actor worker){
+behavior getMin(stateful_actor<GetMinState>* self, const actor worker){
   const int batch = 3;
   return {
     [=](const vector<int> &data){
@@ -76,7 +76,7 @@ behavior getMin(stateful_actor<getMin_state>* self, const actor worker){
   };
 }
 
-behavior yanghui(stateful_actor<yanghui_state >* self,
+behavior yanghui(stateful_actor<YanghuiState>* self,
     const actor worker,
     const actor compare){
   return {
@@ -133,12 +133,6 @@ behavior yanghui(stateful_actor<yanghui_state >* self,
 
 
 void caf_main(actor_system& system, const config& cfg) {
-//  auto worker_group_exp = system.groups().get("remote", cfg.worker_group);
-//  if (!worker_group_exp){
-//    cerr << "failed to get worker group: " << cfg.worker_group << endl;
-//    return;
-//  }
-
   auto result_group_exp = system.groups().get("remote", cfg.count_result_group);
   if (!result_group_exp){
     cerr << "failed to get count result group: " << cfg.count_result_group << endl;
@@ -151,7 +145,6 @@ void caf_main(actor_system& system, const config& cfg) {
     return;
   }
 
-  //auto worker_group = std::move(*worker_group_exp);
   auto result_group = std::move(*result_group_exp);
   auto compare_group = std::move(*compare_group_exp);
 
@@ -176,9 +169,7 @@ void caf_main(actor_system& system, const config& cfg) {
   auto yanghui_actor_fun = make_function_view(yanghui_actor);
   yanghui_actor_fun(result_group);
 
-  //cout << "ok" << endl;
-
-  self->send(yanghui_actor, yanghui_data);
+  self->send(yanghui_actor, kYanghuiData);
 }
 
 CAF_MAIN(caf::io::middleman)
