@@ -5,7 +5,17 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-10.15]
+        libcxx: [libc++, libstdc++11]
+        exclude:
+        - os: macos-10.15
+          libcxx: libstdc++11
+        - os: ubuntu-latest
+          libcxx: libc++
 
     steps:
     - uses: actions/setup-python@v1
@@ -18,7 +28,7 @@ jobs:
     - name: conan
       run: |
         conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-        conan install . -s compiler.libcxx=libstdc++11 --build missing
+        conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
     - name: cmake
       run: |
         cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
