@@ -115,9 +115,10 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
 
   EXPECT_THAT(events.size(), Eq(1));
   EXPECT_THAT(events[0].type(), Eq(Event_Type_MEMBER_CHANGED));
-  ::Member member;
-  events[0].data().UnpackTo(&member);
-  EXPECT_THAT(member.name(), Eq(node_a_.GetNodeName()));
-  EXPECT_THAT(member.host(), Eq(node_a_.GetIpAddress()));
-  EXPECT_THAT(member.port(), Eq(node_a_.GetPort()));
+  ::MemberEvent event;
+  events[0].data().UnpackTo(&event);
+  EXPECT_THAT(event.status(), Eq(::MemberEvent::UP));
+  EXPECT_THAT(event.member().name(), Eq(node_a_.GetNodeName()));
+  EXPECT_THAT(event.member().host(), Eq(node_a_.GetIpAddress()));
+  EXPECT_THAT(event.member().port(), Eq(node_a_.GetPort()));
 }
