@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(actor_system)
 
 aux_source_directory(src ALL_SOURCES)
+aux_source_directory(demo ALL_SOURCES)
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
@@ -30,8 +31,28 @@ list(APPEND ALL_SOURCES ${NODE_KEEPER_PROTO_SRCS} ${NODE_KEEPER_GRPC_SRCS})
 set(LIB_SOURCES ${ALL_SOURCES})
 list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_library(${PROJECT_NAME} ${LIB_SOURCES})
+
 target_include_directories(${PROJECT_NAME}
     PUBLIC include
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(caf REQUIRED)
 target_link_libraries(${PROJECT_NAME} config_manager caf::caf grpc::grpc)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+
+add_executable(additional_allownance demo/additional_allownance.cc)
+target_include_directories(additional_allownance
+    PUBLIC include
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(additional_allownance caf::caf config_manager)
+
+set(TEST_SOURCES ${ALL_SOURCES})
+list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")
+if(NOT "${TEST_SOURCES}" STREQUAL "")
+    add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+    find_package(GTest REQUIRED)
+    target_link_libraries(${PROJECT_NAME}_test GTest::GTest)
+	target_link_libraries(${PROJECT_NAME}_test caf::caf)
+	target_link_libraries(${PROJECT_NAME}_test config_manager)
+	enable_testing()
+    add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
+endif()
