@@ -27,11 +27,16 @@ namespace node_keeper {
                                    ::grpc::ServerWriter<::Event>* writer) {
   auto channel = AddChannel();
   for (auto item = channel->Get(); item.first; item = channel->Get()) {
-    ::Member member;
-    UpdateMember(&member, item.second.member);
+    ::MemberEvent member_event;
+    UpdateMember(member_event.mutable_member(), item.second.member);
+    if (item.second.type == MemberEvent::kMemberUp) {
+      member_event.set_status(::MemberEvent::UP);
+    } else {
+      member_event.set_status(::MemberEvent::DOWN);
+    }
     ::Event event;
     event.set_type(Event_Type_MEMBER_CHANGED);
-    event.mutable_data()->PackFrom(member);
+    event.mutable_data()->PackFrom(member_event);
     writer->Write(event);
   }
   RemoveChannel(channel);

@@ -13,8 +13,10 @@ Requires:
 Checkout to project root and run following commands:
 
 ```shell
-$ conan install .
-$ cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
+$ conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
+$ mkdir build && cd build
+$ conan install .. --build missing
+$ cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
 $ cmake --build .
 $ ctest .
 ```
