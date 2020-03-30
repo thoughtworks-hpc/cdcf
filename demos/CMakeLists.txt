@@ -3,3 +3,4 @@ project(demos)
 
 add_subdirectory(hello_world)
 add_subdirectory(yanghui_triangle)
+add_subdirectory(actor_monitor)
