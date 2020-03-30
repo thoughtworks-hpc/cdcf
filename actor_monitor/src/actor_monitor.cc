@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/3/26.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 #include "../include/actor_monitor.h"
 

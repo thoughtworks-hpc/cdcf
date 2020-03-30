@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #include "../../actor_monitor/include/actor_monitor.h"
-#include "actor_monitor_config.h"
+#include "./actor_monitor_config.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;

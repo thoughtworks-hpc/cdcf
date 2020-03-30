@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/3/26.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_ACTOR_MONITOR_H
 #include <map>
@@ -10,7 +10,7 @@
 #include "caf/io/all.hpp"
 class ActorMonitor : public caf::event_based_actor {
  public:
-  ActorMonitor(caf::actor_config& cfg);
+  explicit ActorMonitor(caf::actor_config& cfg);
   ActorMonitor(caf::actor_config& cfg,
                const std::function<void(const caf::down_msg&,
                                         const std::string&)>& downMsgFun);

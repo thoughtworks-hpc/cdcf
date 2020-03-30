@@ -3,7 +3,7 @@
  */
 
 #include "../../actor_monitor/include/actor_monitor.h"
-#include "actor_monitor_config.h"
+#include "./actor_monitor_config.h"
 
 void downMsgHandle(const caf::down_msg& downMsg,
                    const std::string& actor_description) {

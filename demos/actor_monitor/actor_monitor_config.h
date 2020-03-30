@@ -2,8 +2,10 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ACTOR_MONITOR_CONFIG_H
-#define CDCF_ACTOR_MONITOR_CONFIG_H
+#ifndef DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
+#define DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
+
+#include <string>
 
 #include "../../config_manager/include/cdcf_config.h"
 #include "caf/all.hpp"
@@ -12,7 +14,7 @@
 class config : public cdcf_config {
  public:
   std::string host = "localhost";
-  uint16_t port = 56089;
+  uint16_t port = 56088;
   std::string test_type = "";
   config() {
     opt_group{custom_options_, "global"}
@@ -22,4 +24,4 @@ class config : public cdcf_config {
   }
 };
 
-#endif  // CDCF_ACTOR_MONITOR_CONFIG_H
+#endif  // DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
