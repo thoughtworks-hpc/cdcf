@@ -2,7 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ACTOR_MONITOR_H
+#ifndef ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
+#define ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
 #include <map>
 #include <string>
 
@@ -32,6 +33,4 @@ class ActorMonitor : public caf::event_based_actor {
 bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
                 const std::string& description);
 
-#define CDCF_ACTOR_MONITOR_H
-
-#endif  // CDCF_ACTOR_MONITOR_H
+#endif  // ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
