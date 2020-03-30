@@ -11,15 +11,21 @@
 #include "src/membership_message.h"
 
 membership::Membership::~Membership() {
-  if (members_.size() > 1) {
-    UpdateMessage message;
-    message.InitAsDownMessage(self_, incarnation_ + 1);
+  if (if_notify_leave_) {
+    NotifyLeave();
+  }
+}
+
+void membership::Membership::NotifyLeave() {
+  if (this->members_.size() > 1) {
+    membership::UpdateMessage message;
+    message.InitAsDownMessage(this->self_, this->incarnation_ + 1);
     auto message_serialized = message.SerializeToString();
     gossip::Payload payload{message_serialized};
 
-    int retransmit_limit = GetRetransmitLimit();
+    int retransmit_limit = this->GetRetransmitLimit();
     while (retransmit_limit > 0) {
-      transport_->Gossip(GetAllMemberAddress(), payload);
+      this->transport_->Gossip(this->GetAllMemberAddress(), payload);
       retransmit_limit--;
     }
   }
@@ -47,6 +53,8 @@ int membership::Membership::Init(
   }
 
   transport_ = transport;
+
+  if_notify_leave_ = !config.IfLeaveWithoutNotification();
 
   gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
       std::chrono::milliseconds(config.GetGossipInterval()));
@@ -76,15 +84,17 @@ int membership::Membership::Init(
 void membership::Membership::PullFromSeedMember() {
   std::string pull_request_message = "pull";
 
-  transport_->Pull(GetRandomSeedAddress(), pull_request_message.data(),
-                   pull_request_message.size(),
-                   [this](const gossip::Transportable::PullResult& result) {
-                     if (result.first == gossip::ErrorCode::kOK) {
-                       HandleDidPull(result);
-                       return;
-                     }
-                     PullFromSeedMember();
-                   });
+  if (transport_) {
+    transport_->Pull(GetRandomSeedAddress(), pull_request_message.data(),
+                     pull_request_message.size(),
+                     [this](const gossip::Transportable::PullResult& result) {
+                       if (result.first == gossip::ErrorCode::kOK) {
+                         HandleDidPull(result);
+                         return;
+                       }
+                       PullFromSeedMember();
+                     });
+  }
 }
 
 gossip::Address membership::Membership::GetRandomSeedAddress() const {
@@ -199,7 +209,9 @@ void membership::Membership::HandleDidPull(
 void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
   auto did_gossip = [](gossip::ErrorCode error) {};
 
-  transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
+  if (transport_) {
+    transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
+  }
 }
 
 bool membership::Membership::IsLeftMember(const gossip::Address& address) {

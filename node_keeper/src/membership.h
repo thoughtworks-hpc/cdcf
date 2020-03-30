@@ -56,7 +56,10 @@ bool operator<(const Member& lhs, const Member& rhs);
 
 class Config {
  public:
-  Config() : retransmit_multiplier_(3), gossip_interval_(500) {}
+  Config()
+      : retransmit_multiplier_(3),
+        gossip_interval_(500),
+        leave_without_notification_(false) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
@@ -74,11 +77,17 @@ class Config {
   void AddGossipInterval(unsigned int interval);
   unsigned int GetGossipInterval() const { return gossip_interval_; }
 
+  void SetLeaveWithoutNotification() { leave_without_notification_ = true; }
+  bool IfLeaveWithoutNotification() const {
+    return leave_without_notification_;
+  }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
   int retransmit_multiplier_;
   unsigned int gossip_interval_;
+  bool leave_without_notification_;
 };
 
 class Subscriber {
@@ -88,7 +97,8 @@ class Subscriber {
 
 class Membership {
  public:
-  Membership() : retransmit_multiplier_(3), incarnation_(0) {}
+  Membership()
+      : retransmit_multiplier_(3), incarnation_(0), if_notify_leave_(true) {}
   ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
@@ -113,6 +123,9 @@ class Membership {
   bool IsLeftMember(const gossip::Address& address);
   int GetRetransmitLimit() const;
 
+  void NotifyLeave();
+
+  std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
   std::map<Member, int> members_;
   std::mutex mutex_members_;
   Member self_;
@@ -122,7 +135,7 @@ class Membership {
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   unsigned int incarnation_;
   int retransmit_multiplier_;
-  std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
+  bool if_notify_leave_;
 };
 
 };  // namespace membership
