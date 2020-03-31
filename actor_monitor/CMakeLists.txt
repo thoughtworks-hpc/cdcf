@@ -8,4 +8,4 @@ include_directories(../include)
 aux_source_directory(src ALL_SOURCES)
 
 add_library(${PROJECT_NAME} ${ALL_SOURCES})
-target_link_libraries(${PROJECT_NAME} config_manager)
+

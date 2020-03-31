@@ -18,6 +18,7 @@ using sub_atom = caf::atom_constant<caf::atom("sub")>;
 //}
 
 caf::behavior calculator_fun(caf::event_based_actor* self) {
+  self->set_default_handler(caf::reflect_and_quit);
   return {[=](int a, int b) {
             std::cout << "worker quit" << std::endl;
             self->quit();
@@ -42,13 +43,14 @@ void caf_main(caf::actor_system& system, const config& cfg) {
 
   std::cout << "worker running" << std::endl;
 
+  auto worker_fun = make_function_view(worker);
+
   // sleep
   sleep(2);
 
   if (cfg.test_type == "down") {
     // quit in actor run
     std::cout << "actor quit when run." << std::endl;
-    auto worker_fun = make_function_view(worker);
     worker_fun(12, 13);
   }
 
@@ -64,6 +66,12 @@ void caf_main(caf::actor_system& system, const config& cfg) {
     // send error
     std::cout << "actor receive can't handle error." << std::endl;
     self->send(worker, caf::make_error(caf::exit_reason::out_of_workers));
+  }
+
+  if (cfg.test_type == "default") {
+    // send error
+    std::cout << "actor receive not define message." << std::endl;
+    self->send(worker, "unknown message");
   }
 
   std::cout << "*** press [enter] to quit" << std::endl;
