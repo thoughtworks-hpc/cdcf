@@ -16,8 +16,6 @@ class ActorMonitor : public caf::event_based_actor {
                const std::function<void(const caf::down_msg&,
                                         const std::string&)>& downMsgFun);
   caf::behavior make_behavior() override;
-  void SetDownMsgFun(const std::function<void(const caf::down_msg&,
-                                              const std::string&)>& downMsgFun);
 
  private:
   std::mutex mapLock;
@@ -25,7 +23,6 @@ class ActorMonitor : public caf::event_based_actor {
                      const std::string& description)>
       down_msg_fun;
   std::map<std::string, std::string> actor_map_;
-  void AddMoMonitored(std::string actor_unity, std::string description);
   void DownMsgHandle(const caf::down_msg& down_msg,
                      const std::string& description);
 };
