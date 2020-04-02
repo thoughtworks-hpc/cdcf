@@ -10,19 +10,11 @@
 using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;
 
-// caf::behavior supervisor_fun(caf::event_based_actor* self,
-//                             const caf::actor worker) {
-//  // self->monitor(worker);
-//  return {[=](caf::down_msg msg) { std::cout << "get down msg" << std::endl;
-//  }};
-//}
-
 caf::behavior calculator_fun(caf::event_based_actor* self) {
   self->set_default_handler(caf::reflect_and_quit);
   return {[=](int a, int b) {
             std::cout << "worker quit" << std::endl;
             self->quit();
-            return;
           },
           [](sub_atom, int a, int b) { return a - b; }};
 }
@@ -34,9 +26,6 @@ void caf_main(caf::actor_system& system, const config& cfg) {
 
   // build worker actor
   auto worker = system.spawn(calculator_fun);
-  // auto localSupervisor = system.spawn(supervisor_fun, worker);
-  //  auto pointer = caf::actor_cast<caf::event_based_actor*>(supervisor);
-  //  pointer->monitor(worker);
 
   // set monitor
   SetMonitor(supervisor, worker, "worker actor for testing");
