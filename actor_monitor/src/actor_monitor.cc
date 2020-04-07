@@ -13,9 +13,12 @@ ActorMonitor::ActorMonitor(
 
 caf::behavior ActorMonitor::make_behavior() {
   set_down_handler([=](const caf::down_msg& msg) {
-    mapLock.lock();
-    std::string description = actor_map_[caf::to_string(msg.source)];
-    mapLock.unlock();
+    std::string description;
+
+    {
+      std::lock_guard<std::mutex> locker(mapLock);
+      description = actor_map_[caf::to_string(msg.source)];
+    }
 
     if (down_msg_fun != nullptr) {
       down_msg_fun(msg, description);
@@ -27,9 +30,11 @@ caf::behavior ActorMonitor::make_behavior() {
   return {
       [=](const std::string& msg) { std::cout << msg << std::endl; },
       [=](const caf::actor_addr& actor_addr, const std::string& description) {
-        mapLock.lock();
-        actor_map_[caf::to_string(actor_addr)] = description;
-        mapLock.unlock();
+        {
+          std::lock_guard<std::mutex> locker(mapLock);
+          actor_map_[caf::to_string(actor_addr)] = description;
+        }
+
         aout(this) << "monitor new actor, actor addr:"
                    << caf::to_string(actor_addr)
                    << "actor description:" << description << std::endl;

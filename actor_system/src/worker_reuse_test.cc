@@ -12,8 +12,8 @@ TEST(TestScheduler, threads_proportion) {
 
   for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
 
-  cdcf_config config;
-  cdcf_config::RET_VALUE ret =
+  CDCFConfig config;
+  CDCFConfig::RetValue ret =
       config.parse_config(argc, argv_ptr, "cdcf-application.ini");
 
   size_t thread_num =
@@ -35,8 +35,8 @@ TEST(TestScheduler, load_from_file) {
 
   for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
 
-  cdcf_config config;
-  cdcf_config::RET_VALUE ret =
+  CDCFConfig config;
+  CDCFConfig::RetValue ret =
       config.parse_config(argc, argv_ptr, "cdcf-application.ini");
 
   caf::actor_system system{config};
@@ -55,8 +55,8 @@ TEST(TestScheduler, load_default) {
 
   for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
 
-  cdcf_config config;
-  cdcf_config::RET_VALUE ret = config.parse_config(argc, argv_ptr);
+  CDCFConfig config;
+  CDCFConfig::RetValue ret = config.parse_config(argc, argv_ptr);
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
@@ -75,8 +75,8 @@ TEST(TestScheduler, load_option) {
 
   for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
 
-  cdcf_config config;
-  cdcf_config::RET_VALUE ret = config.parse_config(argc, argv_ptr);
+  CDCFConfig config;
+  CDCFConfig::RetValue ret = config.parse_config(argc, argv_ptr);
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();

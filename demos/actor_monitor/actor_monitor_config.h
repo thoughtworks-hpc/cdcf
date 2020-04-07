@@ -5,13 +5,13 @@
 #ifndef DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
 #define DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
 
+#include <caf/all.hpp>
+#include <caf/io/all.hpp>
 #include <string>
 
-#include "../../config_manager/include/cdcf_config.h"
-#include "caf/all.hpp"
-#include "caf/io/all.hpp"
+#include "cdcf_config.h"
 
-class config : public cdcf_config {
+class config : public CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;

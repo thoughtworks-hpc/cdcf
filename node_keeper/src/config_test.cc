@@ -25,7 +25,7 @@ TEST(Config, ShouldParseSeedsRight) {
   node_keeper::Config config;
   auto result = config.parse_config(args.size(), &args[0], "cdcf-default.ini");
 
-  ASSERT_THAT(result, Eq(cdcf_config::SUCCESS));
+  ASSERT_THAT(result, Eq(CDCFConfig::RetValue::kSuccess));
   auto actual = config.GetSeeds();
   EXPECT_THAT(actual, ContainerEq(seeds));
 }

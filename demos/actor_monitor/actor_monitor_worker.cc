@@ -2,7 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "./actor_monitor_config.h"
@@ -34,8 +35,7 @@ void caf_main(caf::actor_system& system, const config& cfg) {
 
   auto worker_fun = make_function_view(worker);
 
-  // sleep
-  sleep(2);
+  std::this_thread::sleep_for(std::chrono::seconds(2));
 
   if (cfg.test_type == "down") {
     // quit in actor run
