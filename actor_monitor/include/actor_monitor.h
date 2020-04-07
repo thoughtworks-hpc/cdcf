@@ -9,6 +9,7 @@
 
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
+
 class ActorMonitor : public caf::event_based_actor {
  public:
   explicit ActorMonitor(caf::actor_config& cfg);

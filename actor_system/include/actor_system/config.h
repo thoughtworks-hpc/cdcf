@@ -9,7 +9,7 @@
 #include <string>
 
 namespace actor_system {
-class Config : public cdcf_config {
+class Config : public CDCFConfig {
  public:
   std::string host_ = "localhost";
   uint16_t port_ = 4750;

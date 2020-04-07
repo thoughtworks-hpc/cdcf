@@ -50,7 +50,7 @@ void Sum(blocking_actor* self) {
 }
 
 int main(int argc, char** argv) {
-  cdcf_config cfg;
+  CDCFConfig cfg;
   cfg.parse_config(argc, argv);
   caf::actor_system system{cfg};
 
