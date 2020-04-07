@@ -5,7 +5,7 @@
 
 #include <future>
 #include <optional>
-// anti clang-format sort
+
 #include <asio.hpp>
 
 #include "src/gossip/connection.h"
