@@ -23,7 +23,7 @@ TEST(TestScheduler, threads_proportion) {
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(0, ret);
+  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(0.52, config.threads_proportion);
   EXPECT_EQ(thread_num, sch.num_workers());
 }
@@ -42,7 +42,7 @@ TEST(TestScheduler, load_from_file) {
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(0, ret);
+  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(floor(std::thread::hardware_concurrency() *
                     config.threads_proportion) == sch.num_workers() ||
               4 == sch.num_workers());
@@ -61,7 +61,7 @@ TEST(TestScheduler, load_default) {
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(0, ret);
+  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(std::thread::hardware_concurrency() == sch.num_workers() ||
               4 == sch.num_workers());
 }
@@ -81,7 +81,7 @@ TEST(TestScheduler, load_option) {
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(0, ret);
+  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(floor(std::thread::hardware_concurrency() *
                     config.threads_proportion) == sch.num_workers() ||
               4 * config.threads_proportion == sch.num_workers());
