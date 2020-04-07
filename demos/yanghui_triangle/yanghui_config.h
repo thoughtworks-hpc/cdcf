@@ -4,12 +4,12 @@
 
 #ifndef DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
 #define DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
-#include <caf/all.hpp>
-#include <caf/io/all.hpp>
 #include <string>
 #include <vector>
 
-#include "cdcf_config.h"
+#include "../../config_manager/include/cdcf_config.h"
+#include "caf/all.hpp"
+#include "caf/io/all.hpp"
 
 struct NumberCompareData {
   std::vector<int> numbers;

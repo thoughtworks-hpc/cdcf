@@ -6,7 +6,8 @@
 #define CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
 
 #include <algorithm>
-#include <caf/all.hpp>
+
+#include "caf/all.hpp"
 
 class CDCFConfig : public caf::actor_system_config {
  public:

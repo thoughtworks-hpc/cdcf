@@ -5,11 +5,11 @@
 #ifndef DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
 #define DEMOS_ACTOR_MONITOR_ACTOR_MONITOR_CONFIG_H_
 
-#include <caf/all.hpp>
-#include <caf/io/all.hpp>
 #include <string>
 
-#include "cdcf_config.h"
+#include "../../config_manager/include/cdcf_config.h"
+#include "caf/all.hpp"
+#include "caf/io/all.hpp"
 
 class config : public CDCFConfig {
  public:

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
-#include "cdcf_config.h"
+#include "../include/cdcf_config.h"
 
 CDCFConfig::CDCFConfig() {
   opt_group{custom_options_, "global"}.add(

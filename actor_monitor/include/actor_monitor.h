@@ -4,10 +4,12 @@
 
 #ifndef ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
 #define ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
-#include <caf/all.hpp>
-#include <caf/io/all.hpp>
 #include <map>
 #include <string>
+
+#include "caf/all.hpp"
+#include "caf/io/all.hpp"
+
 class ActorMonitor : public caf::event_based_actor {
  public:
   explicit ActorMonitor(caf::actor_config& cfg);

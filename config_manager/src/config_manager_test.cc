@@ -6,7 +6,7 @@
 
 #include <gmock/gmock.h>
 
-#include "cdcf_config.h"
+#include "../include/cdcf_config.h"
 
 class test_config : public CDCFConfig {
  public:
