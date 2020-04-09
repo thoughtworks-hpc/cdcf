@@ -56,9 +56,6 @@ nicely even when it is indented.
 The header line should be meaningful; it is what other people see when they
 run `git shortlog` or `git log --oneline`.
 
-Check the output of `git log --oneline files_that_you_changed` to find out
-what subsystem (or subsystems) your changes touch.
-
 ## Style Guide
 
 To keep the source consistent, readable, diffable and easy to merge, we use a coding style as defined by the [google-styleguide](https://github.com/google/styleguide) project. All patches will be expected to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html). Use [.clang-format](https://github.com/thoughtworks-hpc/cdcf/blob/develop/.clang-format) to check your formatting.
