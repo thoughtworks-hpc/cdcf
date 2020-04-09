@@ -56,6 +56,24 @@ nicely even when it is indented.
 The header line should be meaningful; it is what other people see when they
 run `git shortlog` or `git log --oneline`.
 
+Meaningful means try to explain what do you do as exactly as possible in 50 characters, for examples, when you fixed an issue, do not just type:
+
+> Fix an issue
+
+Try to point out what is the issue exactly:
+
+> Fix crash on given wrong host address
+
+When you refactored, do not just type:
+
+> Refactor codes
+
+Try to point out what refactor do you make:
+
+> Extract an Address class
+
+If you take lots of refactoring steps in one commit, try to keep it step-by-step is always a better practice.
+
 ## Style Guide
 
 To keep the source consistent, readable, diffable and easy to merge, we use a coding style as defined by the [google-styleguide](https://github.com/google/styleguide) project. All patches will be expected to conform to the style outlined [here](https://google.github.io/styleguide/cppguide.html). Use [.clang-format](https://github.com/thoughtworks-hpc/cdcf/blob/develop/.clang-format) to check your formatting.
