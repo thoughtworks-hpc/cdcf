@@ -59,6 +59,11 @@ int membership::Membership::Init(
   gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
       std::chrono::milliseconds(config.GetGossipInterval()));
 
+  failure_detector__queue_ =
+      std::make_unique<queue::TimedFunctorQueue>(std::chrono::milliseconds(
+          config.GetFailureDetectorIntervalInMilliSeconds()));
+  Ping();
+
   auto gossip_handler = [this](const struct gossip::Address& node,
                                const gossip::Payload& payload) {
     HandleGossip(node, payload);
@@ -243,6 +248,49 @@ std::vector<uint8_t> membership::Membership::HandlePull(
 
   return std::vector<uint8_t>(message_serialized.begin(),
                               message_serialized.end());
+}
+
+void membership::Membership::Ping() {
+  auto failure_detector_functor = [this]() {
+    if (transport_) {
+      std::string pull_request_message = "ping";
+
+      auto addresses = GetRandomMemberAddress();
+      gossip::Address address;
+      if (!addresses.empty()) {
+        address = addresses[0];
+      } else {
+        Ping();
+      }
+
+      transport_->Pull(
+          address, pull_request_message.data(), pull_request_message.size(),
+          [this, address](const gossip::Transportable::PullResult& result) {
+            if (result.first != gossip::ErrorCode::kOK) {
+              Suspect(address);
+            }
+          });
+    }
+    Ping();
+  };
+
+  if (failure_detector__queue_) {
+    failure_detector__queue_->Push(failure_detector_functor, 1);
+  }
+}
+
+void membership::Membership::Suspect(const gossip::Address& address) {
+  Member member("", address.host, address.port);
+
+  //  RemoveMember(member);
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+
+  if (members_.find(member) != members_.end()) {
+    left_members_.insert(member);
+    suspects_.push_back(member);
+    members_.erase(member);
+    Notify();
+  }
 }
 
 void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {

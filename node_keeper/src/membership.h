@@ -59,6 +59,7 @@ class Config {
   Config()
       : retransmit_multiplier_(3),
         gossip_interval_(500),
+        failure_detector_interval_(1000),
         leave_without_notification_(false) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
@@ -74,8 +75,17 @@ class Config {
   void AddRetransmitMultiplier(int multiplier);
   int GetRetransmitMultiplier() const { return retransmit_multiplier_; }
 
+  // TODO(davidzwb) Naming using set maybe more appropriate
   void AddGossipInterval(unsigned int interval);
   unsigned int GetGossipInterval() const { return gossip_interval_; }
+
+  void SetFailureDetectorIntervalInMilliSeconds(unsigned int interval) {
+    failure_detector_interval_ = interval;
+  }
+
+  unsigned int GetFailureDetectorIntervalInMilliSeconds() const {
+    return failure_detector_interval_;
+  }
 
   void SetLeaveWithoutNotification() { leave_without_notification_ = true; }
   bool IfLeaveWithoutNotification() const {
@@ -87,6 +97,7 @@ class Config {
   std::vector<Member> seed_members_;
   int retransmit_multiplier_;
   unsigned int gossip_interval_;
+  unsigned int failure_detector_interval_;
   bool leave_without_notification_;
 };
 
@@ -103,6 +114,7 @@ class Membership {
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers() const;
+  std::vector<Member> GetSuspects() const { return suspects_; }
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
  private:
@@ -120,19 +132,25 @@ class Membership {
   void HandleDidPull(const gossip::Transportable::PullResult& result);
   std::vector<uint8_t> HandlePull(const gossip::Address&, const void* data,
                                   size_t size);
+  void Ping();
+  void Suspect(const gossip::Address& address);
   bool IsLeftMember(const gossip::Address& address);
   int GetRetransmitLimit() const;
 
   void NotifyLeave();
 
-  std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
   std::map<Member, int> members_;
+  std::vector<Member> suspects_;
   std::mutex mutex_members_;
   Member self_;
   std::vector<Member> seed_members_;
   std::set<Member> left_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
+  // queue must be destroyed before transport i.e. put after transport otherwise
+  // potential deadlock
+  std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
+  std::unique_ptr<queue::TimedFunctorQueue> failure_detector__queue_;
   unsigned int incarnation_;
   int retransmit_multiplier_;
   bool if_notify_leave_;
