@@ -83,6 +83,10 @@ void printRet(int return_value) {
   std::cout << "return value:" << return_value << std::endl;
 }
 
+void dealSendErr(caf::error err) {
+  std::cout << "get error:" << caf::to_string(err) << std::endl;
+}
+
 void Guard(caf::actor_system& system, const config& cfg) {
   auto node = system.middleman().connect(cfg.host, cfg.port);
   if (!node) {
@@ -117,16 +121,14 @@ void Guard(caf::actor_system& system, const config& cfg) {
   self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 200,
                 100)
       .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
-               [&](caf::error err) {
-                 std::cout << "get error:" << caf::to_string(err) << std::endl;
-               });
+               dealSendErr);
 
   std::cout << "*** press <enter> to show actor guard send message"
             << std::endl;
   getchar();
 
   // guard send message
-  actor_guard.SendAndReceive(printRet, add_atom::value, 50, 100);
+  actor_guard.SendAndReceive(printRet, dealSendErr, add_atom::value, 50, 100);
 
   std::cout << "*** press <enter> to let actor down." << std::endl;
   getchar();
@@ -142,16 +144,14 @@ void Guard(caf::actor_system& system, const config& cfg) {
   self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 500,
                 100)
       .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
-               [&](caf::error err) {
-                 std::cout << "get error:" << caf::to_string(err) << std::endl;
-               });
+               dealSendErr);
 
   std::cout << "*** press <enter> to show guard send after message down."
             << std::endl;
   getchar();
 
   // guard send message after error
-  actor_guard.SendAndReceive(printRet, add_atom::value, 66, 600);
+  actor_guard.SendAndReceive(printRet, dealSendErr, add_atom::value, 66, 600);
 
   std::cout << "*** press <enter> to shutdown guard" << std::endl;
   getchar();
