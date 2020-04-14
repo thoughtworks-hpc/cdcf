@@ -93,13 +93,6 @@ void Guard(caf::actor_system& system, const config& cfg) {
   auto type = "calculator";              // type of the actor we wish to spawn
   auto args = caf::make_message();       // arguments to construct the actor
   auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-  //  auto worker = system.middleman().remote_spawn<calculator>(*node, type,
-  //                                                            args, tout);
-  //  if (!worker) {
-  //    std::cerr << "*** remote spawn failed: "
-  //         << system.render(worker.error()) << std::endl;
-  //    return;
-  //  }
 
   bool active = true;
   auto worker_actor = StartWorker(system, *node, type, args, tout, active);
@@ -115,24 +108,50 @@ void Guard(caf::actor_system& system, const config& cfg) {
       },
       system);
 
-  // bool success = actor_guard.Send(10001, add_atom::value, 1, 3);
+  caf::scoped_actor self{system};
 
-  //  if (!success) {
-  //    std::cout << "send message failed." << std::endl;
-  //  } else{
-  //    actor_guard.ConfirmMsg(10001);
-  //  }
+  std::cout << "*** press <enter> to show normal send message" << std::endl;
+  getchar();
 
-  actor_guard.SendAndReceive(printRet, add_atom::value, 3, 10);
-  actor_guard.SendAndReceive(printRet, add_atom::value, 4, 100);
+  // normal send message
+  self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 200,
+                100)
+      .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
+               [&](caf::error err) {
+                 std::cout << "get error:" << caf::to_string(err) << std::endl;
+               });
 
-  //  std::cout << "*** press <enter> to shutdown worker" << std::endl;
-  //  getchar();
-  //
+  std::cout << "*** press <enter> to show actor guard send message"
+            << std::endl;
+  getchar();
+
+  // guard send message
+  actor_guard.SendAndReceive(printRet, add_atom::value, 50, 100);
+
+  std::cout << "*** press <enter> to let actor down." << std::endl;
+  getchar();
+
+  // let actor down
   caf::anon_send_exit(worker_actor, caf::exit_reason::kill);
 
-  // success = actor_guard.Send(10001, add_atom::value, 1, 3);
-  actor_guard.SendAndReceive(printRet, add_atom::value, 4, 105);
+  std::cout << "*** press <enter> to show normal send message after actor down."
+            << std::endl;
+  getchar();
+
+  // normal send message
+  self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 500,
+                100)
+      .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
+               [&](caf::error err) {
+                 std::cout << "get error:" << caf::to_string(err) << std::endl;
+               });
+
+  std::cout << "*** press <enter> to show guard send after message down."
+            << std::endl;
+  getchar();
+
+  // guard send message after error
+  actor_guard.SendAndReceive(printRet, add_atom::value, 66, 600);
 
   std::cout << "*** press <enter> to shutdown guard" << std::endl;
   getchar();
