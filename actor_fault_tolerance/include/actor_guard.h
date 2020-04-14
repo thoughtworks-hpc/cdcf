@@ -11,18 +11,9 @@ class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
              std::function<caf::actor(std::atomic<bool>&)> restart,
-             caf::actor_system& system);
-  bool SendMsg(MessageID msg_id, const caf::message& msg);
-  void ConfirmMsg(MessageID msg_id);
-
-  template <class... Ts>
-  bool Send(MessageID msg_id, const Ts&... xs) {
-    if (active_) {
-      message_guarantor_.Send(msg_id, xs...);
-    }
-
-    return active_;
-  }
+             caf::actor_system& system)
+      : message_guarantor_(keepActor, system),
+        restart_fun_(std::move(restart)) {}
 
   template <class... send, class return_function>
   bool SendAndReceive(return_function f, const send&... xs) {
@@ -53,7 +44,6 @@ class ActorGuard {
   void HandleDownMsg(const std::string& actor_description);
   ActorMessageGuarantor message_guarantor_;
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
-  caf::actor monitor_;
   std::atomic<bool> active_ = true;
 };
 
