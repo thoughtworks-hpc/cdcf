@@ -22,6 +22,8 @@ class ClusterImpl {
     auto address = host + ":" + std::to_string(port);
     auto channel =
         grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
+    auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);
+    channel->WaitForConnected(deadline);
     stub_ = NodeKeeper::NewStub(channel);
     Fetch();
     thread_ = std::thread(&ClusterImpl::Routine, this);
