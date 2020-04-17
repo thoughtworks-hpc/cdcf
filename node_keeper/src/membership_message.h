@@ -26,10 +26,12 @@ class UpdateMessage : public Message {
  public:
   void InitAsUpMessage(const Member& member, unsigned int incarnation);
   void InitAsDownMessage(const Member& member, unsigned int incarnation);
+  void InitAsSuspectMessage(const Member& member, unsigned int incarnation);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
+  bool IsSuspectMessage() const;
   Member GetMember() const;
-  unsigned int GetIncarnation() const { return incarnation_; }
+  unsigned int GetIncarnation() const { return update_.incarnation(); }
 
   google::protobuf::Message& BaseMessage() override { return update_; }
 

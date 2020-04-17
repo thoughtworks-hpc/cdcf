@@ -10,6 +10,7 @@ message MemberUpdate {
     enum MemberStatus {
         UP = 0;
         DOWN = 1;
+        SUSPECT = 2;
     }
 
     required MemberStatus status = 4;

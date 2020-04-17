@@ -28,7 +28,7 @@ enum ErrorCode {
 
 class Member {
  public:
-  Member() : node_name_(""), ip_address_(""), port_(0) {}
+  Member() : port_(0) {}
   Member(std::string node_name, std::string ip_address, uint16_t port)
       : node_name_(std::move(node_name)),
         ip_address_(std::move(ip_address)),
@@ -60,7 +60,8 @@ class Config {
       : retransmit_multiplier_(3),
         gossip_interval_(500),
         failure_detector_interval_(1000),
-        leave_without_notification_(false) {}
+        leave_without_notification_(false),
+        failure_detector_off_(false) {}
 
   int AddHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
@@ -92,6 +93,9 @@ class Config {
     return leave_without_notification_;
   }
 
+  void SetFailureDetectorOff() { failure_detector_off_ = true; }
+  bool IsFailureDetectorOff() const { return failure_detector_off_; }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
@@ -99,6 +103,7 @@ class Config {
   unsigned int gossip_interval_;
   unsigned int failure_detector_interval_;
   bool leave_without_notification_;
+  bool failure_detector_off_;
 };
 
 class Subscriber {
@@ -114,18 +119,23 @@ class Membership {
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers() const;
-  std::vector<Member> GetSuspects() const { return suspects_; }
+  std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
  private:
   int AddMember(const Member& member);
+  int AddOrUpdateSuspect(const Member& member, unsigned int incarnation);
+  bool IfBelongsToMembers(const membership::Member& member) const;
+  bool IfBelongsToSuspects(const membership::Member& member) const;
+  unsigned int GetMemberLocalIncarnation(const membership::Member& member);
+  unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
   gossip::Address GetRandomSeedAddress() const;
-  std::vector<gossip::Address> GetRandomMemberAddress() const;
+  std::pair<bool, membership::Member> GetRandomMember() const;
   std::vector<gossip::Address> GetAllMemberAddress();
   void DisseminateGossip(const gossip::Payload& payload);
   void PullFromSeedMember();
@@ -133,15 +143,16 @@ class Membership {
   std::vector<uint8_t> HandlePull(const gossip::Address&, const void* data,
                                   size_t size);
   void Ping();
-  void Suspect(const gossip::Address& address);
+  void Suspect(const Member& member, unsigned int incarnation);
   bool IsLeftMember(const gossip::Address& address);
   int GetRetransmitLimit() const;
 
   void NotifyLeave();
 
   std::map<Member, int> members_;
-  std::vector<Member> suspects_;
-  std::mutex mutex_members_;
+  std::map<Member, int> suspects_;
+  mutable std::mutex mutex_members_;
+  mutable std::mutex mutex_suspects_;
   Member self_;
   std::vector<Member> seed_members_;
   std::set<Member> left_members_;

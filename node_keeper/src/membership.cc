@@ -33,7 +33,17 @@ void membership::Membership::NotifyLeave() {
 
 std::vector<membership::Member> membership::Membership::GetMembers() const {
   std::vector<Member> return_members;
+  const std::lock_guard<std::mutex> lock(mutex_members_);
   for (auto& member : members_) {
+    return_members.push_back(member.first);
+  }
+  return return_members;
+}
+
+std::vector<membership::Member> membership::Membership::GetSuspects() const {
+  std::vector<Member> return_members;
+  const std::lock_guard<std::mutex> lock(mutex_suspects_);
+  for (auto& member : suspects_) {
     return_members.push_back(member.first);
   }
   return return_members;
@@ -59,11 +69,6 @@ int membership::Membership::Init(
   gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
       std::chrono::milliseconds(config.GetGossipInterval()));
 
-  failure_detector__queue_ =
-      std::make_unique<queue::TimedFunctorQueue>(std::chrono::milliseconds(
-          config.GetFailureDetectorIntervalInMilliSeconds()));
-  Ping();
-
   auto gossip_handler = [this](const struct gossip::Address& node,
                                const gossip::Payload& payload) {
     HandleGossip(node, payload);
@@ -81,6 +86,13 @@ int membership::Membership::Init(
   if (!config.GetSeedMembers().empty()) {
     seed_members_ = config.GetSeedMembers();
     PullFromSeedMember();
+  }
+
+  if (!config.IsFailureDetectorOff()) {
+    failure_detector__queue_ =
+        std::make_unique<queue::TimedFunctorQueue>(std::chrono::milliseconds(
+            config.GetFailureDetectorIntervalInMilliSeconds()));
+    Ping();
   }
 
   return MEMBERSHIP_SUCCESS;
@@ -111,25 +123,27 @@ gossip::Address membership::Membership::GetRandomSeedAddress() const {
   return gossip::Address{peer.GetIpAddress(), peer.GetPort()};
 }
 
-std::vector<gossip::Address> membership::Membership::GetRandomMemberAddress()
+std::pair<bool, membership::Member> membership::Membership::GetRandomMember()
     const {
-  static std::random_device rd;
-  std::vector<gossip::Address> addresses;
-  for (const auto& member : members_) {
-    if (member.first != self_) {
-      addresses.emplace_back(
-          gossip::Address{member.first.GetIpAddress(), member.first.GetPort()});
+  std::vector<Member> members_without_self;
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    if (members_.size() <= 1) {
+      return std::make_pair(false, Member());
+    }
+
+    for (const auto& member_pair : members_) {
+      if (member_pair.first != self_) {
+        members_without_self.push_back(member_pair.first);
+      }
     }
   }
 
-  if (addresses.size() == 0) {
-    return std::vector<gossip::Address>();
-  }
-
+  static std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<> dis(0, addresses.size() - 1);
+  std::uniform_int_distribution<> dis(0, members_without_self.size() - 1);
 
-  return std::vector<gossip::Address>{addresses[dis(gen)]};
+  return std::make_pair(true, members_without_self[dis(gen)]);
 }
 
 int membership::Membership::AddMember(const membership::Member& member) {
@@ -142,8 +156,19 @@ int membership::Membership::AddMember(const membership::Member& member) {
   return 0;
 }
 
+int membership::Membership::AddOrUpdateSuspect(const membership::Member& member,
+                                               unsigned int incarnation) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_suspects_);
+    suspects_[member] = incarnation;
+  }
+
+  return 0;
+}
+
 std::vector<gossip::Address> membership::Membership::GetAllMemberAddress() {
   std::vector<gossip::Address> addresses;
+  const std::lock_guard<std::mutex> lock(mutex_members_);
   for (const auto& member : members_) {
     if (member.first != self_) {
       addresses.emplace_back(
@@ -166,8 +191,13 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       return;
     }
 
-    if (members_.find(member) != members_.end() &&
-        members_[member] == message.GetIncarnation()) {
+    if (IfBelongsToSuspects(member) &&
+        GetSuspectLocalIncarnation(member) >= message.GetIncarnation()) {
+      return;
+    }
+
+    if (IfBelongsToMembers(member) &&
+        GetMemberLocalIncarnation(member) == message.GetIncarnation()) {
       return;
     }
 
@@ -175,13 +205,25 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
                         GetRetransmitLimit());
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
   } else if (message.IsDownMessage()) {
-    if (members_.find(member) == members_.end()) {
+    if (!IfBelongsToMembers(member)) {
       return;
     }
 
     gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                         GetRetransmitLimit());
     MergeDownUpdate(message.GetMember(), message.GetIncarnation());
+  } else if (message.IsSuspectMessage()) {
+    if (IfBelongsToSuspects(member)) {
+      if (GetSuspectLocalIncarnation(member) < message.GetIncarnation()) {
+        AddOrUpdateSuspect(member, message.GetIncarnation());
+      }
+      return;
+    }
+
+    if (IfBelongsToMembers(member) &&
+        message.GetIncarnation() >= GetMemberLocalIncarnation(member)) {
+      Suspect(member, message.GetIncarnation());
+    }
   }
 }
 
@@ -213,9 +255,18 @@ void membership::Membership::HandleDidPull(
 
 void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
   auto did_gossip = [](gossip::ErrorCode error) {};
+  auto pair = GetRandomMember();
+
+  if (!pair.first) {
+    return;
+  }
+  auto member = pair.second;
+
+  std::vector<gossip::Address> address{
+      {member.GetIpAddress(), member.GetPort()}};
 
   if (transport_) {
-    transport_->Gossip(GetRandomMemberAddress(), payload, did_gossip);
+    transport_->Gossip(address, payload, did_gossip);
   }
 }
 
@@ -255,19 +306,22 @@ void membership::Membership::Ping() {
     if (transport_) {
       std::string pull_request_message = "ping";
 
-      auto addresses = GetRandomMemberAddress();
-      gossip::Address address;
-      if (!addresses.empty()) {
-        address = addresses[0];
-      } else {
+      auto pair = GetRandomMember();
+      if (!pair.first) {
         Ping();
+        return;
       }
+
+      auto member = pair.second;
+      gossip::Address address{member.GetIpAddress(), member.GetPort()};
 
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
-          [this, address](const gossip::Transportable::PullResult& result) {
+          [this, member](const gossip::Transportable::PullResult& result) {
             if (result.first != gossip::ErrorCode::kOK) {
-              Suspect(address);
+              if (IfBelongsToMembers(member)) {
+                Suspect(member, GetMemberLocalIncarnation(member));
+              }
             }
           });
     }
@@ -279,18 +333,62 @@ void membership::Membership::Ping() {
   }
 }
 
-void membership::Membership::Suspect(const gossip::Address& address) {
-  Member member("", address.host, address.port);
-
-  //  RemoveMember(member);
-  const std::lock_guard<std::mutex> lock(mutex_members_);
-
-  if (members_.find(member) != members_.end()) {
+void membership::Membership::Suspect(const Member& member,
+                                     unsigned int incarnation) {
+  if (IfBelongsToMembers(member)) {
     left_members_.insert(member);
-    suspects_.push_back(member);
-    members_.erase(member);
+
+    AddOrUpdateSuspect(member, incarnation);
+
+    UpdateMessage update;
+    update.InitAsSuspectMessage(member, incarnation);
+    auto update_serialized = update.SerializeToString();
+    gossip::Payload payload(update_serialized.data(), update_serialized.size());
+
+    {
+      const std::lock_guard<std::mutex> lock(mutex_members_);
+      members_.erase(member);
+    }
+
+    gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                        GetRetransmitLimit());
+
     Notify();
   }
+}
+
+bool membership::Membership::IfBelongsToMembers(
+    const membership::Member& member) const {
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+  return members_.find(member) != members_.end();
+}
+
+bool membership::Membership::IfBelongsToSuspects(
+    const membership::Member& member) const {
+  const std::lock_guard<std::mutex> lock(mutex_suspects_);
+  return suspects_.find(member) != suspects_.end();
+}
+
+unsigned int membership::Membership::GetMemberLocalIncarnation(
+    const membership::Member& member) {
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+
+  if (members_.find(member) == members_.end()) {
+    return 0;
+  }
+
+  return members_[member];
+}
+
+unsigned int membership::Membership::GetSuspectLocalIncarnation(
+    const membership::Member& member) {
+  const std::lock_guard<std::mutex> lock(mutex_suspects_);
+
+  if (suspects_.find(member) == suspects_.end()) {
+    return 0;
+  }
+
+  return suspects_[member];
 }
 
 void membership::Membership::Subscribe(std::shared_ptr<Subscriber> subscriber) {
@@ -309,14 +407,17 @@ void membership::Membership::MergeUpUpdate(const Member& member,
     return;
   }
 
-  if ((members_.find(member) != members_.end() &&
-       members_[member] >= incarnation)) {
-    return;
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+
+    if ((members_.find(member) != members_.end() &&
+         members_[member] >= incarnation)) {
+      return;
+    }
+
+    members_[member] = incarnation;
   }
 
-  const std::lock_guard<std::mutex> lock(mutex_members_);
-
-  members_[member] = incarnation;
   Notify();
 }
 
@@ -326,17 +427,20 @@ void membership::Membership::MergeDownUpdate(const Member& member,
     return;
   }
 
-  const std::lock_guard<std::mutex> lock(mutex_members_);
-
-  if (members_.find(member) != members_.end()) {
-    // Add to left members list
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    if (members_.find(member) == members_.end()) {
+      return;
+    }
     left_members_.insert(member);
     members_.erase(member);
-    Notify();
   }
+
+  Notify();
 }
 
 int membership::Membership::GetRetransmitLimit() const {
+  const std::lock_guard<std::mutex> lock(mutex_members_);
   return retransmit_multiplier_ *
          static_cast<int>(ceil(log10(members_.size())));
 }
