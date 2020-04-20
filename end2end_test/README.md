@@ -6,9 +6,10 @@ End-to-end test for CDCF is build on test framework [behave](https://github.com/
 
 Requires:
 
+- docker engine
 - Python 3
-- behave 1.26 above
-- docker
+- behave (1.2.6)                   - behave is behaviour-driven development, Python style
+- docker (4.2.0)                   - A Python library for the Docker Engine API.
 
 Checkout to project root and run docker build:
 
