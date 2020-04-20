@@ -100,6 +100,7 @@ Feature: cluster
         | node_b      | node_a:4445,node_b:4445 |
         | node_c      | node_a:4445,node_b:4445 |
        And node_c turns down
-      When we start node_c 
+      When we wait 3 seconds
+       And we start node_c
        And we wait 3 seconds
       Then they should join in one cluster
