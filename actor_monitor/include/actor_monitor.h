@@ -12,7 +12,7 @@
 
 class ActorMonitor : public caf::event_based_actor {
  public:
-  ActorMonitor(caf::actor_config& cfg);
+  explicit ActorMonitor(caf::actor_config& cfg);
   ActorMonitor(caf::actor_config& cfg,
                std::function<void(const caf::down_msg&, const std::string&)>&&
                    downMsgFun);
