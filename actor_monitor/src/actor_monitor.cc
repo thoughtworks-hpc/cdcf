@@ -7,7 +7,7 @@
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(
     caf::actor_config& cfg,
-    std::function<void(const caf::down_msg&, const std::string&)>& downMsgFun)
+    std::function<void(const caf::down_msg&, const std::string&)>&& downMsgFun)
     : event_based_actor(cfg), down_msg_fun(std::move(downMsgFun)) {}
 
 caf::behavior ActorMonitor::make_behavior() {
