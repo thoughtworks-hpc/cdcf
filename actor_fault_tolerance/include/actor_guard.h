@@ -2,8 +2,9 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ACTOR_GUARD_H
-#define CDCF_ACTOR_GUARD_H
+#ifndef CDCF_ACTOR_GUARD_EXAMPLE_H
+#define CDCF_ACTOR_GUARD_EXAMPLE_H
+
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "./actor_message_guarantor.h"
 
@@ -60,4 +61,4 @@ class ActorGuard {
   std::atomic<bool> active_ = true;
 };
 
-#endif  // CDCF_ACTOR_GUARD_H
+#endif  // CDCF_ACTOR_GUARD_EXAMPLE_H
