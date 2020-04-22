@@ -2,13 +2,12 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
-
 #include <string>
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
+#include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../config_manager/include/cdcf_config.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;
