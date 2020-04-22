@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ACTOR_MESSAGE_GUARANTOR_H
-#define CDCF_ACTOR_MESSAGE_GUARANTOR_H
+#ifndef ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_MESSAGE_GUARANTOR_H_
+#define ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_MESSAGE_GUARANTOR_H_
 #include <map>
 #include <utility>
 
@@ -42,4 +42,4 @@ class ActorMessageGuarantor {
   caf::scoped_actor sender_actor_;
 };
 
-#endif  // CDCF_ACTOR_MESSAGE_GUARANTOR_H
+#endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_MESSAGE_GUARANTOR_H_

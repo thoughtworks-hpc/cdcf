@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "actor_message_guarantor.h"
+#include "../include/actor_message_guarantor.h"
 
 void ActorMessageGuarantor::SendMsg(MessageID msg_id, const caf::message& msg) {
   {

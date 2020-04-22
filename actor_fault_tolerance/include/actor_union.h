@@ -2,9 +2,12 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ACTOR_UNION_H
-#define CDCF_ACTOR_UNION_H
-#include "actor_guard.h"
+#ifndef ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
+#define ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
+#include <string>
+
+#include <caf/all.hpp>
+#include <caf/io/all.hpp>
 
 enum class actor_union_error : uint8_t { all_actor_out_of_work = 1 };
 
@@ -65,8 +68,8 @@ class ActorUnion {
       caf::error ret_error =
           make_error(actor_union_error::all_actor_out_of_work);
       err_deal(ret_error);
-    };
+    }
   }
 };
 
-#endif  // CDCF_ACTOR_UNION_H
+#endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
