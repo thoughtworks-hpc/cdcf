@@ -37,14 +37,14 @@ class config : public CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;
-  bool guard_mode = false;
+  bool worker_mode = false;
 
   config() {
     add_actor_type("calculator", calculator_fun);
     opt_group{custom_options_, "global"}
         .add(port, "port,p", "set port")
         .add(host, "host,H", "set node")
-        .add(guard_mode, "guard_mode,s", "enable guard mode");
+        .add(worker_mode, "guard_mode,s", "enable guard mode");
   }
 };
 
@@ -87,7 +87,7 @@ void dealSendErr(caf::error err) {
   std::cout << "get error:" << caf::to_string(err) << std::endl;
 }
 
-void Guard(caf::actor_system& system, const config& cfg) {
+void UnionLeader(caf::actor_system& system, const config& cfg) {
   auto node = system.middleman().connect(cfg.host, cfg.port);
   if (!node) {
     std::cerr << "*** connect failed: " << system.render(node.error())
@@ -158,7 +158,7 @@ void Guard(caf::actor_system& system, const config& cfg) {
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  auto f = cfg.guard_mode ? Guard : Worker;
+  auto f = cfg.worker_mode ? UnionLeader : Worker;
   f(system, cfg);
 }
 
