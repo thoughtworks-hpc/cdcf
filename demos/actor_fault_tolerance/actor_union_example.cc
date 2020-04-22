@@ -146,7 +146,7 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
   // caf::anon_send_exit(worker_actor3, caf::exit_reason::kill);
 
   // remove actor2 down
-  actor_union.RemoveActor(worker_actor2);
+  // actor_union.RemoveActor(worker_actor2);
 
   actor_union.SendAndReceive(printRet, dealSendErr, add_atom::value, 1, 990);
   actor_union.SendAndReceive(printRet, dealSendErr, add_atom::value, 2, 990);
