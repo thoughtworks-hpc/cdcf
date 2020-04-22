@@ -14,7 +14,8 @@ class ActorMonitor : public caf::event_based_actor {
  public:
   explicit ActorMonitor(caf::actor_config& cfg);
   ActorMonitor(caf::actor_config& cfg,
-               std::function<void(const caf::down_msg&, const std::string&)>& downMsgFun);
+               std::function<void(const caf::down_msg&, const std::string&)>&
+                   downMsgFun);
   caf::behavior make_behavior() override;
 
  private:
