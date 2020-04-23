@@ -34,7 +34,7 @@ void printRet(int return_value) {
   std::cout << "return value:" << return_value << std::endl;
 }
 
-void dealSendErr(caf::error err) {
+void dealSendErr(const caf::error& err) {
   std::cout << "get error:" << caf::to_string(err) << std::endl;
 }
 
