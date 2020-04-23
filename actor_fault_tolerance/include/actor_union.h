@@ -19,18 +19,7 @@ class ActorUnion {
   ActorUnion(caf::actor_system& system, caf::actor_pool::policy policy);
   virtual ~ActorUnion();
   void AddActor(const caf::actor& actor);
-  void RemoveActor(caf::actor actor);
-
-  template <class... send, class return_function>
-  void SendAndReceiveWithTryTime(return_function f,
-                                 std::function<void(caf::error)> err_deal,
-                                 uint16_t has_try_time, const send&... xs) {
-    caf::message send_message = caf::make_message(xs...);
-    sender_actor_->request(pool_actor_, std::chrono::seconds(1), xs...)
-        .receive(f, [=](caf::error err) {
-          HandleSendFailed(send_message, f, err_deal, err, has_try_time);
-        });
-  }
+  void RemoveActor(const caf::actor& actor);
 
   template <class... send, class return_function>
   void SendAndReceive(return_function f,
@@ -44,6 +33,17 @@ class ActorUnion {
   caf::scoped_execution_unit* context_;
   caf::scoped_actor sender_actor_;
   uint16_t actor_count_ = 0;
+
+  template <class... send, class return_function>
+  void SendAndReceiveWithTryTime(return_function f,
+                                 std::function<void(caf::error)> err_deal,
+                                 uint16_t has_try_time, const send&... xs) {
+    caf::message send_message = caf::make_message(xs...);
+    sender_actor_->request(pool_actor_, std::chrono::seconds(1), xs...)
+        .receive(f, [=](caf::error err) {
+          HandleSendFailed(send_message, f, err_deal, err, has_try_time);
+        });
+  }
 
   template <class return_function>
   void HandleSendFailed(const caf::message& msg, return_function f,
@@ -64,7 +64,6 @@ class ActorUnion {
     } else {
       std::cout << "send msg failed, return error. try_time:" << has_try_time
                 << std::endl;
-
       caf::error ret_error =
           make_error(actor_union_error::all_actor_out_of_work);
       err_deal(ret_error);

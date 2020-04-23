@@ -7,16 +7,17 @@
 
 #include <utility>
 
-#include "../../actor_monitor/include/actor_monitor.h"
-#include "./actor_message_guarantor.h"
+#include <caf/all.hpp>
+#include <caf/io/all.hpp>
 
 class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
              std::function<caf::actor(std::atomic<bool>&)> restart,
              caf::actor_system& system)
-      : message_guarantor_(keepActor, system),
-        restart_fun_(std::move(restart)) {}
+      : keep_actor_(keepActor),
+        restart_fun_(std::move(restart)),
+        sender_actor_(system) {}
 
   template <class... send, class return_function>
   bool SendAndReceive(return_function f,
@@ -24,12 +25,11 @@ class ActorGuard {
                       const send&... xs) {
     if (active_) {
       caf::message send_message = caf::make_message(xs...);
-      message_guarantor_.SendAndReceive(
-          0, f,
-          [&](caf::error err) {
+
+      sender_actor_->request(keep_actor_, std::chrono::seconds(1), xs...)
+          .receive(f, [&](caf::error err) {
             HandleSendFailed(send_message, f, err_deal, err);
-          },
-          xs...);
+          });
     }
 
     return active_;
@@ -47,7 +47,7 @@ class ActorGuard {
     }
 
     std::cout << "send msg failed, try restart dest actor." << std::endl;
-    message_guarantor_.SetReceiver(restart_fun_(active_));
+    keep_actor_ = restart_fun_(active_);
 
     if (active_) {
       std::cout << "restart actor success." << std::endl;
@@ -58,7 +58,8 @@ class ActorGuard {
     }
   }
 
-  ActorMessageGuarantor message_guarantor_;
+  caf::actor keep_actor_;
+  caf::scoped_actor sender_actor_;
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
   std::atomic<bool> active_ = true;
 };
