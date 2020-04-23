@@ -20,7 +20,7 @@ void ActorUnion::AddActor(const caf::actor& actor) {
   actor_count_++;
 }
 
-void ActorUnion::RemoveActor(caf::actor actor) {
+void ActorUnion::RemoveActor(const caf::actor& actor) {
   caf::anon_send(pool_actor_, caf::sys_atom::value, caf::delete_atom::value,
                  actor);
   actor_count_--;

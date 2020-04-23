@@ -7,58 +7,61 @@
 
 #include <utility>
 
-#include "../../actor_monitor/include/actor_monitor.h"
-#include "./actor_message_guarantor.h"
+#include <caf/all.hpp>
+#include <caf/io/all.hpp>
 
 class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
              std::function<caf::actor(std::atomic<bool>&)> restart,
              caf::actor_system& system)
-      : message_guarantor_(keepActor, system),
-        restart_fun_(std::move(restart)) {}
+      : keep_actor_(keepActor),
+        restart_fun_(std::move(restart)),
+        sender_actor_(system) {}
 
-  template <class... send, class return_function>
-  bool SendAndReceive(return_function f,
-                      std::function<void(caf::error)> err_deal,
-                      const send&... xs) {
+  template <class... send_type, class return_function_type>
+  bool SendAndReceive(return_function_type return_function,
+                      std::function<void(caf::error)> error_deal_function,
+                      const send_type&... messages) {
     if (active_) {
-      caf::message send_message = caf::make_message(xs...);
-      message_guarantor_.SendAndReceive(
-          0, f,
-          [&](caf::error err) {
-            HandleSendFailed(send_message, f, err_deal, err);
-          },
-          xs...);
+      caf::message send_message = caf::make_message(messages...);
+
+      sender_actor_->request(keep_actor_, std::chrono::seconds(1), messages...)
+          .receive(return_function, [&](caf::error err) {
+            HandleSendFailed(send_message, return_function, error_deal_function,
+                             err);
+          });
     }
 
     return active_;
   }
 
  private:
-  template <class return_function>
-  void HandleSendFailed(const caf::message& msg, return_function f,
-                        std::function<void(caf::error)> err_deal,
+  template <class return_function_type>
+  void HandleSendFailed(const caf::message& message,
+                        return_function_type return_function,
+                        std::function<void(caf::error)> error_deal_function,
                         caf::error err) {
     if ("system" != caf::to_string(err.category())) {
       // not system error, mean actor not down, this is a business error.
-      err_deal(err);
+      error_deal_function(err);
       return;
     }
 
     std::cout << "send msg failed, try restart dest actor." << std::endl;
-    message_guarantor_.SetReceiver(restart_fun_(active_));
+    keep_actor_ = restart_fun_(active_);
 
     if (active_) {
       std::cout << "restart actor success." << std::endl;
-      (void)SendAndReceive(f, err_deal, msg);
+      (void)SendAndReceive(return_function, error_deal_function, message);
     } else {
-      std::cout << "restart actor failed. message:" << caf::to_string(msg)
+      std::cout << "restart actor failed. message:" << caf::to_string(message)
                 << " will not deliver." << std::endl;
     }
   }
 
-  ActorMessageGuarantor message_guarantor_;
+  caf::actor keep_actor_;
+  caf::scoped_actor sender_actor_;
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
   std::atomic<bool> active_ = true;
 };
