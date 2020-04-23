@@ -19,16 +19,17 @@ class ActorGuard {
         restart_fun_(std::move(restart)),
         sender_actor_(system) {}
 
-  template <class... send, class return_function>
-  bool SendAndReceive(return_function f,
-                      std::function<void(caf::error)> err_deal,
-                      const send&... xs) {
+  template <class... send_type, class return_function_type>
+  bool SendAndReceive(return_function_type return_function,
+                      std::function<void(caf::error)> error_deal_function,
+                      const send_type&... messages) {
     if (active_) {
-      caf::message send_message = caf::make_message(xs...);
+      caf::message send_message = caf::make_message(messages...);
 
-      sender_actor_->request(keep_actor_, std::chrono::seconds(1), xs...)
-          .receive(f, [&](caf::error err) {
-            HandleSendFailed(send_message, f, err_deal, err);
+      sender_actor_->request(keep_actor_, std::chrono::seconds(1), messages...)
+          .receive(return_function, [&](caf::error err) {
+            HandleSendFailed(send_message, return_function, error_deal_function,
+                             err);
           });
     }
 
@@ -36,13 +37,14 @@ class ActorGuard {
   }
 
  private:
-  template <class return_function>
-  void HandleSendFailed(const caf::message& msg, return_function f,
-                        std::function<void(caf::error)> err_deal,
+  template <class return_function_type>
+  void HandleSendFailed(const caf::message& message,
+                        return_function_type return_function,
+                        std::function<void(caf::error)> error_deal_function,
                         caf::error err) {
     if ("system" != caf::to_string(err.category())) {
       // not system error, mean actor not down, this is a business error.
-      err_deal(err);
+      error_deal_function(err);
       return;
     }
 
@@ -51,9 +53,9 @@ class ActorGuard {
 
     if (active_) {
       std::cout << "restart actor success." << std::endl;
-      (void)SendAndReceive(f, err_deal, msg);
+      (void)SendAndReceive(return_function, error_deal_function, message);
     } else {
-      std::cout << "restart actor failed. message:" << caf::to_string(msg)
+      std::cout << "restart actor failed. message:" << caf::to_string(message)
                 << " will not deliver." << std::endl;
     }
   }

@@ -120,7 +120,11 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
   self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 200,
                 100)
       .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
-               dealSendErr);
+               [=](const caf::error& err) {
+                 std::cout << "get error:" << caf::to_string(err) << std::endl;
+                 std::cout << "first parameter:" << 200 << std::endl;
+                 std::cout << "first parameter:" << 100 << std::endl;
+               });
 
   std::cout << "*** press <enter> to show actor guard send message"
             << std::endl;
@@ -143,7 +147,11 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
   self->request(worker_actor, std::chrono::seconds(1), add_atom::value, 500,
                 100)
       .receive([](int ret) { std::cout << "get ret:" << ret << std::endl; },
-               dealSendErr);
+               [=](const caf::error& err) {
+                 std::cout << "get error:" << caf::to_string(err) << std::endl;
+                 std::cout << "first parameter:" << 200 << std::endl;
+                 std::cout << "first parameter:" << 100 << std::endl;
+               });
 
   std::cout << "*** press <enter> to show guard send after message down."
             << std::endl;
