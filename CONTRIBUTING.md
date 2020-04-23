@@ -31,10 +31,12 @@ The project generally follows the [GitHub Flow](https://guides.github.com/introd
 ## Commit Message
 
 Writing good commit logs is important.  A commit log should describe what
-changed and why.  Follow these guidelines when writing one:
+changed and why. Follow these guidelines when writing one:
 
-1. The first line should be 50 characters or less and contain a short
-   description of the change with the first letter capitalized.
+1. The first line should be 50 characters or less and contain a short description of the change with the first letter
+   capitalized.
+   Remark: Github auto generated message title for merging pull request is an exception for this rule, it generally
+   includes a pull request ID and a long branch name with repository name.
 2. Keep the second line blank.
 3. Wrap all other lines at 72 columns.
 
