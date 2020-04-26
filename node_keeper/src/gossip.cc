@@ -108,8 +108,7 @@ class Transport : public Transportable {
     asio::connect(*socket, endpoints);
     auto out = Message(Message::Type::kPull, data, size).Encode();
     if (did_pull) {
-      auto onDidPull = [this, did_pull, result, socket](
-                           const std::error_code &err, size_t) mutable {
+      auto on_did_pull = [=](const auto &err, auto) mutable {
         if (err) {
           did_pull(result);
           return;
@@ -119,7 +118,7 @@ class Transport : public Transportable {
         }
         did_pull(result);
       };
-      socket->async_write_some(asio::buffer(out), onDidPull);
+      socket->async_write_some(asio::buffer(out), on_did_pull);
     } else {
       auto sent = socket->write_some(asio::buffer(out));
       if (sent != out.size()) {

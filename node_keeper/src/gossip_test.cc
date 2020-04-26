@@ -148,8 +148,8 @@ TEST_F(Gossip, ShouldCallbackWithErrorGivenUnresolvedHostAsynchronously) {
 class Push : public Gossip {
  public:
   void SetUp() {
-    local_ = CreateTransport(addressLocal_, addressLocal_);
-    remote_ = CreateTransport(addressRemote_, addressRemote_);
+    local_ = CreateTransport(local_address_, local_address_);
+    remote_ = CreateTransport(remote_address_, remote_address_);
     remote_->RegisterPushHandler(
         [&](const Address &node, const void *data, size_t size) {
           {
@@ -162,8 +162,8 @@ class Push : public Gossip {
   }
 
  protected:
-  Address addressLocal_{"127.0.0.1", 5000};
-  Address addressRemote_{"127.0.0.1", 5001};
+  Address local_address_{"127.0.0.1", 5000};
+  Address remote_address_{"127.0.0.1", 5001};
   std::unique_ptr<Transportable> local_;
   std::unique_ptr<Transportable> remote_;
   std::mutex mutex_;
@@ -176,7 +176,7 @@ class Push : public Gossip {
 TEST_F(Push, ShouldPushDataToRemotePeer) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
 
-  auto result = local_->Push(addressRemote_, sent.data(), sent.size());
+  auto result = local_->Push(remote_address_, sent.data(), sent.size());
 
   ASSERT_THAT(result, Eq(ErrorCode::kOK));
   {
@@ -189,9 +189,9 @@ TEST_F(Push, ShouldPushDataToRemotePeer) {
 
 TEST_F(Push, ShouldPushTwoDataToRemotePeerSeparately) {
   const std::vector<uint8_t> sent(200, 12);
-  local_->Push(addressRemote_, sent.data(), sent.size());
+  local_->Push(remote_address_, sent.data(), sent.size());
 
-  auto result = local_->Push(addressRemote_, sent.data(), sent.size());
+  auto result = local_->Push(remote_address_, sent.data(), sent.size());
 
   ASSERT_THAT(result, Eq(ErrorCode::kOK));
   {
@@ -207,7 +207,7 @@ TEST_F(Push, ShouldPushDataToRemotePeerAsynchronously) {
   const std::vector<uint8_t> sent{1, 2, 3, 4, 5};
 
   std::promise<void> promise;
-  auto result = local_->Push(addressRemote_, sent.data(), sent.size(),
+  auto result = local_->Push(remote_address_, sent.data(), sent.size(),
                              [&](auto) { promise.set_value(); });
 
   {
@@ -247,15 +247,15 @@ TEST_F(Push, ShouldReturnErrorGivenUnresolvedHostAsynchronously) {
 class Pull : public Gossip {
  public:
   void SetUp() {
-    local_ = CreateTransport(addressLocal_, addressLocal_);
-    remote_ = CreateTransport(addressRemote_, addressRemote_);
+    local_ = CreateTransport(local_address_, local_address_);
+    remote_ = CreateTransport(remote_address_, remote_address_);
     remote_->RegisterPullHandler(
         [](const Address &, const void *, size_t) { return Pull::kResponse; });
   }
 
  protected:
-  Address addressLocal_{"127.0.0.1", 5000};
-  Address addressRemote_{"127.0.0.1", 5001};
+  Address local_address_{"127.0.0.1", 5000};
+  Address remote_address_{"127.0.0.1", 5001};
   std::unique_ptr<Transportable> local_;
   std::unique_ptr<Transportable> remote_;
   static constexpr const std::chrono::milliseconds kTimeout{
@@ -268,7 +268,7 @@ const std::vector<uint8_t> Pull::kRequest{1, 2, 3, 4, 5};
 const std::vector<uint8_t> Pull::kResponse{5, 4, 3, 2, 1};
 
 TEST_F(Pull, ShouldPullDataFromRemotePeer) {
-  auto result = local_->Pull(addressRemote_, kRequest.data(), kRequest.size());
+  auto result = local_->Pull(remote_address_, kRequest.data(), kRequest.size());
 
   ASSERT_THAT(result.first, Eq(ErrorCode::kOK));
   EXPECT_THAT(result.second, Eq(kResponse));
@@ -278,7 +278,7 @@ TEST_F(Pull, ShouldPullDataFromRemotePeerAsynchronously) {
   using PullResult = gossip::Pullable::PullResult;
   std::promise<PullResult> promise;
   std::future<PullResult> future = promise.get_future();
-  auto result = local_->Pull(addressRemote_, kRequest.data(), kRequest.size(),
+  auto result = local_->Pull(remote_address_, kRequest.data(), kRequest.size(),
                              [&](auto &result) { promise.set_value(result); });
 
   ASSERT_THAT(future.wait_for(kTimeout), Eq(std::future_status::ready));
