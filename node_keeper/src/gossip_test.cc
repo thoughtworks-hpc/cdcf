@@ -35,6 +35,26 @@ TEST(Transport, ShouldThrowErrorIfCreateTransportWithOccupiedPort) {
   EXPECT_THROW(CreateTransport(udp, tcp), PortOccupied);
 }
 
+TEST(Transport, DestructShouldNotBeBlockDuringAsynchronouslyPull) {
+  Address local_address{"127.0.0.1", 5000};
+  auto local = CreateTransport(local_address, local_address);
+  Address remote_address{"127.0.0.1", 5001};
+  auto remote = CreateTransport(remote_address, remote_address);
+  std::promise<void> promise;
+  remote->RegisterPullHandler([&](const auto &, const auto *, auto) {
+    promise.get_future().get();
+    return std::vector<uint8_t>{};
+  });
+
+  auto did_pull = [&](auto &result) {};
+  auto result = local->Pull(remote_address, "0", 1, did_pull);
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  auto future = std::async([&]() { local.reset(); });
+
+  const auto timeout = std::chrono::milliseconds(100);
+  ASSERT_THAT(future.wait_for(timeout), Eq(std::future_status::ready));
+}
+
 class Gossip : public testing::Test {
  public:
   void SetUp() {

@@ -4,12 +4,14 @@
 #include "src/gossip.h"
 
 #include <future>
-#include <optional>
+#include <list>
+#include <memory>
 
 #include <asio.hpp>
 
 #include "src/gossip/connection.h"
 #include "src/gossip/message.h"
+#include "src/gossip/pull_session.h"
 
 namespace gossip {
 
@@ -28,6 +30,11 @@ class Transport : public Transportable {
   }
 
   virtual ~Transport() {
+    for (auto &session : pull_sessions_) {
+      session->Cancel();
+    }
+    pull_sessions_.clear();
+
     io_context_.stop();
     if (io_thread_.joinable()) {
       io_thread_.join();
@@ -101,33 +108,20 @@ class Transport : public Transportable {
 
   virtual PullResult Pull(const Address &node, const void *data, size_t size,
                           DidPullHandler did_pull) try {
-    PullResult result{ErrorCode::kUnknown, {}};
-    tcp::resolver resolver(io_context_);
-    auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
-    auto socket = std::make_shared<tcp::socket>(io_context_);
-    asio::connect(*socket, endpoints);
-    auto out = Message(Message::Type::kPull, data, size).Encode();
+    auto session = std::make_shared<PullSession>(&io_context_, node.host,
+                                                 std::to_string(node.port));
+    auto it = pull_sessions_.insert(pull_sessions_.end(), session);
+    std::unique_ptr<int, std::function<void(int *)>> guard(nullptr, [=](int *) {
+      (*it)->Cancel();
+      pull_sessions_.erase(it);
+    });
     if (did_pull) {
-      auto on_did_pull = [=](const auto &err, auto) mutable {
-        if (err) {
-          did_pull(result);
-          return;
-        }
-        if (auto message = ReadMessage(&*socket)) {
-          result = PullResult{ErrorCode::kOK, message->Data()};
-        }
-        did_pull(result);
-      };
-      socket->async_write_some(asio::buffer(out), on_did_pull);
+      return session->Request(
+          data, size,
+          [session, did_pull](const auto &result) { return did_pull(result); });
     } else {
-      auto sent = socket->write_some(asio::buffer(out));
-      if (sent != out.size()) {
-        return result;
-      }
-      auto message = ReadMessage(&*socket);
-      return message ? PullResult{ErrorCode::kOK, message->Data()} : result;
+      return session->Request(data, size);
     }
-    return result;
   } catch (const asio::system_error &e) {
     PullResult result{ExtractError(e), {}};
     if (did_pull) {
@@ -142,24 +136,6 @@ class Transport : public Transportable {
   }
 
  private:
-  std::optional<Message> ReadMessage(tcp::socket *socket) {
-    Message message;
-    auto buffer = std::vector<uint8_t>(1024, 0);
-    while (true) {
-      auto bytes_transferred = socket->read_some(asio::buffer(buffer, 1024));
-      if (bytes_transferred == 0) {
-        return std::nullopt;
-      }
-      for (size_t decoded = 0; decoded < bytes_transferred;) {
-        decoded +=
-            message.Decode(&buffer[decoded], bytes_transferred - decoded);
-        if (message.IsSatisfied()) {
-          return std::optional<Message>(std::move(message));
-        }
-      }
-    }
-  }
-
   void StartReceiveGossip() {
     auto buffer =
         std::make_shared<std::vector<uint8_t>>(Payload::kMaxPayloadSize);
@@ -227,6 +203,7 @@ class Transport : public Transportable {
     }
   }
 
+  std::list<std::shared_ptr<PullSession>> pull_sessions_;
   asio::io_context io_context_;
   udp::socket upd_socket_;
   std::thread io_thread_;
