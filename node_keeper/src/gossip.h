@@ -4,14 +4,18 @@
 #ifndef NODE_KEEPER_SRC_GOSSIP_H_
 #define NODE_KEEPER_SRC_GOSSIP_H_
 
+#include <asio.hpp>
 #include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include "src/gossip/message.h"
 
 namespace gossip {
 
@@ -119,5 +123,62 @@ class PortOccupied : public std::runtime_error {
 
 std::unique_ptr<Transportable> CreateTransport(const Address &upd,
                                                const Address &tcp);
-};      // namespace gossip
+
+class Transport : public Transportable {
+ public:
+  Transport(const Address &udp, const Address &tcp);
+
+  virtual ~Transport();
+
+ public:
+  virtual ErrorCode Gossip(const std::vector<Address> &nodes,
+                           const Payload &payload, DidGossipHandler did_gossip);
+  virtual void RegisterGossipHandler(GossipHandler handler);
+  ErrorCode Push(const Address &node, const void *data, size_t size,
+                 DidPushHandler did_push);
+  virtual void RegisterPushHandler(PushHandler handler);
+  virtual PullResult Pull(const Address &node, const void *data, size_t size,
+                          DidPullHandler did_pull);
+  void RegisterPullHandler(PullHandler handler);
+
+ private:
+  std::optional<Message> ReadMessage(asio::ip::tcp::socket *socket);
+  void StartReceiveGossip();
+  void IORoutine();
+  void StartAccept();
+
+ private:
+  void OnPull(asio::ip::tcp::socket *socket, const Address &address,
+              const std::vector<uint8_t> &request);
+  ErrorCode ExtractError(const asio::system_error &e);
+
+  asio::io_context io_context_;
+  asio::ip::udp::socket upd_socket_;
+  std::thread io_thread_;
+  GossipHandler gossip_handler_;
+  asio::ip::tcp::acceptor acceptor_;
+  PushHandler push_handler_;
+  PullHandler pull_handler_;
+};
+
+class UnreachableTransport : public Transport {
+ public:
+  UnreachableTransport(const Address &udp, const Address &tcp)
+      : Transport(udp, tcp), self_address_(tcp) {}
+  virtual ~UnreachableTransport();
+  virtual PullResult Pull(const Address &node, const void *data, size_t size,
+                          DidPullHandler did_pull) override;
+
+  void MakeUnreachableTo(const Address &peer);
+
+ private:
+  std::vector<Address> unreachable_addresses_;
+  std::future<PullResult> pull_future_;
+  Address self_address_;
+};
+
+std::unique_ptr<UnreachableTransport> CreateUnreachableTransport(
+    const Address &udp, const Address &tcp);
+};  // namespace gossip
+
 #endif  // NODE_KEEPER_SRC_GOSSIP_H_

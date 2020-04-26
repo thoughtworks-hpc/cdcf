@@ -53,5 +53,40 @@ class FullStateMessage : public Message {
   MemberFullState state_;
 };
 
+class PullRequestMessage : public Message {
+ public:
+  void InitAsFullStateType();
+  void InitAsPingType();
+  void InitAsPingRelayType(const Member& self, const Member& target);
+  bool IsFullStateType();
+  bool IsPingType();
+  bool IsPingRelayType();
+  std::string GetName();
+  std::string GetIpAddress();
+  unsigned int GetPort();
+  std::string GetSelfIpAddress();
+  unsigned int GetSelfPort();
+
+  google::protobuf::Message& BaseMessage() override { return pull_request_; }
+
+ private:
+  PullRequest pull_request_;
+};
+
+class PullResponseMessage : public Message {
+ public:
+  void InitAsPingSuccess(const Member& member);
+  void InitAsPingFailure(const Member& member);
+  void InitAsPingReceived();
+  Member GetMember();
+  bool IsPingSuccess();
+  bool IsPingFailure();
+
+  google::protobuf::Message& BaseMessage() override { return pull_response_; }
+
+ private:
+  PullResponse pull_response_;
+};
+
 };      // namespace membership
 #endif  // NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_

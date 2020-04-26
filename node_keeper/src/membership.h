@@ -136,13 +136,19 @@ class Membership {
                     const gossip::Payload& payload);
   gossip::Address GetRandomSeedAddress() const;
   std::pair<bool, membership::Member> GetRandomMember() const;
+  std::pair<bool, membership::Member> GetRelayMember(
+      const std::set<Member>& exclude_members) const;
   std::vector<gossip::Address> GetAllMemberAddress();
+
   void DisseminateGossip(const gossip::Payload& payload);
   void PullFromSeedMember();
   void HandleDidPull(const gossip::Transportable::PullResult& result);
-  std::vector<uint8_t> HandlePull(const gossip::Address&, const void* data,
-                                  size_t size);
+  std::vector<uint8_t> HandlePull(const gossip::Address& address,
+                                  const void* data, size_t size);
+  void HandlePush(const gossip::Address& address, const void* data,
+                  size_t size);
   void Ping();
+  void RelayPing(const Member& ping_target, std::set<Member> exclude_members);
   void Suspect(const Member& member, unsigned int incarnation);
   bool IsLeftMember(const gossip::Address& address);
   int GetRetransmitLimit() const;
@@ -161,7 +167,7 @@ class Membership {
   // queue must be destroyed before transport i.e. put after transport otherwise
   // potential deadlock
   std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
-  std::unique_ptr<queue::TimedFunctorQueue> failure_detector__queue_;
+  std::unique_ptr<queue::TimedFunctorQueue> failure_detector_queue_;
   unsigned int incarnation_;
   int retransmit_multiplier_;
   bool if_notify_leave_;

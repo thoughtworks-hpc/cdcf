@@ -26,3 +26,31 @@ message MemberFullState {
     required ErrorCode error = 1;
     repeated MemberUpdate states = 2;
 }
+
+message PullRequest {
+    enum Type {
+        FULL_STATE = 0;
+        PING = 1;
+        PING_RELAY = 2;
+    }
+    required Type type = 1;
+    optional string name = 2;
+    optional string ip = 3;
+    optional int32 port = 4;
+
+    optional string self_name = 5;
+    optional string self_ip = 6;
+    optional int32 self_port = 7;
+}
+
+message PullResponse {
+    enum Type {
+        PING_SUSCESS = 1;
+        PING_FAILURE = 2;
+        PING_REQUEST_RECEIVED = 3;
+    }
+    required Type type = 1;
+    optional string name = 2;
+    optional string ip = 3;
+    optional int32 port = 4;
+}

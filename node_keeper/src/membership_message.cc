@@ -80,11 +80,122 @@ void membership::FullStateMessage::InitAsReentryRejected() {
 
 std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
   std::vector<Member> members;
-  for (auto state : state_.states()) {
+  for (const auto& state : state_.states()) {
     members.emplace_back(state.name(), state.ip(), state.port());
   }
   return members;
 }
+
 bool membership::FullStateMessage::IsSuccess() {
   return state_.error() == MemberFullState::SUCCESS;
+}
+
+void membership::PullRequestMessage::InitAsFullStateType() {
+  pull_request_.set_type(
+      ::membership::PullRequest_Type::PullRequest_Type_FULL_STATE);
+}
+
+void membership::PullRequestMessage::InitAsPingType() {
+  pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
+}
+
+void membership::PullRequestMessage::InitAsPingRelayType(const Member& self,
+                                                         const Member& target) {
+  pull_request_.set_type(
+      ::membership::PullRequest_Type::PullRequest_Type_PING_RELAY);
+  pull_request_.set_name(target.GetNodeName());
+  pull_request_.set_ip(target.GetIpAddress());
+  pull_request_.set_port(target.GetPort());
+  pull_request_.set_self_name(self.GetNodeName());
+  pull_request_.set_self_ip(self.GetIpAddress());
+  pull_request_.set_self_port(self.GetPort());
+}
+
+bool membership::PullRequestMessage::IsFullStateType() {
+  return pull_request_.type() == PullRequest_Type_FULL_STATE;
+}
+
+bool membership::PullRequestMessage::IsPingType() {
+  return pull_request_.type() == PullRequest_Type_PING;
+}
+
+bool membership::PullRequestMessage::IsPingRelayType() {
+  return pull_request_.type() == PullRequest_Type_PING_RELAY;
+}
+
+std::string membership::PullRequestMessage::GetName() {
+  std::string name;
+  if (IsPingRelayType()) {
+    name = pull_request_.name();
+  }
+  return name;
+}
+
+std::string membership::PullRequestMessage::GetIpAddress() {
+  std::string ip;
+  if (IsPingRelayType()) {
+    ip = pull_request_.ip();
+  }
+  return ip;
+}
+
+unsigned int membership::PullRequestMessage::GetPort() {
+  int port = 0;
+  if (IsPingRelayType()) {
+    port = pull_request_.port();
+  }
+  return port;
+}
+
+std::string membership::PullRequestMessage::GetSelfIpAddress() {
+  std::string ip;
+  if (IsPingRelayType()) {
+    ip = pull_request_.self_ip();
+  }
+  return ip;
+}
+
+unsigned int membership::PullRequestMessage::GetSelfPort() {
+  int port = 0;
+  if (IsPingRelayType()) {
+    port = pull_request_.self_port();
+  }
+  return port;
+}
+
+void membership::PullResponseMessage::InitAsPingSuccess(const Member& member) {
+  pull_response_.set_type(PullResponse_Type_PING_SUSCESS);
+  pull_response_.set_name(member.GetNodeName());
+  pull_response_.set_ip(member.GetIpAddress());
+  pull_response_.set_port(member.GetPort());
+}
+
+void membership::PullResponseMessage::InitAsPingFailure(const Member& member) {
+  pull_response_.set_type(PullResponse_Type_PING_FAILURE);
+  pull_response_.set_name(member.GetNodeName());
+  pull_response_.set_ip(member.GetIpAddress());
+  pull_response_.set_port(member.GetPort());
+}
+
+void membership::PullResponseMessage::InitAsPingReceived() {
+  pull_response_.set_type(PullResponse_Type_PING_REQUEST_RECEIVED);
+}
+
+membership::Member membership::PullResponseMessage::GetMember() {
+  if (pull_response_.type() == PullResponse_Type_PING_SUSCESS ||
+      pull_response_.type() == PullResponse_Type_PING_FAILURE) {
+    Member member{pull_response_.name(), pull_response_.ip(),
+                  static_cast<uint16_t>(pull_response_.port())};
+    return member;
+  } else {
+    return Member();
+  }
+}
+
+bool membership::PullResponseMessage::IsPingSuccess() {
+  return pull_response_.type() == PullResponse_Type_PING_SUSCESS;
+}
+
+bool membership::PullResponseMessage::IsPingFailure() {
+  return pull_response_.type() == PullResponse_Type_PING_FAILURE;
 }
