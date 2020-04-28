@@ -22,7 +22,7 @@ std::vector<std::string> split(const std::string& input, char delim) {
   return result;
 }
 
-class Config : public cdcf_config {
+class Config : public CDCFConfig {
  public:
   std::string name_ = "node";
   uint16_t port_ = 4748;

@@ -4,13 +4,13 @@
 #include "src/gossip.h"
 
 #include <future>
-#include <iostream>
-#include <optional>
-#include <vector>
-// anti clang-format sort
+#include <memory>
 
-#include "src/gossip.h"
+#include <asio.hpp>
+
 #include "src/gossip/connection.h"
+#include "src/gossip/message.h"
+#include "src/gossip/pull_session.h"
 
 namespace gossip {
 
@@ -27,16 +27,14 @@ Transport::Transport(const Address &udp, const Address &tcp) try
 }
 
 Transport::~Transport() {
-  std::cout << "~Transport 1" << std::endl;
-  io_context_.stop();
-  std::cout << "~Transport 2" << std::endl;
-  if (io_thread_.joinable()) {
-    std::cout << "~Transport 3" << std::endl;
-    std::cout << "~Transport io_context status: " << io_context_.stopped()
-              << std::endl;
+  for (auto &session : pull_sessions_) {
+    session->Cancel();
+  }
+  pull_sessions_.clear();
 
+  io_context_.stop();
+  if (io_thread_.joinable()) {
     io_thread_.join();
-    std::cout << "~Transport 4" << std::endl;
   }
 }
 
@@ -106,34 +104,20 @@ void Transport::RegisterPushHandler(PushHandler handler) {
 
 Pullable::PullResult Transport::Pull(const Address &node, const void *data,
                                      size_t size, DidPullHandler did_pull) try {
-  PullResult result{ErrorCode::kUnknown, {}};
-  tcp::resolver resolver(io_context_);
-  auto endpoints = resolver.resolve(node.host, std::to_string(node.port));
-  auto socket = std::make_shared<tcp::socket>(io_context_);
-  asio::connect(*socket, endpoints);
-  auto out = Message(Message::Type::kPull, data, size).Encode();
+  auto session = std::make_shared<PullSession>(&io_context_, node.host,
+                                               std::to_string(node.port));
+  auto it = pull_sessions_.insert(pull_sessions_.end(), session);
+  std::unique_ptr<int, std::function<void(int *)>> guard(nullptr, [=](int *) {
+    (*it)->Cancel();
+    pull_sessions_.erase(it);
+  });
   if (did_pull) {
-    auto onDidPull = [this, did_pull, result, socket](
-                         const std::error_code &err, size_t) mutable {
-      if (err) {
-        did_pull(result);
-        return;
-      }
-      if (auto message = ReadMessage(&*socket)) {
-        result = PullResult{ErrorCode::kOK, message->Data()};
-      }
-      did_pull(result);
-    };
-    socket->async_write_some(asio::buffer(out), onDidPull);
+    return session->Request(
+        data, size,
+        [session, did_pull](const auto &result) { return did_pull(result); });
   } else {
-    auto sent = socket->write_some(asio::buffer(out));
-    if (sent != out.size()) {
-      return result;
-    }
-    auto message = ReadMessage(&*socket);
-    return message ? PullResult{ErrorCode::kOK, message->Data()} : result;
+    return session->Request(data, size);
   }
-  return result;
 } catch (const asio::system_error &e) {
   PullResult result{ExtractError(e), {}};
   if (did_pull) {
@@ -145,23 +129,6 @@ Pullable::PullResult Transport::Pull(const Address &node, const void *data,
 
 void Transport::RegisterPullHandler(PullHandler handler) {
   pull_handler_ = handler;
-}
-
-std::optional<Message> Transport::ReadMessage(tcp::socket *socket) {
-  Message message;
-  auto buffer = std::vector<uint8_t>(1024, 0);
-  while (true) {
-    auto bytes_transferred = socket->read_some(asio::buffer(buffer, 1024));
-    if (bytes_transferred == 0) {
-      return std::nullopt;
-    }
-    for (size_t decoded = 0; decoded < bytes_transferred;) {
-      decoded += message.Decode(&buffer[decoded], bytes_transferred - decoded);
-      if (message.IsSatisfied()) {
-        return std::optional<Message>(std::move(message));
-      }
-    }
-  }
 }
 
 void Transport::StartReceiveGossip() {
@@ -231,44 +198,6 @@ ErrorCode Transport::ExtractError(const asio::system_error &e) {
 std::unique_ptr<Transportable> CreateTransport(const Address &udp,
                                                const Address &tcp) {
   return std::make_unique<Transport>(udp, tcp);
-}
-
-Pullable::PullResult UnreachableTransport::Pull(
-    const Address &node, const void *data, size_t size,
-    Pullable::DidPullHandler did_pull) {
-  bool is_to_make_unreachable = false;
-
-  for (const auto &address : unreachable_addresses_) {
-    if (address == node) {
-      is_to_make_unreachable = true;
-    }
-  }
-
-  if (is_to_make_unreachable) {
-    std::cout << "to block network between " << self_address_.port << " and "
-              << node.port << std::endl;
-
-    PullResult result{ErrorCode::kUnknown, std::vector<uint8_t>()};
-    pull_future_ = std::async(std::launch::async, ([did_pull, result]() {
-                                did_pull(result);
-                                return result;
-                              }));
-    return result;
-  } else {
-    return Transport::Pull(node, data, size, did_pull);
-  }
-}
-
-void UnreachableTransport::MakeUnreachableTo(const Address &peer) {
-  unreachable_addresses_.push_back(peer);
-}
-
-UnreachableTransport::~UnreachableTransport() { /*pull_future_.wait();*/
-}
-
-std::unique_ptr<UnreachableTransport> CreateUnreachableTransport(
-    const Address &udp, const Address &tcp) {
-  return std::make_unique<UnreachableTransport>(udp, tcp);
 }
 
 }  // namespace gossip

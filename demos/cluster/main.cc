@@ -3,15 +3,16 @@
  */
 #include <actor_system.h>
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <memory>
-#include <utility>
+#include <sstream>
+#include <vector>
 
 #include <asio.hpp>
 
 #include "./config.h"
-#include "./worker.h"
 
 using asio::ip::tcp;
 
@@ -26,25 +27,21 @@ class WorkerRouter : public actor_system::cluster::Observer {
     actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
   }
 
-  caf::function_view<Hello> Route(const std::string& name) {
-    auto member = members_[rand() % members_.size()];
-    std::cout << "routee: " << member.host << ":" << port_ << std::endl;
-    auto node = system_.middleman().connect(member.host, port_);
-    if (!node) {
-      std::cerr << "*** connect failed: " << system_.render(node.error())
-                << std::endl;
-      throw std::runtime_error("failed to connect cluster");
-    }
-    auto args = caf::make_message();
-    auto timeout = std::chrono::seconds(30);
-    auto worker =
-        system_.middleman().remote_spawn<Hello>(*node, name, args, timeout);
-    if (!worker) {
-      std::cerr << "*** remote spawn failed: " << system_.render(worker.error())
-                << std::endl;
-      throw std::runtime_error("failed to spawn actor");
-    }
-    return make_function_view(*worker);
+  std::function<std::string(const std::string&)> Route() {
+    FetchMembers();
+    const auto members = members_;
+    std::vector<std::string> result(members.size());
+    std::transform(members.begin(), members.end(), result.begin(),
+                   [](const auto& member) {
+                     return member.host + ":" + std::to_string(member.port);
+                   });
+    std::sort(result.begin(), result.end());
+    std::stringstream ss;
+    std::copy(result.begin(), result.end(),
+              std::ostream_iterator<std::string>(ss, "\n"));
+    return [result = ss.str()](const std::string&) {
+      return result.empty() ? "\n" : result;
+    };
   }
 
   void Update(const actor_system::cluster::Event&) override {
@@ -56,11 +53,8 @@ class WorkerRouter : public actor_system::cluster::Observer {
   void FetchMembers() {
     auto cluster = actor_system::cluster::Cluster::GetInstance();
     members_ = cluster->GetMembers();
-    std::cout << "all members: " << cluster->GetMembers().size() << std::endl;
-    auto it = std::remove_if(members_.begin(), members_.end(),
-                             [&](auto& m) { return m.host == host_; });
-    members_.erase(it, members_.end());
-    std::cout << "filtered members: " << members_.size() << std::endl;
+    std::cout << "[worker] all members: " << cluster->GetMembers().size()
+              << std::endl;
   }
 
   caf::actor_system& system_;
@@ -70,16 +64,6 @@ class WorkerRouter : public actor_system::cluster::Observer {
 };
 
 static std::unique_ptr<WorkerRouter> router;
-
-void InitWorker(caf::actor_system& system, uint16_t port) {
-  std::cout << "actor system port: " << port << std::endl;
-  auto res = system.middleman().open(port);
-  if (!res) {
-    std::cerr << "*** cannot open port: " << system.render(res.error())
-              << std::endl;
-    return;
-  }
-}
 
 class Session : public std::enable_shared_from_this<Session> {
  public:
@@ -93,10 +77,9 @@ class Session : public std::enable_shared_from_this<Session> {
     socket_.async_read_some(asio::buffer(data_, data_.size()),
                             [this, self](std::error_code ec, size_t length) {
                               if (!ec) {
-                                auto result = router->Route("Hello")(
+                                auto result = router->Route()(
                                     std::string(&data_[0], &data_[length]));
-                                // anon_send_exit(*worker, exit_reason::kill);
-                                DoWrite(*result);
+                                DoWrite(result);
                               }
                             });
   }
@@ -135,15 +118,11 @@ class Server {
   tcp::acceptor acceptor_;
 };
 
-std::string the_host_name;  // NOLINT
-
 void caf_main(caf::actor_system& system, const Config& config) {
-  the_host_name = config.host_;
   std::cout << "this node host: " << config.host_ << std::endl;
   auto local_port = config.port_;
   auto remote_port = config.port_;
   router = std::make_unique<WorkerRouter>(system, config.host_, remote_port);
-  InitWorker(system, local_port);
 
   try {
     asio::io_context io_context;

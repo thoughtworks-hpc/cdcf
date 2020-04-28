@@ -7,15 +7,17 @@
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(
     caf::actor_config& cfg,
-    const std::function<void(const caf::down_msg&, const std::string&)>&
-        downMsgFun)
-    : event_based_actor(cfg), down_msg_fun(downMsgFun) {}
+    std::function<void(const caf::down_msg&, const std::string&)>&& downMsgFun)
+    : event_based_actor(cfg), down_msg_fun(std::move(downMsgFun)) {}
 
 caf::behavior ActorMonitor::make_behavior() {
-  set_down_handler([=](caf::down_msg msg) {
-    mapLock.lock();
-    std::string description = actor_map_[caf::to_string(msg.source)];
-    mapLock.unlock();
+  set_down_handler([=](const caf::down_msg& msg) {
+    std::string description;
+
+    {
+      std::lock_guard<std::mutex> locker(mapLock);
+      description = actor_map_[caf::to_string(msg.source)];
+    }
 
     if (down_msg_fun != nullptr) {
       down_msg_fun(msg, description);
@@ -25,22 +27,17 @@ caf::behavior ActorMonitor::make_behavior() {
   });
 
   return {
-      [=](std::string msg) { std::cout << msg << std::endl; },
-      [=](const caf::actor_addr& actor_addr, const std::string description) {
-        mapLock.lock();
-        actor_map_[caf::to_string(actor_addr)] = description;
-        mapLock.unlock();
+      [=](const std::string& msg) { std::cout << msg << std::endl; },
+      [=](const caf::actor_addr& actor_addr, const std::string& description) {
+        {
+          std::lock_guard<std::mutex> locker(mapLock);
+          actor_map_[caf::to_string(actor_addr)] = description;
+        }
+
         aout(this) << "monitor new actor, actor addr:"
                    << caf::to_string(actor_addr)
                    << "actor description:" << description << std::endl;
       }};
-}
-
-void ActorMonitor::AddMoMonitored(std::string actor_unity,
-                                  std::string description) {
-  mapLock.lock();
-  actor_map_[actor_unity] = description;
-  mapLock.unlock();
 }
 
 void ActorMonitor::DownMsgHandle(const caf::down_msg& down_msg,
@@ -51,12 +48,6 @@ void ActorMonitor::DownMsgHandle(const caf::down_msg& down_msg,
          << ". actor description:" << description;
 
   this->send(this, buffer.str());
-}
-
-void ActorMonitor::SetDownMsgFun(
-    const std::function<void(const caf::down_msg&, const std::string&)>&
-        downMsgFun) {
-  down_msg_fun = downMsgFun;
 }
 
 bool SetMonitor(caf::actor& supervisor, caf::actor& worker,

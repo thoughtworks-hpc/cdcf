@@ -4,10 +4,11 @@
 
 #include "src/membership.h"
 
+#include <gmock/gmock.h>
+
 #include <cmath>
 #include <vector>
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "src/membership_message.h"
 #include "src/mock_gossip.h"

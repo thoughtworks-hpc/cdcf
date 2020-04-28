@@ -4,8 +4,6 @@
 
 #include "src/queue.h"
 
-#include <iostream>
-
 namespace queue {
 
 TimedFunctorQueue::TimedFunctorQueue(std::chrono::milliseconds interval)
@@ -14,15 +12,12 @@ TimedFunctorQueue::TimedFunctorQueue(std::chrono::milliseconds interval)
 }
 
 TimedFunctorQueue::~TimedFunctorQueue() {
-  std::cout << "TimedFunctorQueue 1" << std::endl;
   {
     std::lock_guard lk(should_stop_mut_);
     should_stop_ = true;
   }
 
-  std::cout << "TimedFunctorQueue 2" << std::endl;
   thread_->join();
-  std::cout << "TimedFunctorQueue 3" << std::endl;
 }
 
 void TimedFunctorQueue::Push(const std::function<void()>& functor, int times) {

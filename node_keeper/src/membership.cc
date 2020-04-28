@@ -17,9 +17,7 @@ membership::Membership::~Membership() {
 }
 
 void membership::Membership::NotifyLeave() {
-  std::cout << "NotifyLeave 1, " << self_.GetPort() << std::endl;
   if (this->members_.size() > 1) {
-    std::cout << "NotifyLeave 2，" << self_.GetPort() << std::endl;
     membership::UpdateMessage message;
     message.InitAsDownMessage(this->self_, this->incarnation_ + 1);
     auto message_serialized = message.SerializeToString();
@@ -30,9 +28,7 @@ void membership::Membership::NotifyLeave() {
       this->transport_->Gossip(this->GetAllMemberAddress(), payload);
       retransmit_limit--;
     }
-    std::cout << "NotifyLeave 3，" << self_.GetPort() << std::endl;
   }
-  std::cout << "NotifyLeave 4，" << self_.GetPort() << std::endl;
 }
 
 std::vector<membership::Member> membership::Membership::GetMembers() const {
@@ -232,8 +228,6 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
     if (IfBelongsToMembers(member) &&
         message.GetIncarnation() >= GetMemberLocalIncarnation(member)) {
-      std::cout << "receive gossip and suspect " << member.GetPort() << " by "
-                << self_.GetPort() << std::endl;
       Suspect(member, message.GetIncarnation());
     }
   }
@@ -314,9 +308,6 @@ std::vector<uint8_t> membership::Membership::HandlePull(
 
     message_serialized = message.SerializeToString();
   } else if (message.IsPingType()) {
-    std::cout << "get ping in " << self_.GetPort() << " and reply alive"
-              << std::endl;
-
     PullResponseMessage message;
     message.InitAsPingSuccess(self_);
     message_serialized = message.SerializeToString();
@@ -334,28 +325,13 @@ std::vector<uint8_t> membership::Membership::HandlePull(
           message.GetSelfIpAddress(),
           static_cast<uint16_t>(message.GetSelfPort())};
 
-      std::cout << "get relay ping request, port " << message.GetPort()
-                << ", self_port " << message.GetSelfPort() << std::endl;
-
-      std::cout << "ping on behalf of " << message.GetSelfPort() << " to "
-                << ping_target_address.port << " by " << self_.GetPort()
-                << std::endl;
-
       auto did_pull = [ping_result_destination_address, ping_target_member,
                        this](const gossip::Transportable::PullResult& result) {
         std::string message_serialized;
         PullResponseMessage response_message;
         if (result.first == gossip::ErrorCode::kOK) {
-          std::cout << "ping successfully on behalf of "
-                    << ping_result_destination_address.port << " to "
-                    << ping_target_member.GetPort() << " by " << self_.GetPort()
-                    << std::endl;
           response_message.InitAsPingSuccess(ping_target_member);
         } else {
-          std::cout << "ping unsuccessfully on behalf of "
-                    << ping_result_destination_address.port << " to "
-                    << ping_target_member.GetPort() << " by " << self_.GetPort()
-                    << std::endl;
           response_message.InitAsPingFailure(ping_target_member);
         }
         message_serialized = response_message.SerializeToString();
@@ -368,8 +344,6 @@ std::vector<uint8_t> membership::Membership::HandlePull(
       auto pull_result =
           transport_->Pull(ping_target_address, pull_request_message.data(),
                            pull_request_message.size(), did_pull);
-
-      std::cout << "end pull by " << self_.GetPort() << std::endl;
 
       PullResponseMessage response_message;
       response_message.InitAsPingReceived();
@@ -389,11 +363,7 @@ void membership::Membership::HandlePush(const gossip::Address& address,
   Member ping_target = message.GetMember();
 
   if (message.IsPingFailure()) {
-    std::cout << "suspect after relay ping in " << self_.GetPort() << std::endl;
     Suspect(ping_target, GetMemberLocalIncarnation(ping_target));
-  } else {
-    std::cout << "relinquish suspect after relay ping in " << self_.GetPort()
-              << std::endl;
   }
 }
 
@@ -414,16 +384,11 @@ void membership::Membership::Ping() {
       gossip::Address address{ping_target.GetIpAddress(),
                               ping_target.GetPort()};
 
-      std::cout << "ping " << ping_target.GetPort() << " by " << self_.GetPort()
-                << " to check if it's alive" << std::endl;
-
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
             if (result.first != gossip::ErrorCode::kOK) {
               if (IfBelongsToMembers(ping_target)) {
-                //                Suspect(member,
-                //                GetMemberLocalIncarnation(member));
                 std::set<Member> exclude_members;
                 exclude_members.insert(self_);
                 exclude_members.insert(ping_target);
@@ -445,8 +410,6 @@ void membership::Membership::RelayPing(const membership::Member& ping_target,
   auto pair = GetRelayMember(exclude_members);
   bool if_get_relay_member_success = pair.first;
 
-  std::cout << "RelayPing 1, " << self_.GetPort() << std::endl;
-
   if (if_get_relay_member_success) {
     PullRequestMessage message;
     Member relay_target = pair.second;
@@ -455,29 +418,18 @@ void membership::Membership::RelayPing(const membership::Member& ping_target,
     message.InitAsPingRelayType(self_, ping_target);
     auto payload = message.SerializeToString();
 
-    std::cout << "relay ping of " << ping_target.GetPort() << " to "
-              << relay_target_address.port << " by " << self_.GetPort()
-              << std::endl;
-
     auto did_pull =
         [this, ping_target, relay_target, exclude_members](
             const gossip::Transportable::PullResult& result) mutable {
           if (result.first != gossip::ErrorCode::kOK) {
-            std::cout << "send relay ping request failed by " << self_.GetPort()
-                      << std::endl;
             exclude_members.insert(relay_target);
             RelayPing(ping_target, exclude_members);
-          } else {
-            std::cout << "send relay ping request succeeded by "
-                      << self_.GetPort() << std::endl;
           }
         };
 
     transport_->Pull(relay_target_address, payload.data(), payload.size(),
                      did_pull);
   } else {
-    std::cout << "suspect " << ping_target.GetPort() << " after relay ping"
-              << std::endl;
     Suspect(ping_target, GetMemberLocalIncarnation(ping_target));
   }
 }

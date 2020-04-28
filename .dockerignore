@@ -1,9 +1,10 @@
+Dockerfile
+
 **/.*.swp
 **/*.a
 **/*.so
 **/*.dylib
 **/*_test
-!end2end_test
 build
 
 conan.lock

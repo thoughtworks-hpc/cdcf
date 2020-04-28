@@ -1,0 +1,39 @@
+name: 'Commit Message'
+
+on: [push]
+
+jobs:
+  check-commit-message:
+    name: Check Commit Message
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Title Capitalize
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^[^a-z]'
+          flags: ''
+          error: 'Your title should capitalize first word, read CONTRIBUTING.md for more details.'
+      - name: Check Title Length
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^[^\s]+([ \t]+[^\s]+){2,}[ \t]*(\n.*)?$'
+          flags: 's'
+          error: 'A meaningful title should contain at least 3 words, read CONTRIBUTING.md for more details.'
+      - name: Check Title Line Length
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^([^\n]{1,50}|Merge pull request.*)(\n.*)?$'
+          flags: 's'
+          error: 'The maximum title line length of 50 characters is exceeded, read CONTRIBUTING.md for more details.'
+      - name: Check Title Line Separator
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^[^\n]+(\n\n.+)?$'
+          flags: 's'
+          error: 'Should leave an empty line after title'
+      - name: Check Line Length
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^[^\n]+(\n[^\n]{0,72})*$'
+          flags: 's'
+          error: 'The maximum line length of 72 characters is exceeded, read CONTRIBUTING.md for more details.'

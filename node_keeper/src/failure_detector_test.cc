@@ -8,10 +8,16 @@
 #include "gtest/gtest.h"
 #include "src/gossip.h"
 #include "src/membership.h"
+// anti clang-format sort
+#include "src/fake_gossip.h"
 
-TEST(
-    FailureDetector,
-    should_detect_node_a_fail_from_node_b_when_node_a_leave_without_notify_given_a_running_cluster_of_nodes_a_b) {
+/*
+ * given a cluster of two nodes A B running normally
+ * when A leaves without notifying B
+ * then B will detect A fails
+ */
+TEST(FailureDetector,
+     should_detect_node_a_fail_from_node_b_when_node_a_leave_without_notify) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
   config_a.AddHostMember("node_a", "127.0.0.1", 50000);
@@ -47,9 +53,13 @@ TEST(
   EXPECT_EQ(expected_suspects, node_b.GetSuspects());
 }
 
-TEST(
-    FailureDetector,
-    should_aware_node_a_fail_in_c_when_node_a_leave_without_notify_given_a_cluster_of_a_b_c_nodes_and_node_c_has_failure_detector_turned_off) {
+/*
+ * given a cluster of three nodes A B C running normally and C has failure
+ * detector turned off when A leaves without notifying B and C then C will
+ * become aware of A's failure
+ */
+TEST(FailureDetector,
+     should_aware_node_a_fail_in_c_when_node_a_leave_without_notify) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
   config_a.AddHostMember("node_a", "127.0.0.1", 50000);
@@ -146,17 +156,13 @@ TEST(
  * when A and B become unreachable over network and A C, B C still reachable
  * then B should not suspect A
  */
-
-TEST(
-    FailureDetector,
-    should_not_suspect_a_when_a_and_b_become_unreachable_given_a_c_and_b_c_still_reachable) {
+TEST(FailureDetector, should_not_suspect_a_when_a_and_b_become_unreachable) {
   membership::Membership node_a;
   membership::Config config_a;
   config_a.AddHostMember("node_a", "127.0.0.1", 50000);
   config_a.SetFailureDetectorIntervalInMilliSeconds(500);
-  std::shared_ptr<gossip::UnreachableTransport> transport_a =
-      gossip::CreateUnreachableTransport({"127.0.0.1", 50000},
-                                         {"127.0.0.1", 50000});
+  std::shared_ptr<gossip::Transportable> transport_a =
+      gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a.Init(transport_a, config_a);
 
   membership::Membership node_b;
@@ -164,9 +170,8 @@ TEST(
   config_b.AddHostMember("node_b", "127.0.0.1", 50001);
   config_b.AddOneSeedMember("node_a", "127.0.0.1", 50000);
   config_b.SetFailureDetectorIntervalInMilliSeconds(500);
-  std::shared_ptr<gossip::UnreachableTransport> transport_b =
-      gossip::CreateUnreachableTransport({"127.0.0.1", 50001},
-                                         {"127.0.0.1", 50001});
+  std::shared_ptr<UnreachableTransport> transport_b =
+      CreateUnreachableTransport({"127.0.0.1", 50001}, {"127.0.0.1", 50001});
   node_b.Init(transport_b, config_b);
 
   membership::Membership node_c;
@@ -175,9 +180,8 @@ TEST(
   config_c.AddOneSeedMember("node_b", "127.0.0.1", 50001);
   config_c.SetFailureDetectorIntervalInMilliSeconds(500);
   config_c.SetFailureDetectorOff();
-  std::shared_ptr<gossip::UnreachableTransport> transport_c =
-      gossip::CreateUnreachableTransport({"127.0.0.1", 50002},
-                                         {"127.0.0.1", 50002});
+  std::shared_ptr<gossip::Transportable> transport_c =
+      gossip::CreateTransport({"127.0.0.1", 50002}, {"127.0.0.1", 50002});
   node_c.Init(transport_c, config_c);
 
   std::this_thread::sleep_for(std::chrono::seconds(5));

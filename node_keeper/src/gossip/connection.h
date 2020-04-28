@@ -7,7 +7,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-// against to clang-format
+
 #include <asio.hpp>
 
 #include "src/gossip/message.h"

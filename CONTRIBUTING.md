@@ -31,10 +31,12 @@ The project generally follows the [GitHub Flow](https://guides.github.com/introd
 ## Commit Message
 
 Writing good commit logs is important.  A commit log should describe what
-changed and why.  Follow these guidelines when writing one:
+changed and why. Follow these guidelines when writing one:
 
-1. The first line should be 50 characters or less and contain a short
-   description of the change with the first letter capitalized.
+1. The first line should be 50 characters or less and contain a short description of the change with the first letter
+   capitalized.
+   Remark: Github auto generated message title for merging pull request is an exception for this rule, it generally
+   includes a pull request ID and a long branch name with repository name.
 2. Keep the second line blank.
 3. Wrap all other lines at 72 columns.
 
@@ -56,8 +58,23 @@ nicely even when it is indented.
 The header line should be meaningful; it is what other people see when they
 run `git shortlog` or `git log --oneline`.
 
-Check the output of `git log --oneline files_that_you_changed` to find out
-what subsystem (or subsystems) your changes touch.
+Meaningful means try to explain what do you do as exactly as possible in 50 characters, for examples, when you fixed an issue, do not just type:
+
+> Fix an issue
+
+Try to point out what is the issue exactly:
+
+> Fix crash on given wrong host address
+
+When you refactored, do not just type:
+
+> Refactor codes
+
+Try to point out what refactor do you make:
+
+> Extract an Address class
+
+If you take lots of refactoring steps in one commit, try to keep it step-by-step is always a better practice.
 
 ## Style Guide
 

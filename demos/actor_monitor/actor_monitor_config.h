@@ -11,7 +11,7 @@
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
-class config : public cdcf_config {
+class config : public CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;
