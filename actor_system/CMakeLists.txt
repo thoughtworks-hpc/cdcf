@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(actor_system)
 
 aux_source_directory(src ALL_SOURCES)
-aux_source_directory(demo ALL_SOURCES)
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
@@ -38,12 +37,6 @@ target_include_directories(${PROJECT_NAME}
 find_package(caf REQUIRED)
 target_link_libraries(${PROJECT_NAME} config_manager caf::caf grpc::grpc)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-
-add_executable(additional_allownance demo/additional_allownance.cc)
-target_include_directories(additional_allownance
-    PUBLIC include
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(additional_allownance caf::caf config_manager)
 
 set(TEST_SOURCES ${ALL_SOURCES})
 list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")
