@@ -16,7 +16,6 @@ ActorUnion::~ActorUnion() { delete context_; }
 void ActorUnion::AddActor(const caf::actor& actor) {
   caf::anon_send(pool_actor_, caf::sys_atom::value, caf::put_atom::value,
                  actor);
-
   actor_count_++;
 }
 
