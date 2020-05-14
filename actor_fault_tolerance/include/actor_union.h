@@ -37,12 +37,12 @@ class ActorUnion {
   template <class... send_type, class return_function_type>
   void SendAndReceiveWithTryTime(
       return_function_type return_function,
-      std::function<void(caf::error)> error_deal_function,
+      std::function<void(caf::error)> handle_error_function,
       uint16_t has_try_time, const send_type&... messages) {
     caf::message send_message = caf::make_message(messages...);
     sender_actor_->request(pool_actor_, std::chrono::seconds(1), messages...)
         .receive(return_function, [=](caf::error err) {
-          HandleSendFailed(send_message, return_function, error_deal_function,
+          HandleSendFailed(send_message, return_function, handle_error_function,
                            err, has_try_time);
         });
   }
@@ -50,11 +50,11 @@ class ActorUnion {
   template <class return_function_type>
   void HandleSendFailed(const caf::message& msg,
                         return_function_type return_function,
-                        std::function<void(caf::error)> error_deal_function,
+                        std::function<void(caf::error)> handle_error_function,
                         caf::error err, uint16_t has_try_time) {
     if ("system" != caf::to_string(err.category())) {
       // not system error, mean actor not down, this is a business error.
-      error_deal_function(err);
+      handle_error_function(err);
       return;
     }
 
@@ -63,14 +63,14 @@ class ActorUnion {
     if (has_try_time <= actor_count_) {
       std::cout << "send msg failed, try send to another actor. try_time:"
                 << has_try_time << std::endl;
-      SendAndReceiveWithTryTime(return_function, error_deal_function,
+      SendAndReceiveWithTryTime(return_function, handle_error_function,
                                 has_try_time, msg);
     } else {
       std::cout << "send msg failed, return error. try_time:" << has_try_time
                 << std::endl;
       caf::error ret_error =
           make_error(actor_union_error::all_actor_out_of_work);
-      error_deal_function(ret_error);
+      handle_error_function(ret_error);
     }
   }
 };
