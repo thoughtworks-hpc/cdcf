@@ -258,7 +258,7 @@ TEST(Membership, NewDownMessageReceived) {
 //  membership::Config config;
 //  auto transport = std::make_shared<MockTransport>();
 //  config.SetHostMember("node1", "127.0.0.1", 27777);
-//  config.AddRetransmitMultiplier(3);
+//  config.SetRetransmitMultiplier(3);
 //
 //  int retransmit_limit_one_member =
 //      config.GetRetransmitMultiplier() * ceil(log10(2));
@@ -412,7 +412,7 @@ TEST(Membership, MemberLeaveFromSingleNodeCluster) {
   membership::Membership node;
   membership::Config config;
   config.SetHostMember("node1", "127.0.0.1", 27777);
-  config.AddRetransmitMultiplier(3);
+  config.SetRetransmitMultiplier(3);
   auto transport = std::make_shared<MockTransport>();
 
   membership::UpdateMessage message;
@@ -429,7 +429,7 @@ TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
   membership::Membership node;
   membership::Config config;
   config.SetHostMember("node1", "127.0.0.1", 27777);
-  config.AddRetransmitMultiplier(3);
+  config.SetRetransmitMultiplier(3);
   int retransmit_limit_two_node =
       config.GetRetransmitMultiplier() * ceil(log10(2 + 1));
   auto transport = std::make_shared<MockTransport>();

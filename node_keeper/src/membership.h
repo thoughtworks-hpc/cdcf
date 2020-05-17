@@ -73,11 +73,10 @@ class Config {
 
   /* Retransmit a message to RetransmitMultiplier * log(N+1) nodes, to ensure
      that messages are propagated through the entire cluster.*/
-  void AddRetransmitMultiplier(int multiplier);
+  void SetRetransmitMultiplier(int multiplier);
   int GetRetransmitMultiplier() const { return retransmit_multiplier_; }
 
-  // TODO(davidzwb) Naming using set maybe more appropriate
-  void AddGossipInterval(unsigned int interval);
+  void SetGossipInterval(unsigned int interval);
   unsigned int GetGossipInterval() const { return gossip_interval_; }
 
   void SetFailureDetectorIntervalInMilliSeconds(unsigned int interval) {

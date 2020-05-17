@@ -618,10 +618,10 @@ int membership::Config::AddOneSeedMember(const std::string& node_name,
   return MEMBERSHIP_SUCCESS;
 }
 
-void membership::Config::AddRetransmitMultiplier(int multiplier) {
+void membership::Config::SetRetransmitMultiplier(int multiplier) {
   retransmit_multiplier_ = multiplier;
 }
 
-void membership::Config::AddGossipInterval(unsigned int interval) {
+void membership::Config::SetGossipInterval(unsigned int interval) {
   gossip_interval_ = interval;
 }
