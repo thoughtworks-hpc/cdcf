@@ -61,7 +61,8 @@ class Config {
         gossip_interval_(500),
         failure_detector_interval_(1000),
         leave_without_notification_(false),
-        failure_detector_off_(false) {}
+        failure_detector_off_(false),
+        relay_ping_enabled_(false) {}
 
   int SetHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
@@ -95,6 +96,9 @@ class Config {
   void SetFailureDetectorOff() { failure_detector_off_ = true; }
   bool IsFailureDetectorOff() const { return failure_detector_off_; }
 
+  void EnableRelayPing() { relay_ping_enabled_ = true; }
+  bool IsRelayPingEnabled() const { return relay_ping_enabled_; }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
@@ -103,6 +107,7 @@ class Config {
   unsigned int failure_detector_interval_;
   bool leave_without_notification_;
   bool failure_detector_off_;
+  bool relay_ping_enabled_;
 };
 
 class Subscriber {
@@ -170,6 +175,7 @@ class Membership {
   unsigned int incarnation_;
   int retransmit_multiplier_;
   bool if_notify_leave_;
+  bool is_relay_ping_enabled_;
 };
 
 };  // namespace membership

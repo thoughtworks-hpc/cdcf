@@ -92,6 +92,7 @@ int membership::Membership::Init(
     PullFromSeedMember();
   }
 
+  is_relay_ping_enabled_ = config.IsRelayPingEnabled();
   if (!config.IsFailureDetectorOff()) {
     failure_detector_queue_ =
         std::make_unique<queue::TimedFunctorQueue>(std::chrono::milliseconds(
@@ -387,13 +388,15 @@ void membership::Membership::Ping() {
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
-            if (result.first != gossip::ErrorCode::kOK) {
-              // TODO merge
-              if (IfBelongsToMembers(ping_target)) {
+            if (result.first != gossip::ErrorCode::kOK &&
+                IfBelongsToMembers(ping_target)) {
+              if (is_relay_ping_enabled_) {
                 std::set<Member> exclude_members;
                 exclude_members.insert(self_);
                 exclude_members.insert(ping_target);
                 RelayPing(ping_target, exclude_members);
+              } else {
+                Suspect(ping_target, GetMemberLocalIncarnation(ping_target));
               }
             }
           });
