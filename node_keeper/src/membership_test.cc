@@ -447,8 +447,6 @@ TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
       node.GetMembers(),
       {{"node1", "127.0.0.1", 27777}, {"node2", "127.0.0.1", 28888}}));
 
-  std::this_thread::sleep_for(std::chrono::seconds(retransmit_limit_two_node));
-
   EXPECT_CALL(*transport, Gossip(_, payload, _)).Times(0);
   SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
   EXPECT_TRUE(
