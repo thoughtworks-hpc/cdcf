@@ -17,18 +17,18 @@
  * then B will detect A fails
  */
 TEST(FailureDetector,
-     DISABLED_should_detect_node_a_fail_when_node_a_leave_without_notify) {
+     should_detect_node_a_fail_when_node_a_leave_without_notify) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
-  config_a.AddHostMember("node_a", "127.0.0.1", 50000);
-  config_a.SetLeaveWithoutNotification();
+  config_a.SetHostMember("node_a", "127.0.0.1", 50000);
+  config_a.EnableLeaveWithoutNotification();
   std::shared_ptr<gossip::Transportable> transport_a =
       gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a_ptr->Init(transport_a, config_a);
 
   membership::Membership node_b;
   membership::Config config_b;
-  config_b.AddHostMember("node_b", "127.0.0.1", 50001);
+  config_b.SetHostMember("node_b", "127.0.0.1", 50001);
   config_b.AddOneSeedMember("node_a", "127.0.0.1", 50000);
   config_b.SetFailureDetectorIntervalInMilliSeconds(500);
   std::shared_ptr<gossip::Transportable> transport_b =
@@ -59,18 +59,18 @@ TEST(FailureDetector,
  * become aware of A's failure
  */
 TEST(FailureDetector,
-     DISABLED_should_aware_node_a_fail_in_c_when_node_a_leave_without_notify) {
+     should_aware_node_a_fail_in_c_when_node_a_leave_without_notify) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
-  config_a.AddHostMember("node_a", "127.0.0.1", 50000);
-  config_a.SetLeaveWithoutNotification();
+  config_a.SetHostMember("node_a", "127.0.0.1", 50000);
+  config_a.EnableLeaveWithoutNotification();
   std::shared_ptr<gossip::Transportable> transport_a =
       gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a_ptr->Init(transport_a, config_a);
 
   membership::Membership node_b;
   membership::Config config_b;
-  config_b.AddHostMember("node_b", "127.0.0.1", 50001);
+  config_b.SetHostMember("node_b", "127.0.0.1", 50001);
   config_b.AddOneSeedMember("node_a", "127.0.0.1", 50000);
   config_b.SetFailureDetectorIntervalInMilliSeconds(500);
   std::shared_ptr<gossip::Transportable> transport_b =
@@ -79,7 +79,7 @@ TEST(FailureDetector,
 
   membership::Membership node_c;
   membership::Config config_c;
-  config_c.AddHostMember("node_c", "127.0.0.1", 50002);
+  config_c.SetHostMember("node_c", "127.0.0.1", 50002);
   config_c.AddOneSeedMember("node_b", "127.0.0.1", 50001);
   config_c.SetFailureDetectorIntervalInMilliSeconds(500);
   config_c.SetFailureDetectorOff();
@@ -156,19 +156,19 @@ TEST(FailureDetector,
  * when A and B become unreachable over network and A C, B C still reachable
  * then B should not suspect A
  */
-TEST(FailureDetector,
-     DISABLED_should_not_suspect_a_when_a_and_b_become_unreachable) {
+TEST(FailureDetector, should_not_suspect_a_when_a_and_b_become_unreachable) {
   membership::Membership node_a;
   membership::Config config_a;
-  config_a.AddHostMember("node_a", "127.0.0.1", 50000);
+  config_a.SetHostMember("node_a", "127.0.0.1", 50000);
   config_a.SetFailureDetectorIntervalInMilliSeconds(500);
+  // config_.EnableRaleyPing();
   std::shared_ptr<gossip::Transportable> transport_a =
       gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a.Init(transport_a, config_a);
 
   membership::Membership node_b;
   membership::Config config_b;
-  config_b.AddHostMember("node_b", "127.0.0.1", 50001);
+  config_b.SetHostMember("node_b", "127.0.0.1", 50001);
   config_b.AddOneSeedMember("node_a", "127.0.0.1", 50000);
   config_b.SetFailureDetectorIntervalInMilliSeconds(500);
   std::shared_ptr<UnreachableTransport> transport_b =
@@ -177,7 +177,7 @@ TEST(FailureDetector,
 
   membership::Membership node_c;
   membership::Config config_c;
-  config_c.AddHostMember("node_c", "127.0.0.1", 50002);
+  config_c.SetHostMember("node_c", "127.0.0.1", 50002);
   config_c.AddOneSeedMember("node_b", "127.0.0.1", 50001);
   config_c.SetFailureDetectorIntervalInMilliSeconds(500);
   config_c.SetFailureDetectorOff();

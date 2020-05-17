@@ -64,7 +64,7 @@ int membership::Membership::Init(
 
   transport_ = transport;
 
-  if_notify_leave_ = !config.IfLeaveWithoutNotification();
+  if_notify_leave_ = !config.IsLeaveWithoutNotificationEnabled();
 
   gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
       std::chrono::milliseconds(config.GetGossipInterval()));
@@ -335,10 +335,10 @@ std::vector<uint8_t> membership::Membership::HandlePull(
           response_message.InitAsPingFailure(ping_target_member);
         }
         message_serialized = response_message.SerializeToString();
-        auto didPush = [](gossip::ErrorCode error) {};
+        auto did_push = [](gossip::ErrorCode error) {};
         transport_->Push(ping_result_destination_address,
                          message_serialized.data(), message_serialized.size(),
-                         didPush);
+                         did_push);
       };
 
       auto pull_result =
@@ -388,6 +388,7 @@ void membership::Membership::Ping() {
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
             if (result.first != gossip::ErrorCode::kOK) {
+              // TODO merge
               if (IfBelongsToMembers(ping_target)) {
                 std::set<Member> exclude_members;
                 exclude_members.insert(self_);
@@ -405,6 +406,7 @@ void membership::Membership::Ping() {
   }
 }
 
+// TODO(davidzwb) configurable function
 void membership::Membership::RelayPing(const membership::Member& ping_target,
                                        std::set<Member> exclude_members) {
   auto pair = GetRelayMember(exclude_members);
@@ -591,7 +593,7 @@ bool membership::Member::IsEmptyMember() {
   return node_name_.empty() && ip_address_.empty() && port_ == 0;
 }
 
-int membership::Config::AddHostMember(const std::string& node_name,
+int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
                                       uint16_t port) {
   Member host(node_name, ip_address, port);

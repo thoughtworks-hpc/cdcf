@@ -68,7 +68,7 @@ TEST(Membership, MemberComparisonNotEqual) {
 // Config
 TEST(Membership, ConfigWithHost) {
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
 
   membership::Member member("node1", "127.0.0.1", 27777);
 
@@ -147,7 +147,7 @@ TEST(Membership, CreateHostMember) {
   membership::Member member("node1", "127.0.0.1", 27777);
 
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
 
   my_membership.Init(std::make_shared<MockTransport>(), config);
 
@@ -194,7 +194,7 @@ TEST(Membership, NewUpMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   my_membership.Init(transport, config);
 
@@ -212,7 +212,7 @@ TEST(Membership, DuplicateUpMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
@@ -231,7 +231,7 @@ TEST(Membership, NewDownMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   my_membership.Init(transport, config);
 
   membership::Member member{"node2", "127.0.0.1", 28888};
@@ -257,7 +257,7 @@ TEST(Membership, NewDownMessageReceived) {
 //  membership::Membership node;
 //  membership::Config config;
 //  auto transport = std::make_shared<MockTransport>();
-//  config.AddHostMember("node1", "127.0.0.1", 27777);
+//  config.SetHostMember("node1", "127.0.0.1", 27777);
 //  config.AddRetransmitMultiplier(3);
 //
 //  int retransmit_limit_one_member =
@@ -307,7 +307,7 @@ TEST(Membership, JoinWithSingleNodeCluster) {
   membership::Membership node;
   membership::Config config;
   auto transport = std::make_shared<MockTransport>();
-  config.AddHostMember("node_a", "127.0.0.1", 27777);
+  config.SetHostMember("node_a", "127.0.0.1", 27777);
   config.AddOneSeedMember("node_b", "127.0.0.1", 28888);
 
   membership::UpdateMessage message;
@@ -356,7 +356,7 @@ TEST(Membership, ClusterResponseToPullRequst) {
   membership::Membership node;
   membership::Config config;
   auto transport = std::make_shared<MockTransport>();
-  config.AddHostMember("node_a", "127.0.0.1", 27777);
+  config.SetHostMember("node_a", "127.0.0.1", 27777);
 
   membership::FullStateMessage message;
   message.InitAsFullStateMessage({{"node_a", "127.0.0.1", 27777}});
@@ -376,7 +376,7 @@ TEST(Membership, ClusterResponseToPullRequst) {
 TEST(Membership, EventSubcriptionWithMemberJoin) {
   membership::Membership node;
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   auto transport = std::make_shared<MockTransport>();
 
   node.Init(transport, config);
@@ -393,7 +393,7 @@ TEST(Membership, EventSubcriptionWithMemberJoin) {
 TEST(Membership, EventSubcriptionWithMemberLeave) {
   membership::Membership node;
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   auto transport = std::make_shared<MockTransport>();
 
   node.Init(transport, config);
@@ -411,7 +411,7 @@ TEST(Membership, EventSubcriptionWithMemberLeave) {
 TEST(Membership, MemberLeaveFromSingleNodeCluster) {
   membership::Membership node;
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   config.AddRetransmitMultiplier(3);
   auto transport = std::make_shared<MockTransport>();
 
@@ -428,7 +428,7 @@ TEST(Membership, MemberLeaveFromSingleNodeCluster) {
 TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
   membership::Membership node;
   membership::Config config;
-  config.AddHostMember("node1", "127.0.0.1", 27777);
+  config.SetHostMember("node1", "127.0.0.1", 27777);
   config.AddRetransmitMultiplier(3);
   int retransmit_limit_two_node =
       config.GetRetransmitMultiplier() * ceil(log10(2 + 1));

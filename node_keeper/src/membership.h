@@ -63,7 +63,7 @@ class Config {
         leave_without_notification_(false),
         failure_detector_off_(false) {}
 
-  int AddHostMember(const std::string& node_name, const std::string& ip_address,
+  int SetHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
   Member GetHostMember() const { return host_; }
 
@@ -88,8 +88,8 @@ class Config {
     return failure_detector_interval_;
   }
 
-  void SetLeaveWithoutNotification() { leave_without_notification_ = true; }
-  bool IfLeaveWithoutNotification() const {
+  void EnableLeaveWithoutNotification() { leave_without_notification_ = true; }
+  bool IsLeaveWithoutNotificationEnabled() const {
     return leave_without_notification_;
   }
 
