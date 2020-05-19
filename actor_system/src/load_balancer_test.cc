@@ -1,0 +1,179 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+#include <actor_system/load_balancer.h>
+#include <gmock/gmock.h>
+
+#include <algorithm>
+#include <atomic>
+#include <future>
+#include <iterator>
+
+using testing::Eq, testing::NotNull;
+
+class State {
+ public:
+  std::atomic<size_t> count{0};
+
+  void Lock() {
+    start_promise_.set_value();
+    stop_promise_.get_future().get();
+  }
+  void Unlock() try { stop_promise_.set_value(); } catch (...) {
+  }
+  void WaitForLocked() { start_promise_.get_future().get(); }
+
+ private:
+  std::promise<void> start_promise_;
+  std::promise<void> stop_promise_;
+};
+
+using add_atom = caf::atom_constant<caf::atom("add")>;
+using lock_atom = caf::atom_constant<caf::atom("lock")>;
+using count_atom = caf::atom_constant<caf::atom("count")>;
+using Worker = caf::stateful_actor<State>;
+caf::behavior adder(Worker* self) {
+  return {[=](add_atom, int a, int b) {
+            ++self->state.count;
+            return a + b;
+          },
+          [=](count_atom) -> size_t { return self->state.count; },
+          [=](lock_atom) { self->state.Lock(); }};
+}
+
+MATCHER_P(ExecutedTimes, times,
+          "actor executed " + std::to_string(times) + " time(s)") {
+  auto func = make_function_view(arg);
+  auto message = *func(count_atom::value);
+  auto count = *reinterpret_cast<const size_t*>(message.get(0));
+  *result_listener << "it's executed " << count << " time(s)";
+  return count == times;
+}
+
+MATCHER_P(AllExecutedTimes, times,
+          "actor executed " + std::to_string(times) + " time(s)") {
+  auto func = make_function_view(arg);
+  auto message = *func(count_atom::value);
+  auto count = *reinterpret_cast<const size_t*>(message.get(0));
+  *result_listener << "it's executed " << count << " time(s)";
+  return count == times;
+}
+
+class LoadBalancerTest : public ::testing::Test {
+ protected:
+  void Prepare(size_t workers_count) {
+    balancer_ = cdcf::load_balancer::make(&context);
+    std::generate_n(std::back_inserter(workers_), workers_count,
+                    [&]() { return system_.spawn(adder); });
+    caf::scoped_actor self{system_};
+    for (const auto& worker : workers_) {
+      self->send(balancer_, caf::sys_atom::value, caf::put_atom::value, worker);
+    }
+  }
+
+  void TearDown() override {
+    for (const auto& actor : workers_) {
+      caf::actor_cast<Worker*>(actor)->state.Unlock();
+    }
+  }
+
+  caf::actor_system_config config_;
+  caf::actor_system system_{config_};
+  caf::scoped_execution_unit context{&system_};
+  caf::actor balancer_;
+  std::vector<caf::actor> workers_;
+};
+
+TEST_F(LoadBalancerTest, actor_should_work_behind_load_balancer) {
+  Prepare(1);
+
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_evenly_with_function_view) {
+  Prepare(2);
+
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+  EXPECT_THAT(workers_[1], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_evenly_with_request_receive) {
+  Prepare(2);
+
+  caf::scoped_actor self{system_};
+  for (const auto& worker : workers_) {
+    self->request(balancer_, caf::infinite, add_atom::value, 1, 1)
+        .receive([&](int result) {}, [&](caf::error& error) {});
+  }
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+  EXPECT_THAT(workers_[1], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_evenly_with_request_then) {
+  Prepare(4);
+
+  auto async = [&](caf::event_based_actor* self, caf::actor balancer) {
+    auto dummy = []() {};
+    for (const auto& worker : workers_) {
+      self->request(balancer, caf::infinite, add_atom::value, 1, 1).then(dummy);
+    }
+  };
+  caf::scoped_actor self{system_};
+  auto actor = self->spawn(async, balancer_);
+  self->wait_for(actor);
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+  EXPECT_THAT(workers_[1], ExecutedTimes(1));
+  EXPECT_THAT(workers_[2], ExecutedTimes(1));
+  EXPECT_THAT(workers_[3], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_to_first_worker_while_all_are_idle) {
+  Prepare(4);
+
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_to_second_worker_while_first_is_busy) {
+  Prepare(2);
+  caf::anon_send(balancer_, lock_atom::value);
+  caf::actor_cast<Worker*>(workers_[0])->state.WaitForLocked();
+
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_THAT(workers_[1], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest,
+       should_route_to_last_worker_while_all_priors_are_busy) {
+  Prepare(4);
+  std::for_each(workers_.begin(), workers_.end() - 1, [&](auto worker) {
+    caf::anon_send(balancer_, lock_atom::value);
+    caf::actor_cast<Worker*>(worker)->state.WaitForLocked();
+  });
+
+  make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_THAT(workers_[3], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_route_to_first_worker_while_all_are_busy) {
+  Prepare(4);
+  for (auto& worker : workers_) {
+    caf::anon_send(balancer_, lock_atom::value);
+    caf::actor_cast<Worker*>(worker)->state.WaitForLocked();
+  }
+
+  caf::anon_send(balancer_, add_atom::value, 1, 1);
+  caf::actor_cast<Worker*>(workers_[0])->state.Unlock();
+
+  EXPECT_THAT(workers_[0], ExecutedTimes(1));
+}
