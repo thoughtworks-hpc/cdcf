@@ -409,7 +409,6 @@ void membership::Membership::Ping() {
   }
 }
 
-// TODO(davidzwb) configurable function
 void membership::Membership::RelayPing(const membership::Member& ping_target,
                                        std::set<Member> exclude_members) {
   auto pair = GetRelayMember(exclude_members);
