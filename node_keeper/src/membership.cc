@@ -293,10 +293,10 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   PullRequestMessage message;
   message.DeserializeFromArray(data, size);
   if (message.IsFullStateType()) {
-    FullStateMessage message;
+    FullStateMessage response;
 
     if (IsLeftMember(address)) {
-      message.InitAsReentryRejected();
+      response.InitAsReentryRejected();
     } else {
       std::vector<Member> members;
       for (const auto& member : members_) {
@@ -304,14 +304,14 @@ std::vector<uint8_t> membership::Membership::HandlePull(
                              member.first.GetIpAddress(),
                              member.first.GetPort());
       }
-      message.InitAsFullStateMessage(members);
+      response.InitAsFullStateMessage(members);
     }
 
-    message_serialized = message.SerializeToString();
+    message_serialized = response.SerializeToString();
   } else if (message.IsPingType()) {
-    PullResponseMessage message;
-    message.InitAsPingSuccess(self_);
-    message_serialized = message.SerializeToString();
+    PullResponseMessage response;
+    response.InitAsPingSuccess(self_);
+    message_serialized = response.SerializeToString();
   } else if (message.IsPingRelayType()) {
     if (transport_) {
       PullRequestMessage request_message;
