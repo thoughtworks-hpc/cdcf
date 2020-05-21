@@ -26,10 +26,12 @@ class UpdateMessage : public Message {
  public:
   void InitAsUpMessage(const Member& member, unsigned int incarnation);
   void InitAsDownMessage(const Member& member, unsigned int incarnation);
+  void InitAsSuspectMessage(const Member& member, unsigned int incarnation);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
+  bool IsSuspectMessage() const;
   Member GetMember() const;
-  unsigned int GetIncarnation() const { return incarnation_; }
+  unsigned int GetIncarnation() const { return update_.incarnation(); }
 
   google::protobuf::Message& BaseMessage() override { return update_; }
 
@@ -49,6 +51,41 @@ class FullStateMessage : public Message {
 
  private:
   MemberFullState state_;
+};
+
+class PullRequestMessage : public Message {
+ public:
+  void InitAsFullStateType();
+  void InitAsPingType();
+  void InitAsPingRelayType(const Member& self, const Member& target);
+  bool IsFullStateType();
+  bool IsPingType();
+  bool IsPingRelayType();
+  std::string GetName();
+  std::string GetIpAddress();
+  unsigned int GetPort();
+  std::string GetSelfIpAddress();
+  unsigned int GetSelfPort();
+
+  google::protobuf::Message& BaseMessage() override { return pull_request_; }
+
+ private:
+  PullRequest pull_request_;
+};
+
+class PullResponseMessage : public Message {
+ public:
+  void InitAsPingSuccess(const Member& member);
+  void InitAsPingFailure(const Member& member);
+  void InitAsPingReceived();
+  Member GetMember();
+  bool IsPingSuccess();
+  bool IsPingFailure();
+
+  google::protobuf::Message& BaseMessage() override { return pull_response_; }
+
+ private:
+  PullResponse pull_response_;
 };
 
 };      // namespace membership
