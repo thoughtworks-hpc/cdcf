@@ -13,7 +13,7 @@ Router::Router(caf::actor_config &config)
       planned_reason_(caf::exit_reason::normal),
       proxy_(std::make_unique<Proxy>()) {}
 
-caf::actor Router::make(caf::execution_unit *host,
+caf::actor Router::Make(caf::execution_unit *host,
                         load_balancer::Policy &&policy) {
   auto &sys = host->system();
   caf::actor_config config{host};
@@ -26,7 +26,7 @@ caf::actor Router::make(caf::execution_unit *host,
 }
 
 void Router::enqueue(caf::mailbox_element_ptr what, caf::execution_unit *host) {
-  Lock guard{workers_mtx_};
+  Lock guard{lock_};
   if (Filter(guard, what, host)) {
     return;
   }
@@ -157,7 +157,7 @@ void Router::Down(Lock &guard, caf::execution_unit *eu,
     planned_reason_ = caf::exit_reason::out_of_workers;
     unique_guard.unlock();
     // we can safely run our cleanup code here without holding
-    // workers_mtx_ because abstract_actor has its own lock
+    // lock_ because abstract_actor has its own lock
     if (cleanup(planned_reason_, eu)) {
       unregister_from_system();
     }

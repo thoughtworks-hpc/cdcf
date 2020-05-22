@@ -19,7 +19,7 @@ class Proxy;
 
 class Router : public caf::monitorable_actor {
  public:
-  static caf::actor make(caf::execution_unit *host,
+  static caf::actor Make(caf::execution_unit *host,
                          load_balancer::Policy &&policy);
 
  public:
@@ -69,7 +69,7 @@ class Router : public caf::monitorable_actor {
 
   void Exit(Lock &guard, caf::execution_unit *eu, const caf::exit_msg &message);
 
-  caf::detail::shared_spinlock workers_mtx_;
+  caf::detail::shared_spinlock lock_;
   caf::exit_reason planned_reason_;
   std::vector<caf::actor> workers_;
   std::unordered_map<caf::actor, Metrics> metrics_;

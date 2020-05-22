@@ -63,7 +63,7 @@ class LoadBalancerTest : public ::testing::Test {
  protected:
   void Prepare(size_t workers_count) {
     auto policy = cdcf::load_balancer::policy::MinLoad();
-    balancer_ = cdcf::load_balancer::Router::make(&context, std::move(policy));
+    balancer_ = cdcf::load_balancer::Router::Make(&context, std::move(policy));
     std::generate_n(std::back_inserter(workers_), workers_count,
                     [&]() { return system_.spawn(adder); });
     caf::scoped_actor self{system_};
