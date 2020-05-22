@@ -66,9 +66,9 @@ class LoadBalancerTest : public ::testing::Test {
     balancer_ = cdcf::load_balancer::Router::Make(&context, std::move(policy));
     std::generate_n(std::back_inserter(workers_), workers_count,
                     [&]() { return system_.spawn(adder); });
-    caf::scoped_actor self{system_};
     for (const auto& worker : workers_) {
-      self->send(balancer_, caf::sys_atom::value, caf::put_atom::value, worker);
+      caf::anon_send(balancer_, caf::sys_atom::value, caf::put_atom::value,
+                     worker);
     }
   }
 
