@@ -1,34 +1,38 @@
 version: "3.7"
 services:
-  node_a:
+  yanghui_root:
     image: cdcf:latest
     environment:
-      HOST: node_a
-      SEEDS: node_a:4445,node_b:4445
-      APP: cluster
-    ports:
-      - 50051:50051
-      - 3335:3335
+      HOST: yanghui_root
+      SEEDS: yanghui_root:4445
+      APP: yanghui_cluster_root
+      BEROOT: -r
+      APPHOST: yanghui_root
+      APPPORT: 56600
+      WORKERPORT: 56601
     networks:
       - cdcf
-  node_b:
+    command: /bin/bash -c "sleep 1000000000"
+  yanghui_worker1:
     image: cdcf:latest
     environment:
-      HOST: node_b
-      SEEDS: node_a:4445,node_b:4445
-      APP: cluster
-    ports:
-      - 50052:50051
+      HOST: yanghui_worker1
+      APPHOST: yanghui_root
+      SEEDS: yanghui_root:4445
+      APP: yanghui_cluster_root
+      APPPORT: 56600
+      WORKERPORT: 56601
     networks:
       - cdcf
-  node_c:
+  yanghui_worker2:
     image: cdcf:latest
     environment:
-      HOST: node_c
-      SEEDS: node_a:4445,node_b:4445
-      APP: cluster
-    ports:
-      - 50053:50051
+      HOST: yanghui_worker2
+      APPHOST: yanghui_root
+      SEEDS: yanghui_root:4445
+      APP: yanghui_cluster_root
+      APPPORT: 56600
+      WORKERPORT: 56601
     networks:
       - cdcf
 networks:
