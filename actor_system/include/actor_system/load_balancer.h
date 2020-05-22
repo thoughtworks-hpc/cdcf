@@ -4,6 +4,9 @@
 #ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
 #define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
 
+#include <algorithm>
+#include <cassert>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -28,33 +31,13 @@ class Router : public caf::monitorable_actor {
   void enqueue(caf::mailbox_element_ptr what,
                caf::execution_unit *host) override;
 
-  void on_destroy() override {
-    CAF_PUSH_AID_FROM_PTR(this);
-    if (!getf(is_cleaned_up_flag)) {
-      cleanup(caf::exit_reason::unreachable, nullptr);
-      monitorable_actor::on_destroy();
-      unregister_from_system();
-    }
-  }
+  void on_destroy() override;
 
  protected:
-  void on_cleanup(const caf::error &reason) override {
-    CAF_PUSH_AID_FROM_PTR(this);
-    CAF_IGNORE_UNUSED(reason);
-    CAF_LOG_TERMINATE_EVENT(this, reason);
-  }
+  void on_cleanup(const caf::error &reason) override;
 
  private:
-  std::vector<Metrics> GetMetrics() const {
-    std::vector<Metrics> result(workers_.size());
-    std::transform(workers_.begin(), workers_.end(), result.begin(),
-                   [&](auto &worker) {
-                     auto it = metrics_.find(worker);
-                     assert(it != metrics_.end());
-                     return it->second;
-                   });
-    return result;
-  }
+  std::vector<Metrics> GetMetrics() const;
 
   bool Filter(Lock &guard, caf::mailbox_element_ptr &what,
               caf::execution_unit *eu);
@@ -76,6 +59,17 @@ class Router : public caf::monitorable_actor {
   std::unique_ptr<Proxy> proxy_;
   Policy policy_;
 };
+
+inline std::vector<Metrics> Router::GetMetrics() const {
+  std::vector<Metrics> result(workers_.size());
+  std::transform(workers_.begin(), workers_.end(), result.begin(),
+                 [&](auto &worker) {
+                   auto it = metrics_.find(worker);
+                   assert(it != metrics_.end());
+                   return it->second;
+                 });
+  return result;
+}
 
 }  // namespace load_balancer
 }  // namespace cdcf

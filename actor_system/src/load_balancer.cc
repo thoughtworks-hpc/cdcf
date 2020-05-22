@@ -25,6 +25,21 @@ caf::actor Router::Make(caf::execution_unit *host,
   return res;
 }
 
+void Router::on_destroy() {
+  CAF_PUSH_AID_FROM_PTR(this);
+  if (!getf(is_cleaned_up_flag)) {
+    cleanup(caf::exit_reason::unreachable, nullptr);
+    monitorable_actor::on_destroy();
+    unregister_from_system();
+  }
+}
+
+void Router::on_cleanup(const caf::error &reason) {
+  CAF_PUSH_AID_FROM_PTR(this);
+  CAF_IGNORE_UNUSED(reason);
+  CAF_LOG_TERMINATE_EVENT(this, reason);
+}
+
 void Router::enqueue(caf::mailbox_element_ptr what, caf::execution_unit *host) {
   Lock guard{lock_};
   if (Filter(guard, what, host)) {
