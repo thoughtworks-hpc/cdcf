@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(actor_system)
 
 aux_source_directory(src ALL_SOURCES)
+aux_source_directory(src/load_balancer LOAD_BALANCER_SOURCES)
+list(APPEND ALL_SOURCES ${LOAD_BALANCER_SOURCES})
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)

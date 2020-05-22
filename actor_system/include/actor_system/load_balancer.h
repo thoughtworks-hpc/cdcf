@@ -4,27 +4,31 @@
 #ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
 #define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
 
-#include <limits>
 #include <unordered_map>
 
 #include <caf/all.hpp>
 #include <caf/default_attachable.hpp>
 
+#include "actor_system/load_balancer/policy.h"
+
 namespace cdcf {
-class load_balancer : public caf::monitorable_actor {
+namespace load_balancer {
+class Router : public caf::monitorable_actor {
  public:
-  static caf::actor make(caf::execution_unit *host) {
+  static caf::actor make(caf::execution_unit *host,
+                         load_balancer::Policy &&policy) {
     auto &sys = host->system();
     caf::actor_config config{host};
-    auto res = caf::make_actor<load_balancer, caf::actor>(
-        sys.next_actor_id(), sys.node(), &sys, config);
-    auto ptr = static_cast<load_balancer *>(
-        caf::actor_cast<caf::abstract_actor *>(res));
+    auto res = caf::make_actor<Router, caf::actor>(sys.next_actor_id(),
+                                                   sys.node(), &sys, config);
+    auto ptr =
+        static_cast<Router *>(caf::actor_cast<caf::abstract_actor *>(res));
+    ptr->policy_ = std::move(policy);
     return res;
   }
 
  public:
-  explicit load_balancer(caf::actor_config &config)
+  explicit Router(caf::actor_config &config)
       : caf::monitorable_actor(config),
         planned_reason_(caf::exit_reason::normal) {}
 
@@ -81,7 +85,7 @@ class load_balancer : public caf::monitorable_actor {
   void Reply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
              caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
     auto from = caf::actor_cast<caf::actor>(what->sender);
-    --loads_[from];
+    --metrics_[from].load;
     auto ticket = ExtractTicket(what);
     guard.unlock();
     ticket.Reply(ctrl(), what->move_content_to_message(), host);
@@ -119,37 +123,26 @@ class load_balancer : public caf::monitorable_actor {
                : result.with_high_priority();
   }
 
+  std::vector<Metrics> GetMetrics() const {
+    std::vector<Metrics> result(workers_.size());
+    std::transform(workers_.begin(), workers_.end(), result.begin(),
+                   [&](auto &worker) {
+                     auto it = metrics_.find(worker);
+                     assert(it != metrics_.end());
+                     return it->second;
+                   });
+    return result;
+  }
+
   void Relay(caf::mailbox_element_ptr &what, caf::execution_unit *host,
              caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
-    auto worker = Policy(home_system(), workers_, what, host);
-    ++loads_[worker];
+    auto worker = policy_(workers_, GetMetrics(), what);
+    ++metrics_[worker].load;
     auto [new_id, _] = PlaceTicket(what);
     guard.unlock();
     // replace sender with load_balancer
     worker->enqueue(ctrl(), new_id, what->move_content_to_message(), host);
     return;
-  }
-
-  size_t GetWorkerLoad(const caf::actor &actor) {
-    auto it = loads_.find(actor);
-    return it == loads_.end() ? 0 : it->second;
-  }
-
-  caf::actor Policy(caf::actor_system &system,
-                    const std::vector<caf::actor> &actors,
-                    caf::mailbox_element_ptr &mail, caf::execution_unit *host) {
-    CAF_ASSERT(!actors.empty());
-    /* Implement a round robin with std::rotated, note that its complexity is
-     * O(n). */
-    std::vector<caf::actor> candidates(actors.size());
-    rotated_ = (rotated_ + 1) % actors.size();
-    auto pivot = actors.begin() + rotated_;
-    std::rotate_copy(actors.begin(), pivot, actors.end(), candidates.begin());
-    auto it = std::min_element(candidates.begin(), candidates.end(),
-                               [this](auto &a, auto &b) {
-                                 return GetWorkerLoad(a) < GetWorkerLoad(b);
-                               });
-    return *it;
   }
 
   bool Filter(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
@@ -227,16 +220,22 @@ class load_balancer : public caf::monitorable_actor {
           address(), caf::default_attachable::monitor};
       worker->detach(tk);
       workers_.erase(i);
+      metrics_.erase(worker);
     }
   }
 
   void AddWorker(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
                  const caf::actor &worker) {
+    auto it = std::find(workers_.begin(), workers_.end(), worker);
+    if (it != workers_.end()) {
+      return;
+    }
     worker->attach(
         caf::default_attachable::make_monitor(worker.address(), address()));
     caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
         guard};
     workers_.push_back(worker);
+    metrics_.emplace(worker, Metrics{});
   }
 
   void Down(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
@@ -247,7 +246,10 @@ class load_balancer : public caf::monitorable_actor {
     auto last = workers_.end();
     auto i = std::find(workers_.begin(), workers_.end(), dm.source);
     CAF_LOG_DEBUG_IF(i == last, "received down message for an unknown worker");
-    if (i != last) workers_.erase(i);
+    if (i != last) {
+      metrics_.erase(*i);
+      workers_.erase(i);
+    }
     if (workers_.empty()) {
       planned_reason_ = caf::exit_reason::out_of_workers;
       unique_guard.unlock();
@@ -261,8 +263,8 @@ class load_balancer : public caf::monitorable_actor {
 
   void Exit(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
             caf::execution_unit *eu, const caf::exit_msg &exit_message) {
-    // acquire second mutex as well
     std::vector<caf::actor> workers;
+    std::unordered_map<caf::actor, Metrics> metrics;
     auto reason = exit_message.reason;
     if (cleanup(std::move(reason), eu)) {
       // send exit messages *always* to all workers and clear vector
@@ -270,6 +272,7 @@ class load_balancer : public caf::monitorable_actor {
       caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
           guard};
       workers_.swap(workers);
+      metrics_.swap(metrics);
       unique_guard.unlock();
       const auto message = make_message(exit_message);
       for (const auto &worker : workers) {
@@ -279,16 +282,15 @@ class load_balancer : public caf::monitorable_actor {
     }
   }
 
-  using Loads = std::unordered_map<caf::actor, size_t>;
-  Loads loads_;
-  using Tickets = std::unordered_map<caf::message_id, Ticket>;
-  Tickets tickets_;
-  caf::message_id last_request_id_ = {caf::make_message_id()};
-  size_t rotated_{std::numeric_limits<size_t>::max()};
   caf::detail::shared_spinlock workers_mtx_;
-  std::vector<caf::actor> workers_;
   caf::exit_reason planned_reason_;
+  caf::message_id last_request_id_ = {caf::make_message_id()};
+  std::vector<caf::actor> workers_;
+  std::unordered_map<caf::actor, Metrics> metrics_;
+  std::unordered_map<caf::message_id, Ticket> tickets_;
+  Policy policy_;
 };
 
+}  // namespace load_balancer
 }  // namespace cdcf
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
