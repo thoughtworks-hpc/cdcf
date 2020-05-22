@@ -85,17 +85,15 @@ bool Router::Filter(Lock &guard, caf::mailbox_element_ptr &what,
   if (content.match_elements<caf::sys_atom, caf::get_atom>()) {
     auto workers = workers_;
     guard.unlock();
-    caf::message_id mid1 = mid.response_id();
-    sender->enqueue(nullptr, mid1, make_message(std::move(workers)), eu);
+    sender->enqueue(nullptr, mid.response_id(),
+                    make_message(std::move(workers)), eu);
     return true;
   }
   if (mid.is_request() && sender != nullptr && workers_.empty()) {
     guard.unlock();
-    caf::message_id mid1 =
-        mid.response_id();  // Tell client we have ignored this request message
-                            // by sending and empty
-                            // message back.
-    sender->enqueue(nullptr, mid1, caf::message{}, eu);
+    /* Tell client we have ignored this request message by sending and empty
+     * message back. */
+    sender->enqueue(nullptr, mid.response_id(), caf::message{}, eu);
     return true;
   }
   return false;
@@ -116,12 +114,12 @@ void Router::AddWorker(Lock &guard, const caf::actor &worker) {
 void Router::DeleteWorker(Lock &guard, const caf::actor &worker) {
   caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{guard};
   auto last = workers_.end();
-  auto i = std::find(workers_.begin(), last, worker);
-  if (i != last) {
-    caf::default_attachable::observe_token tk{address(),
-                                              caf::default_attachable::monitor};
-    worker->detach(tk);
-    workers_.erase(i);
+  auto it = std::find(workers_.begin(), last, worker);
+  if (it != last) {
+    caf::default_attachable::observe_token token{
+        address(), caf::default_attachable::monitor};
+    worker->detach(token);
+    workers_.erase(it);
     metrics_.erase(worker);
   }
 }
@@ -129,9 +127,9 @@ void Router::DeleteWorker(Lock &guard, const caf::actor &worker) {
 void Router::ClearWorker(Lock &guard) {
   caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{guard};
   for (auto &worker : workers_) {
-    caf::default_attachable::observe_token tk{address(),
-                                              caf::default_attachable::monitor};
-    worker->detach(tk);
+    caf::default_attachable::observe_token token{
+        address(), caf::default_attachable::monitor};
+    worker->detach(token);
   }
   workers_.clear();
 }
