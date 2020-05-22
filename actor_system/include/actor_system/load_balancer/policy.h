@@ -3,6 +3,8 @@
  */
 #ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_POLICY_H_
 #define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_POLICY_H_
+#include <vector>
+
 #include <caf/all.hpp>
 
 namespace cdcf::load_balancer {
