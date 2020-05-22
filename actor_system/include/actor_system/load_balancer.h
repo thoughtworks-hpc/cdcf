@@ -34,16 +34,10 @@ class load_balancer : public caf::monitorable_actor {
     if (Filter(guard, what, host)) {
       return;
     }
-    std::cout << "what: " << what->mid.integer_value() << ": "
-              << what->mid.category() << ", " << what->mid.is_request() << ", "
-              << what->mid.response_id().integer_value() << ", " << what->mid.is_answered() << std::endl;
-    if (what->sender) {
-      std::cout << "sender: " << what->sender->aid << std::endl;
-    }
-    if (IsProxyReply(what)) {
-      return HandleReply(what, host, guard);
+    if (what->mid.is_response()) {
+      return Reply(what, host, guard);
     } else {
-      return Proxy(what, host, guard);
+      return Relay(what, host, guard);
     }
   }
 
@@ -64,59 +58,76 @@ class load_balancer : public caf::monitorable_actor {
   }
 
  private:
-  void HandleReply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
-                   caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
-      std::cout << "handle reply <------" << std::endl;
+  struct Ticket {
+    static Ticket ReplyTo(const caf::mailbox_element_ptr &what) {
+      bool required_reply = what->mid != what->mid.response_id();
+      return required_reply ? Ticket{what->mid.response_id(),
+                                     caf::actor_cast<caf::actor>(what->sender)}
+                            : Ticket{};
+    }
+
+    caf::message_id response_id;
+    caf::actor response_to;
+
+    void Reply(caf::strong_actor_ptr sender, const caf::message &message,
+               caf::execution_unit *host) {
+      if (!response_to) {
+        return;
+      }
+      response_to->enqueue(sender, response_id, message, host);
+    }
+  };
+
+  void Reply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
+             caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
     auto from = caf::actor_cast<caf::actor>(what->sender);
     --loads_[from];
-    auto caller = FindCaller(what);
-    if (!caller) {
-      return;
-    }
+    auto ticket = ExtractTicket(what);
     guard.unlock();
-    const auto msg = what->move_content_to_message();
-    caller->enqueue(ctrl(), what->mid, msg, host);
-    return;
+    ticket.Reply(ctrl(), what->move_content_to_message(), host);
   }
 
-  bool TrackProxy(const caf::mailbox_element_ptr &what) {
-    bool required_reply = what->mid != what->mid.response_id();
-    if (required_reply) {
-      // store original sender
-      auto from = caf::actor_cast<caf::actor>(what->sender);
-      callers_[what->mid.response_id()] = from;
+  std::pair<caf::message_id, Ticket> PlaceTicket(
+      const caf::mailbox_element_ptr &what) {
+    auto new_message_id = AllocateRequestID(what);
+    auto ticket = Ticket::ReplyTo(what);
+    tickets_.emplace(new_message_id.response_id(), ticket);
+    return std::make_pair(new_message_id, ticket);
+  }
+
+  Ticket ExtractTicket(const caf::mailbox_element_ptr &what) {
+    auto it = tickets_.find(what->mid);
+    if (it == tickets_.end()) {
+      return {};
     }
-    return required_reply;
-  }
-
-  caf::actor FindCaller(const caf::mailbox_element_ptr &what) {
-    auto it = callers_.find(what->mid);
-    if (it == callers_.end()) {
-      std::cout << "ignore reply from: " << what->sender->aid << std::endl;
-      return nullptr;
+    /* worker get remove from load balancer, should remove the ticket */
+    if (std::find(workers_.begin(), workers_.end(), what->sender) ==
+        workers_.end()) {
+      tickets_.erase(it);
+      return {};
     }
-    callers_.erase(it);
-    return it->second;
+    auto result = it->second;
+    tickets_.erase(it);
+    return result;
   }
 
-  void Proxy(caf::mailbox_element_ptr &what, caf::execution_unit *host,
+  caf::message_id AllocateRequestID(const caf::mailbox_element_ptr &what) {
+    auto priority = static_cast<caf::message_priority>(what->mid.category());
+    auto result = ++last_request_id_;
+    return priority == caf::message_priority::normal
+               ? result
+               : result.with_high_priority();
+  }
+
+  void Relay(caf::mailbox_element_ptr &what, caf::execution_unit *host,
              caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
-    std::cout << "forwarding ---> " << std::endl;
-    auto actor = Policy(home_system(), workers_, what, host);
-    ++loads_[actor];
-    TrackProxy(what);
+    auto worker = Policy(home_system(), workers_, what, host);
+    ++loads_[worker];
+    auto [new_id, _] = PlaceTicket(what);
     guard.unlock();
     // replace sender with load_balancer
-    actor->enqueue(ctrl(), what->mid, what->move_content_to_message(), host);
+    worker->enqueue(ctrl(), new_id, what->move_content_to_message(), host);
     return;
-  }
-
-  bool IsProxyReply(const caf::mailbox_element_ptr &what) const {
-    if (what->mid.is_request()) {
-      return false;
-    }
-    auto it = std::find(workers_.begin(), workers_.end(), what->sender);
-    return it != workers_.end();
   }
 
   size_t GetWorkerLoad(const caf::actor &actor) {
@@ -128,9 +139,6 @@ class load_balancer : public caf::monitorable_actor {
                     const std::vector<caf::actor> &actors,
                     caf::mailbox_element_ptr &mail, caf::execution_unit *host) {
     CAF_ASSERT(!actors.empty());
-    for (auto &[actor, load] : loads_) {
-      std::cout << "#" << actor.id() << ": load: " << load << std::endl;
-    }
     /* Implement a round robin with std::rotated, note that its complexity is
      * O(n). */
     std::vector<caf::actor> candidates(actors.size());
@@ -141,8 +149,6 @@ class load_balancer : public caf::monitorable_actor {
                                [this](auto &a, auto &b) {
                                  return GetWorkerLoad(a) < GetWorkerLoad(b);
                                });
-    std::cout << " rotated: " << rotated_
-              << " offset: " << it - candidates.begin() << std::endl;
     return *it;
   }
 
@@ -273,11 +279,11 @@ class load_balancer : public caf::monitorable_actor {
     }
   }
 
-  using Callers = std::unordered_map<caf::message_id, caf::actor>;
-  Callers callers_;
   using Loads = std::unordered_map<caf::actor, size_t>;
   Loads loads_;
-
+  using Tickets = std::unordered_map<caf::message_id, Ticket>;
+  Tickets tickets_;
+  caf::message_id last_request_id_ = {caf::make_message_id()};
   size_t rotated_{std::numeric_limits<size_t>::max()};
   caf::detail::shared_spinlock workers_mtx_;
   std::vector<caf::actor> workers_;

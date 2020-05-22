@@ -87,8 +87,9 @@ class LoadBalancerTest : public ::testing::Test {
 TEST_F(LoadBalancerTest, should_work_behind_load_balancer) {
   Prepare(1);
 
-  make_function_view(balancer_)(add_atom::value, 1, 1);
+  auto message = make_function_view(balancer_)(add_atom::value, 1, 1);
 
+  EXPECT_THAT(message->get_as<int>(0), Eq(2));
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
 }
 
