@@ -3,37 +3,26 @@
  */
 #include "actor_system/load_balancer.h"
 
+#include <caf/default_attachable.hpp>
+
+#include "src/load_balancer/proxy.h"
+
 namespace cdcf::load_balancer {
-std::pair<caf::message_id, Ticket> Router::PlaceTicket(
-    caf::mailbox_element_ptr &what) {
-  auto new_message_id = AllocateRequestID(what);
-  auto ticket = Ticket::ReplyTo(what);
-  tickets_.emplace(new_message_id.response_id(), ticket);
-  return std::make_pair(new_message_id, ticket);
-}
+Router::Router(caf::actor_config &config)
+    : caf::monitorable_actor(config),
+      planned_reason_(caf::exit_reason::normal),
+      proxy_(std::make_unique<Proxy>()) {}
 
-Ticket Router::ExtractTicket(caf::mailbox_element_ptr &what) {
-  auto it = tickets_.find(what->mid);
-  if (it == tickets_.end()) {
-    return {};
-  }
-  /* worker get remove from load balancer, should remove the ticket */
-  if (std::find(workers_.begin(), workers_.end(), what->sender) ==
-      workers_.end()) {
-    tickets_.erase(it);
-    return {};
-  }
-  auto result = it->second;
-  tickets_.erase(it);
-  return result;
-}
-
-caf::message_id Router::AllocateRequestID(caf::mailbox_element_ptr &what) {
-  auto priority = static_cast<caf::message_priority>(what->mid.category());
-  auto result = ++last_request_id_;
-  return priority == caf::message_priority::normal
-             ? result
-             : result.with_high_priority();
+caf::actor Router::make(caf::execution_unit *host,
+                        load_balancer::Policy &&policy) {
+  auto &sys = host->system();
+  caf::actor_config config{host};
+  auto res = caf::make_actor<Router, caf::actor>(sys.next_actor_id(),
+                                                 sys.node(), &sys, config);
+  auto abstract = caf::actor_cast<caf::abstract_actor *>(res);
+  auto ptr = static_cast<Router *>(abstract);
+  ptr->policy_ = std::move(policy);
+  return res;
 }
 
 void Router::enqueue(caf::mailbox_element_ptr what, caf::execution_unit *host) {
@@ -42,30 +31,14 @@ void Router::enqueue(caf::mailbox_element_ptr what, caf::execution_unit *host) {
     return;
   }
   if (what->mid.is_response()) {
-    return Reply(what, host, guard);
+    auto from = caf::actor_cast<caf::actor>(what->sender);
+    --metrics_[from].load;
+    return proxy_->Reply(ctrl(), what, host, guard, workers_);
   } else {
-    return Relay(what, host, guard);
+    auto to = policy_(workers_, GetMetrics(), what);
+    ++metrics_[to].load;
+    return proxy_->Relay(ctrl(), what, host, guard, to);
   }
-}
-
-void Router::Relay(caf::mailbox_element_ptr &what, caf::execution_unit *host,
-                   Lock &guard) {
-  auto worker = policy_(workers_, GetMetrics(), what);
-  ++metrics_[worker].load;
-  auto [new_id, _] = PlaceTicket(what);
-  guard.unlock();
-  // replace sender with load_balancer
-  worker->enqueue(ctrl(), new_id, what->move_content_to_message(), host);
-  return;
-}
-
-void Router::Reply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
-                   Lock &guard) {
-  auto from = caf::actor_cast<caf::actor>(what->sender);
-  --metrics_[from].load;
-  auto ticket = ExtractTicket(what);
-  guard.unlock();
-  ticket.Reply(ctrl(), what->move_content_to_message(), host);
 }
 
 bool Router::Filter(Lock &guard, caf::mailbox_element_ptr &what,

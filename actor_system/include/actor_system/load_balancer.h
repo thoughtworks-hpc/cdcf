@@ -8,50 +8,22 @@
 #include <vector>
 
 #include <caf/all.hpp>
-#include <caf/default_attachable.hpp>
 
 #include "actor_system/load_balancer/policy.h"
 
 namespace cdcf {
 namespace load_balancer {
+using Lock = caf::upgrade_lock<caf::detail::shared_spinlock>;
 
-struct Ticket {
-  static Ticket ReplyTo(caf::mailbox_element_ptr &what) {
-    bool required_reply = what->mid != what->mid.response_id();
-    return required_reply ? Ticket{what->mid.response_id(),
-                                   caf::actor_cast<caf::actor>(what->sender)}
-                          : Ticket{};
-  }
-
-  caf::message_id response_id;
-  caf::actor response_to;
-
-  void Reply(caf::strong_actor_ptr sender, const caf::message &message,
-             caf::execution_unit *host) const {
-    if (response_to) {
-      response_to->enqueue(sender, response_id, message, host);
-    }
-  }
-};
+class Proxy;
 
 class Router : public caf::monitorable_actor {
  public:
   static caf::actor make(caf::execution_unit *host,
-                         load_balancer::Policy &&policy) {
-    auto &sys = host->system();
-    caf::actor_config config{host};
-    auto res = caf::make_actor<Router, caf::actor>(sys.next_actor_id(),
-                                                   sys.node(), &sys, config);
-    auto abstract = caf::actor_cast<caf::abstract_actor *>(res);
-    auto ptr = static_cast<Router *>(abstract);
-    ptr->policy_ = std::move(policy);
-    return res;
-  }
+                         load_balancer::Policy &&policy);
 
  public:
-  explicit Router(caf::actor_config &config)
-      : caf::monitorable_actor(config),
-        planned_reason_(caf::exit_reason::normal) {}
+  explicit Router(caf::actor_config &config);
 
   void enqueue(caf::mailbox_element_ptr what,
                caf::execution_unit *host) override;
@@ -73,21 +45,6 @@ class Router : public caf::monitorable_actor {
   }
 
  private:
-  using Lock = caf::upgrade_lock<caf::detail::shared_spinlock>;
-
-  void Relay(caf::mailbox_element_ptr &what, caf::execution_unit *host,
-             Lock &guard);
-
-  void Reply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
-             Lock &guard);
-
-  std::pair<caf::message_id, Ticket> PlaceTicket(
-      caf::mailbox_element_ptr &what);
-
-  Ticket ExtractTicket(caf::mailbox_element_ptr &what);
-
-  caf::message_id AllocateRequestID(caf::mailbox_element_ptr &what);
-
   std::vector<Metrics> GetMetrics() const {
     std::vector<Metrics> result(workers_.size());
     std::transform(workers_.begin(), workers_.end(), result.begin(),
@@ -114,10 +71,9 @@ class Router : public caf::monitorable_actor {
 
   caf::detail::shared_spinlock workers_mtx_;
   caf::exit_reason planned_reason_;
-  caf::message_id last_request_id_ = {caf::make_message_id()};
   std::vector<caf::actor> workers_;
   std::unordered_map<caf::actor, Metrics> metrics_;
-  std::unordered_map<caf::message_id, Ticket> tickets_;
+  std::unique_ptr<Proxy> proxy_;
   Policy policy_;
 };
 
