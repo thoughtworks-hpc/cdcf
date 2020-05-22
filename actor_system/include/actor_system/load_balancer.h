@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include <caf/all.hpp>
+#include <caf/default_attachable.hpp>
 
 namespace cdcf {
 class load_balancer : public caf::monitorable_actor {
@@ -30,17 +31,16 @@ class load_balancer : public caf::monitorable_actor {
   void enqueue(caf::mailbox_element_ptr what,
                caf::execution_unit *host) override {
     caf::upgrade_lock<caf::detail::shared_spinlock> guard{workers_mtx_};
-    if (Filter(guard, what->sender, what->mid, *what, host)) {
+    if (Filter(guard, what, host)) {
       return;
     }
     std::cout << "what: " << what->mid.integer_value() << ": "
-              << what->mid.category() << ", "
-              << what->mid.request_id().integer_value() << ", "
-              << what->mid.response_id().integer_value() << std::endl;
+              << what->mid.category() << ", " << what->mid.is_request() << ", "
+              << what->mid.response_id().integer_value() << ", " << what->mid.is_answered() << std::endl;
     if (what->sender) {
       std::cout << "sender: " << what->sender->aid << std::endl;
     }
-    if (IsReply(what)) {
+    if (IsProxyReply(what)) {
       return HandleReply(what, host, guard);
     } else {
       return Proxy(what, host, guard);
@@ -66,6 +66,7 @@ class load_balancer : public caf::monitorable_actor {
  private:
   void HandleReply(caf::mailbox_element_ptr &what, caf::execution_unit *host,
                    caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
+      std::cout << "handle reply <------" << std::endl;
     auto from = caf::actor_cast<caf::actor>(what->sender);
     --loads_[from];
     auto caller = FindCaller(what);
@@ -110,7 +111,10 @@ class load_balancer : public caf::monitorable_actor {
     return;
   }
 
-  bool IsReply(caf::mailbox_element_ptr const &what) const {
+  bool IsProxyReply(const caf::mailbox_element_ptr &what) const {
+    if (what->mid.is_request()) {
+      return false;
+    }
     auto it = std::find(workers_.begin(), workers_.end(), what->sender);
     return it != workers_.end();
   }
@@ -143,13 +147,130 @@ class load_balancer : public caf::monitorable_actor {
   }
 
   bool Filter(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
-              const caf::strong_actor_ptr &sender, caf::message_id mid,
-              caf::message_view &mv, caf::execution_unit *eu);
+              const caf::mailbox_element_ptr &what, caf::execution_unit *eu) {
+    const auto &sender = what->sender;
+    const auto &mid = what->mid;
+    const auto &content = what->content();
+    CAF_LOG_TRACE(CAF_ARG(mid) << CAF_ARG(content));
+    if (content.match_elements<caf::exit_msg>()) {
+      Exit(guard, eu, content.get_as<caf::exit_msg>(0));
+      return true;
+    }
+    if (content.match_elements<caf::down_msg>()) {
+      Down(guard, eu, content.get_as<caf::down_msg>(0));
+      return true;
+    }
+    if (content.match_elements<caf::sys_atom, caf::put_atom, caf::actor>()) {
+      AddWorker(guard, content.get_as<caf::actor>(2));
+      return true;
+    }
+    if (content.match_elements<caf::sys_atom, caf::delete_atom, caf::actor>()) {
+      DeleteWorker(guard, content.get_as<caf::actor>(2));
+      return true;
+    }
+    if (content.match_elements<caf::sys_atom, caf::delete_atom>()) {
+      ClearWorker(guard);
+      return true;
+    }
+    if (content.match_elements<caf::sys_atom, caf::get_atom>()) {
+      auto workers = workers_;
+      guard.unlock();
+      ListWorkers(sender, mid.response_id(), eu, workers);
+      return true;
+    }
+    if (mid.is_request() && sender != nullptr && workers_.empty()) {
+      guard.unlock();
+      Ignore(sender, mid.response_id(), eu);
+      return true;
+    }
+    return false;
+  }
 
-  void Quit(caf::execution_unit *host) {
-    // we can safely run our cleanup code here without holding
-    // workers_mtx_ because abstract_actor has its own lock
-    if (cleanup(planned_reason_, host)) unregister_from_system();
+  void Ignore(const caf::strong_actor_ptr &sender, caf::message_id mid,
+              caf::execution_unit *eu) const {
+    // Tell client we have ignored this request message by sending and empty
+    // message back.
+    sender->enqueue(nullptr, mid, caf::message{}, eu);
+  }
+
+  void ListWorkers(const caf::strong_actor_ptr &sender, caf::message_id mid,
+                   caf::execution_unit *eu,
+                   const std::vector<caf::actor> &cpy) const {
+    sender->enqueue(nullptr, mid, make_message(std::move(cpy)), eu);
+  }
+
+  void ClearWorker(caf::upgrade_lock<caf::detail::shared_spinlock> &guard) {
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
+        guard};
+    for (auto &worker : workers_) {
+      caf::default_attachable::observe_token tk{
+          address(), caf::default_attachable::monitor};
+      worker->detach(tk);
+    }
+    workers_.clear();
+  }
+
+  void DeleteWorker(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
+                    const caf::actor &worker) {
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
+        guard};
+    auto last = workers_.end();
+    auto i = std::find(workers_.begin(), last, worker);
+    if (i != last) {
+      caf::default_attachable::observe_token tk{
+          address(), caf::default_attachable::monitor};
+      worker->detach(tk);
+      workers_.erase(i);
+    }
+  }
+
+  void AddWorker(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
+                 const caf::actor &worker) {
+    worker->attach(
+        caf::default_attachable::make_monitor(worker.address(), address()));
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
+        guard};
+    workers_.push_back(worker);
+  }
+
+  void Down(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
+            caf::execution_unit *eu,
+            const caf::down_msg &dm) {  // remove failed worker from pool
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
+        guard};
+    auto last = workers_.end();
+    auto i = std::find(workers_.begin(), workers_.end(), dm.source);
+    CAF_LOG_DEBUG_IF(i == last, "received down message for an unknown worker");
+    if (i != last) workers_.erase(i);
+    if (workers_.empty()) {
+      planned_reason_ = caf::exit_reason::out_of_workers;
+      unique_guard.unlock();
+      // we can safely run our cleanup code here without holding
+      // workers_mtx_ because abstract_actor has its own lock
+      if (cleanup(planned_reason_, eu)) {
+        unregister_from_system();
+      }
+    }
+  }
+
+  void Exit(caf::upgrade_lock<caf::detail::shared_spinlock> &guard,
+            caf::execution_unit *eu, const caf::exit_msg &exit_message) {
+    // acquire second mutex as well
+    std::vector<caf::actor> workers;
+    auto reason = exit_message.reason;
+    if (cleanup(std::move(reason), eu)) {
+      // send exit messages *always* to all workers and clear vector
+      // afterwards but first swap workers_ out of the critical section
+      caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> unique_guard{
+          guard};
+      workers_.swap(workers);
+      unique_guard.unlock();
+      const auto message = make_message(exit_message);
+      for (const auto &worker : workers) {
+        anon_send(worker, message);
+      }
+      unregister_from_system();
+    }
   }
 
   using Callers = std::unordered_map<caf::message_id, caf::actor>;

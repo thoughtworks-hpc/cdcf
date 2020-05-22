@@ -84,12 +84,21 @@ class LoadBalancerTest : public ::testing::Test {
   std::vector<caf::actor> workers_;
 };
 
-TEST_F(LoadBalancerTest, actor_should_work_behind_load_balancer) {
+TEST_F(LoadBalancerTest, should_work_behind_load_balancer) {
   Prepare(1);
 
   make_function_view(balancer_)(add_atom::value, 1, 1);
 
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_reply_empty_message_without_worker) {
+  Prepare(0);
+
+  auto result = make_function_view(balancer_)(add_atom::value, 1, 1);
+
+  EXPECT_TRUE(result);
+  EXPECT_THAT(result->size(), Eq(0));
 }
 
 TEST_F(LoadBalancerTest, should_route_evenly_with_function_view) {
@@ -176,4 +185,18 @@ TEST_F(LoadBalancerTest, should_route_to_first_worker_while_all_are_busy) {
   caf::actor_cast<Worker*>(workers_[0])->state.Unlock();
 
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
+}
+
+TEST_F(LoadBalancerTest, should_exit_workers_while_send_exit_to_balancer) {
+  Prepare(4);
+  const auto reason = caf::exit_reason::remote_link_unreachable;
+  std::promise<caf::exit_reason> promise;
+  workers_[0]->attach_functor([&](const caf::error& reason) {
+    promise.set_value(caf::exit_reason{reason.code()});
+  });
+
+  caf::anon_send_exit(balancer_, reason);
+
+  auto actual = promise.get_future().get();
+  EXPECT_THAT(actual, Eq(reason));
 }
