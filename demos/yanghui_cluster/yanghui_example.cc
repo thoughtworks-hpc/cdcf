@@ -10,13 +10,13 @@
 
 #include "./yanghui_config.h"
 
-std::vector<std::vector<int> > kYanghuiData = {
+std::vector<std::vector<int>> kYanghuiData = {
     {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
 
 struct YanghuiState {
   int index = 0;
   std::map<int, int> current_result;
-  std::vector<std::vector<int> > data;
+  std::vector<std::vector<int>> data;
 };
 
 struct GetMinState {
@@ -81,7 +81,7 @@ caf::behavior getMin(caf::stateful_actor<GetMinState>* self,
 
 caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self,
                       const caf::actor& worker, const caf::actor& compare) {
-  return {[=](const std::vector<std::vector<int> >& data) {
+  return {[=](const std::vector<std::vector<int>>& data) {
             self->state.data = data;
             self->state.current_result[0] = data[0][0];
             self->send(self, 1);
@@ -134,10 +134,10 @@ caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self,
           }};
 }
 
-class ClusterRouter : public actor_system::cluster::Observer {
+class CountCluster : public actor_system::cluster::Observer {
  public:
-  ClusterRouter(std::string host, caf::actor_system& system,
-                caf::actor& worker_pool, uint16_t port, uint16_t worker_port)
+  CountCluster(std::string host, caf::actor_system& system,
+               caf::actor& worker_pool, uint16_t port, uint16_t worker_port)
       : host_(std::move(host)),
         system_(system),
         worker_pool_(worker_pool),
@@ -145,7 +145,7 @@ class ClusterRouter : public actor_system::cluster::Observer {
         worker_port_(worker_port) {
     actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
   }
-  ~ClusterRouter() {
+  ~CountCluster() {
     actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
   }
 
@@ -156,7 +156,7 @@ class ClusterRouter : public actor_system::cluster::Observer {
     if (event.member.host != host_) {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
-        AddWorker(event.member.host, worker_port_);
+        AddWorkerNode(event.member.host, worker_port_);
       } else {
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
@@ -166,7 +166,7 @@ class ClusterRouter : public actor_system::cluster::Observer {
     }
   }
 
-  void AddWorker(const std::string& host, uint16_t port) {
+  void AddWorkerNode(const std::string& host, uint16_t port) {
     auto worker_exp = system_.middleman().remote_actor(host, port);
     auto worker = std::move(*worker_exp);
     caf::anon_send(worker_pool_, caf::sys_atom::value, caf::put_atom::value,
@@ -181,6 +181,7 @@ class ClusterRouter : public actor_system::cluster::Observer {
   uint16_t worker_port_;
 };
 
+// old worker
 caf::behavior countAdd(caf::event_based_actor* self,
                        const caf::group& result_group,
                        const caf::group& compare_result_group) {
@@ -253,7 +254,7 @@ void WorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "... cya" << std::endl;
 }
 
-static std::unique_ptr<ClusterRouter> router;
+static std::unique_ptr<CountCluster> router;
 
 void RootStart(caf::actor_system& system, const config& cfg) {
   // start group server
@@ -297,7 +298,7 @@ void RootStart(caf::actor_system& system, const config& cfg) {
   caf::scoped_execution_unit context(&system);
   auto pool = caf::actor_pool::make(&context, caf::actor_pool::round_robin());
 
-  router = std::make_unique<ClusterRouter>(
+  router = std::make_unique<CountCluster>(
       cfg.host, system, pool, cfg.node_keeper_port, cfg.worker_port);
 
   // start actor

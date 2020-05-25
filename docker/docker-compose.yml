@@ -35,5 +35,40 @@ services:
       WORKERPORT: 56601
     networks:
       - cdcf
+  yanghui_root_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_root_v2
+      SEEDS: yanghui_root_v2:4445
+      APP: yanghui_cluster_root_v2
+      BEROOT: -r
+      APPHOST: yanghui_root
+      APPPORT: 56600
+      WORKERPORT: 56601
+    networks:
+      - cdcf
+    command: /bin/bash -c "sleep 1000000000"
+  yanghui_worker1_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_worker1_v2
+      APPHOST: yanghui_root_v2
+      SEEDS: yanghui_root_v2:4445
+      APP: yanghui_cluster_root_v2
+      APPPORT: 56600
+      WORKERPORT: 56601
+    networks:
+      - cdcf
+  yanghui_worker2_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_worker2_v2
+      APPHOST: yanghui_root_v2
+      SEEDS: yanghui_root_v2:4445
+      APP: yanghui_cluster_root_v2
+      APPPORT: 56600
+      WORKERPORT: 56601
+    networks:
+      - cdcf
 networks:
   cdcf:

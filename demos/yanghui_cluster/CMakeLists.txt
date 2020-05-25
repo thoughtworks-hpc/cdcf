@@ -9,8 +9,11 @@ include_directories(../../config_manager/include)
 #target_link_libraries(${PROJECT_NAME}_worker caf::caf config_manager)
 
 add_executable(${PROJECT_NAME}_root yanghui_example.cc)
-target_link_libraries(${PROJECT_NAME}_root caf::caf config_manager actor_system)
+target_link_libraries(${PROJECT_NAME}_root caf::caf config_manager actor_fault_tolerance actor_system)
 
+add_executable(${PROJECT_NAME}_root_v2 yanghui_example_v2.cc)
+target_link_libraries(${PROJECT_NAME}_root_v2 caf::caf)
+target_link_libraries(${PROJECT_NAME}_root_v2 config_manager actor_monitor actor_fault_tolerance actor_system)
 
 
 

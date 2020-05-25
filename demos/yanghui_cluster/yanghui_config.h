@@ -22,6 +22,43 @@ typename Inspector::result_type inspect(Inspector& f,
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
+using calculator =
+    caf::typed_actor<caf::replies_to<int, int>::with<int>,
+                     caf::replies_to<NumberCompareData>::with<int>>;
+
+calculator::behavior_type calculator_fun(calculator::pointer self) {
+  return {[=](int a, int b) -> int {
+            caf::aout(self) << "received add task. input a:" << a << " b:" << b
+                            << std::endl;
+
+            int result = a + b;
+            caf::aout(self) << "return: " << result << std::endl;
+            return result;
+          },
+          [=](NumberCompareData& data) -> int {
+            if (data.numbers.empty()) {
+              caf::aout(self) << "get empty compare" << std::endl;
+              return 999;
+            }
+
+            int result = data.numbers[0];
+
+            caf::aout(self) << "received compare task, input: ";
+
+            for (int number : data.numbers) {
+              caf::aout(self) << number << " ";
+              if (number < result) {
+                result = number;
+              }
+            }
+
+            caf::aout(self) << std::endl;
+            caf::aout(self) << "return: " << result << std::endl;
+
+            return result;
+          }};
+}
+
 class config : public CDCFConfig {
  public:
   uint16_t port = 0;
@@ -31,6 +68,7 @@ class config : public CDCFConfig {
   bool root = false;
 
   config() {
+    add_actor_type("calculator", calculator_fun);
     opt_group{custom_options_, "global"}
         .add(port, "port,p", "set port")
         .add(host, "host,H", "set node")
