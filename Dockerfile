@@ -15,14 +15,14 @@ RUN conan install . -s compiler.libcxx=libstdc++11 --build missing
 COPY . .
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
     && cmake --build .
-#    && cmake --build . \
-#    && ctest --output-on-failure
+    && cmake --build . \
+    && ctest --output-on-failure
 
 FROM debian
 COPY --from=builder /cdcf/node_keeper/node_keeper /bin/node_keeper
-COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root /bin/yanghui_cluster_root
+COPY --from=builder /cdcf/demos/cluster/cluster /bin/cluster
 COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root_v2 /bin/yanghui_cluster_root_v2
 COPY docker/script.sh /bin/script.sh
-ENV APP=/bin/yanghui_cluster_root
+ENV APP=/bin/cluster
 #ENTRYPOINT ["/bin/script.sh"]
 CMD ["/bin/script.sh"]
