@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
-#define DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
+#ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
+#define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #include <string>
 #include <vector>
 
@@ -82,4 +82,4 @@ class config : public CDCFConfig {
   const std::string kCompareGroupName = "compare";
 };
 
-#endif  // DEMOS_YANGHUI_TRIANGLE_YANGHUI_CONFIG_H_
+#endif  // DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_

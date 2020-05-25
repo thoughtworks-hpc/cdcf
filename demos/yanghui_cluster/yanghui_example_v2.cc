@@ -167,8 +167,10 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
   return {
       [=](const std::vector<std::vector<int>>& data) {
         int n = data.size();
-        int temp_states[n];
-        int states[n];
+        //        int temp_states[n];
+        //        int states[n];
+        int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+        int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
         int error = 0;
 
         states[0] = 1;
@@ -223,7 +225,8 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
 
         caf::aout(self) << "yanghui triangle actor task complete, result: "
                         << min_sum << std::endl;
-
+        free(temp_states);
+        free(states);
         return min_sum;
       },
       [=](std::string&) {

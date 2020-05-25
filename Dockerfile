@@ -14,7 +14,6 @@ RUN conan install . -s compiler.libcxx=libstdc++11 --build missing
 
 COPY . .
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build .
     && cmake --build . \
     && ctest --output-on-failure
 
