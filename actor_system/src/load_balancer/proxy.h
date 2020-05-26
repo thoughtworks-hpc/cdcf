@@ -19,8 +19,9 @@ class Proxy {
   void Relay(const caf::strong_actor_ptr &sender,
              caf::mailbox_element_ptr &what, caf::execution_unit *host,
              Lock &guard, caf::actor worker) {
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> lock{guard};
     auto [new_id, _] = PlaceTicket(what);
-    guard.unlock();
+    lock.unlock();
     // replace sender with load_balancer
     worker->enqueue(sender, new_id, what->move_content_to_message(), host);
     return;
@@ -29,8 +30,9 @@ class Proxy {
   void Reply(const caf::strong_actor_ptr &sender,
              caf::mailbox_element_ptr &what, caf::execution_unit *host,
              Lock &guard, const std::vector<caf::actor> &workers) {
+    caf::upgrade_to_unique_lock<caf::detail::shared_spinlock> lock{guard};
     auto ticket = ExtractTicket(what, workers);
-    guard.unlock();
+    lock.unlock();
     ticket.Reply(sender, what->move_content_to_message(), host);
   }
 
