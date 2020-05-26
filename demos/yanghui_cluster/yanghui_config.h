@@ -4,12 +4,10 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
+#include <actor_system.h>
+
 #include <string>
 #include <vector>
-
-#include "../../config_manager/include/cdcf_config.h"
-#include "caf/all.hpp"
-#include "caf/io/all.hpp"
 
 struct NumberCompareData {
   std::vector<int> numbers;
@@ -59,22 +57,21 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
           }};
 }
 
-class config : public CDCFConfig {
+class config : public actor_system::Config {
  public:
-  uint16_t port = 0;
-  std::string host = "localhost";
+  uint16_t root_port = 0;
+  std::string root_host = "localhost";
   uint16_t worker_port = 0;
   uint16_t node_keeper_port = 0;
   bool root = false;
 
   config() {
-    add_actor_type("calculator", calculator_fun);
     opt_group{custom_options_, "global"}
-        .add(port, "port,p", "set port")
-        .add(host, "host,H", "set node")
-        .add(worker_port, "worker, w", "set worker port")
+        .add(root_port, "root_port", "set root port")
+        .add(root_host, "root_host", "set root node")
+        .add(worker_port, "worker_port, w", "set worker port")
         .add(root, "root, r", "set current node be root")
-        .add(node_keeper_port, "node, n", "set node keeper port");
+        .add(node_keeper_port, "node_port", "set node keeper port");
     add_message_type<NumberCompareData>("NumberCompareData");
   }
 

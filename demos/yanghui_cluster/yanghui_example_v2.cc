@@ -261,7 +261,8 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  CountCluster counter(cfg.host, system, cfg.node_keeper_port, cfg.worker_port);
+  CountCluster counter(cfg.root_host, system, cfg.node_keeper_port,
+                       cfg.worker_port);
 
   // local test
   // counter.AddWorkerNode("localhost", cfg.worker_port);
