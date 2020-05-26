@@ -12,9 +12,15 @@ WORKDIR /cdcf
 COPY conanfile.txt .
 RUN conan install . -s compiler.libcxx=libstdc++11 --build missing
 
-COPY . .
+COPY CMakeLists.txt .
+COPY config_manager config_manager
+COPY node_keeper node_keeper
+COPY actor_fault_tolerance actor_fault_tolerance
+COPY actor_monitor actor_monitor
+COPY actor_system actor_system
+COPY demos demos
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build . \
+    && cmake --build . -j 8 \
     && ctest --output-on-failure
 
 FROM debian
