@@ -20,6 +20,8 @@ RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release 
 FROM debian
 COPY --from=builder /cdcf/node_keeper/node_keeper /bin/node_keeper
 COPY --from=builder /cdcf/demos/cluster/cluster /bin/cluster
+COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root_v2 /bin/yanghui_cluster_root_v2
 COPY docker/script.sh /bin/script.sh
 ENV APP=/bin/cluster
-ENTRYPOINT ["/bin/script.sh"]
+#ENTRYPOINT ["/bin/script.sh"]
+CMD ["/bin/script.sh"]
