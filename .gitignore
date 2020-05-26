@@ -31,3 +31,4 @@ DartConfiguration.tcl
 **/*.pb.h
 
 tags
+__pycache__
