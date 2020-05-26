@@ -66,6 +66,7 @@ class config : public actor_system::Config {
   bool root = false;
 
   config() {
+    add_actor_type("calculator", calculator_fun);
     opt_group{custom_options_, "global"}
         .add(root_port, "root_port", "set root port")
         .add(root_host, "root_host", "set root node")
