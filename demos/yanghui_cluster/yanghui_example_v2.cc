@@ -214,8 +214,7 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
         //      if (states[j] < min_sum) min_sum = states[j];
         //    }
 
-        std::vector<int> states_vec(states,
-                                    states + sizeof(states) / sizeof(int));
+        std::vector<int> states_vec(states, states + n);
 
         error = counter->Compare(states_vec, min_sum);
         if (0 != error) {
