@@ -11,7 +11,7 @@
 namespace cdcf::load_balancer::policy {
 class MinLoadImpl {
  public:
-  explicit MinLoadImpl(size_t load_threshold_to_hold = kMaxLoad)
+  explicit MinLoadImpl(size_t load_threshold_to_hold)
       : load_threshold_to_hold_(load_threshold_to_hold) {}
 
   MinLoadImpl(MinLoadImpl &&other) noexcept
@@ -74,15 +74,14 @@ class MinLoadImpl {
     mails_.pop();
   }
 
-  static constexpr const size_t kMaxLoad{10};
   size_t rotated_{std::numeric_limits<size_t>::max()};
   std::queue<caf::mailbox_element_ptr> mails_;
   size_t load_threshold_to_hold_;
   std::mutex mutex_;
 };
 
-Policy MinLoad() {
-  auto i = std::make_shared<MinLoadImpl>();
+Policy MinLoad(size_t load_threshold_to_hold) {
+  auto i = std::make_shared<MinLoadImpl>(load_threshold_to_hold);
   return [i](const std::vector<caf::actor> &actors,
              const std::vector<Metrics> &metrics,
              caf::mailbox_element_ptr &mail) mutable {

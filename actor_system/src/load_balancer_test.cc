@@ -80,8 +80,8 @@ MATCHER_P2(AllExecutedTimesNear, times, error,
 
 class LoadBalancerTest : public ::testing::Test {
  protected:
-  void Prepare(size_t workers_count) {
-    auto policy = cdcf::load_balancer::policy::MinLoad();
+  void Prepare(size_t workers_count, size_t threshold = 10) {
+    auto policy = cdcf::load_balancer::policy::MinLoad(threshold);
     balancer_ = cdcf::load_balancer::Router::Make(&context, std::move(policy));
     std::generate_n(std::back_inserter(workers_), workers_count,
                     [&]() { return system_.spawn(adder); });
@@ -228,11 +228,12 @@ TEST_F(LoadBalancerTest, should_exit_workers_while_send_exit_to_balancer) {
   should_cleanup_ = false;
 }
 
-TEST_F(LoadBalancerTest, should_route_even_under_throughput_load) {
+TEST_F(LoadBalancerTest, should_roughly_route_even_under_throughput_load) {
   constexpr size_t concurrent = 4;
   constexpr size_t times = 200;
   constexpr size_t x = 3'300'000;
-  Prepare(concurrent);
+  constexpr size_t load_threshold = 5;
+  Prepare(concurrent, load_threshold);
 
   auto async = [x](caf::event_based_actor* self, caf::actor balancer) {
     auto dummy = [](size_t) {};
@@ -245,5 +246,6 @@ TEST_F(LoadBalancerTest, should_route_even_under_throughput_load) {
   auto actor = self->spawn(async, balancer_);
   self->wait_for(actor);
 
-  EXPECT_THAT(workers_, AllExecutedTimesNear(times / concurrent, 1));
+  EXPECT_THAT(workers_,
+              AllExecutedTimesNear(times / concurrent, load_threshold * 2));
 }

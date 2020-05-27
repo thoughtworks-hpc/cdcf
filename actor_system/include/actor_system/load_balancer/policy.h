@@ -12,11 +12,16 @@ namespace cdcf::load_balancer {
 struct Metrics {
   size_t load;
 };
+
 using Policy = std::function<std::pair<caf::actor, caf::mailbox_element_ptr>(
     const std::vector<caf::actor> &actors, const std::vector<Metrics> &metrics,
     caf::mailbox_element_ptr &mail)>;
+
 namespace policy {
-Policy MinLoad();
+
+static constexpr const size_t kDefaultLoadThreshold{10};
+
+Policy MinLoad(size_t load_threshold_to_hold = kDefaultLoadThreshold);
 }  // namespace policy
 }  // namespace cdcf::load_balancer
 
