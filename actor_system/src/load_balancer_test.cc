@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
+#include <cstdint>
 #include <future>
 #include <iterator>
 
@@ -28,14 +30,18 @@ class State {
   std::promise<void> stop_promise_;
 };
 
-using add_atom = caf::atom_constant<caf::atom("add")>;
+using factorial_atom = caf::atom_constant<caf::atom("factorial")>;
 using lock_atom = caf::atom_constant<caf::atom("lock")>;
 using count_atom = caf::atom_constant<caf::atom("count")>;
 using Worker = caf::stateful_actor<State>;
 caf::behavior adder(Worker* self) {
-  return {[=](add_atom, int a, int b) {
+  return {[=](factorial_atom, size_t x) {
             ++self->state.count;
-            return a + b;
+            size_t result = 1;
+            for (size_t i = 1; i <= x; ++i) {
+              result *= i;
+            }
+            return result;
           },
           [=](count_atom) -> size_t { return self->state.count; },
           [=](lock_atom) { self->state.Lock(); }};
@@ -43,20 +49,33 @@ caf::behavior adder(Worker* self) {
 
 MATCHER_P(ExecutedTimes, times,
           "actor executed " + std::to_string(times) + " time(s)") {
-  auto func = make_function_view(arg);
+  auto func = caf::make_function_view(arg);
   auto message = *func(count_atom::value);
   auto count = *reinterpret_cast<const size_t*>(message.get(0));
   *result_listener << "it's executed " << count << " time(s)";
   return count == times;
 }
 
-MATCHER_P(AllExecutedTimes, times,
-          "actor executed " + std::to_string(times) + " time(s)") {
-  auto func = make_function_view(arg);
-  auto message = *func(count_atom::value);
-  auto count = *reinterpret_cast<const size_t*>(message.get(0));
-  *result_listener << "it's executed " << count << " time(s)";
-  return count == times;
+MATCHER_P2(AllExecutedTimesNear, times, error,
+           "all of actor executed " + std::to_string(times) + " time(s)") {
+  std::vector<size_t> counts(arg.size());
+  std::transform(arg.begin(), arg.end(), counts.begin(), [](auto& worker) {
+    auto func = make_function_view(worker);
+    auto message = *func(count_atom::value);
+    return *reinterpret_cast<const size_t*>(message.get(0));
+  });
+
+  std::stringstream ss;
+  std::copy(counts.begin(), counts.end(),
+            std::ostream_iterator<size_t>(ss, ","));
+  *result_listener << "they're executed {" << ss.str() << "} time(s)";
+  auto every_as_expected =
+      std::all_of(counts.begin(), counts.end(), [=](auto& i) {
+        return std::abs(static_cast<intmax_t>(times - i)) <= error;
+      });
+  auto total = std::accumulate(counts.begin(), counts.end(), 0);
+  auto total_as_expected = total == times * arg.size();
+  return every_as_expected && total_as_expected;
 }
 
 class LoadBalancerTest : public ::testing::Test {
@@ -88,16 +107,17 @@ class LoadBalancerTest : public ::testing::Test {
 TEST_F(LoadBalancerTest, should_work_behind_load_balancer) {
   Prepare(1);
 
-  auto message = make_function_view(balancer_)(add_atom::value, 1, 1);
+  auto message =
+      make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
-  EXPECT_THAT(message->get_as<int>(0), Eq(2));
+  EXPECT_THAT(message->get_as<size_t>(0), Eq(2));
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
 }
 
 TEST_F(LoadBalancerTest, should_reply_empty_message_without_worker) {
   Prepare(0);
 
-  auto result = make_function_view(balancer_)(add_atom::value, 1, 1);
+  auto result = make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
   EXPECT_TRUE(result);
   EXPECT_THAT(result->size(), Eq(0));
@@ -106,8 +126,8 @@ TEST_F(LoadBalancerTest, should_reply_empty_message_without_worker) {
 TEST_F(LoadBalancerTest, should_route_evenly_with_function_view) {
   Prepare(2);
 
-  make_function_view(balancer_)(add_atom::value, 1, 1);
-  make_function_view(balancer_)(add_atom::value, 1, 1);
+  make_function_view(balancer_)(factorial_atom::value, size_t{2});
+  make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
   EXPECT_THAT(workers_[1], ExecutedTimes(1));
@@ -118,7 +138,7 @@ TEST_F(LoadBalancerTest, should_route_evenly_with_request_receive) {
 
   caf::scoped_actor self{system_};
   for (const auto& worker : workers_) {
-    self->request(balancer_, caf::infinite, add_atom::value, 1, 1)
+    self->request(balancer_, caf::infinite, factorial_atom::value, size_t{2})
         .receive([&](int result) {}, [&](caf::error& error) {});
   }
 
@@ -132,7 +152,8 @@ TEST_F(LoadBalancerTest, should_route_evenly_with_request_then) {
   auto async = [&](caf::event_based_actor* self, caf::actor balancer) {
     auto dummy = []() {};
     for (const auto& worker : workers_) {
-      self->request(balancer, caf::infinite, add_atom::value, 1, 1).then(dummy);
+      self->request(balancer, caf::infinite, factorial_atom::value, size_t{2})
+          .then(dummy);
     }
   };
   caf::scoped_actor self{system_};
@@ -148,7 +169,7 @@ TEST_F(LoadBalancerTest, should_route_evenly_with_request_then) {
 TEST_F(LoadBalancerTest, should_route_to_first_worker_while_all_are_idle) {
   Prepare(4);
 
-  make_function_view(balancer_)(add_atom::value, 1, 1);
+  make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
 }
@@ -158,7 +179,7 @@ TEST_F(LoadBalancerTest, should_route_to_second_worker_while_first_is_busy) {
   caf::anon_send(balancer_, lock_atom::value);
   caf::actor_cast<Worker*>(workers_[0])->state.WaitForLocked();
 
-  make_function_view(balancer_)(add_atom::value, 1, 1);
+  make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
   EXPECT_THAT(workers_[1], ExecutedTimes(1));
 }
@@ -171,7 +192,7 @@ TEST_F(LoadBalancerTest,
     caf::actor_cast<Worker*>(worker)->state.WaitForLocked();
   });
 
-  make_function_view(balancer_)(add_atom::value, 1, 1);
+  make_function_view(balancer_)(factorial_atom::value, size_t{2});
 
   EXPECT_THAT(workers_[3], ExecutedTimes(1));
 }
@@ -183,7 +204,7 @@ TEST_F(LoadBalancerTest, should_route_to_first_worker_while_all_are_busy) {
     caf::actor_cast<Worker*>(worker)->state.WaitForLocked();
   }
 
-  caf::anon_send(balancer_, add_atom::value, 1, 1);
+  caf::anon_send(balancer_, factorial_atom::value, size_t{2});
   caf::actor_cast<Worker*>(workers_[0])->state.Unlock();
 
   EXPECT_THAT(workers_[0], ExecutedTimes(1));
@@ -201,4 +222,24 @@ TEST_F(LoadBalancerTest, should_exit_workers_while_send_exit_to_balancer) {
 
   auto actual = promise.get_future().get();
   EXPECT_THAT(actual, Eq(reason));
+}
+
+TEST_F(LoadBalancerTest, should_route_even_under_throughput_load) {
+  constexpr size_t concurrent = 4;
+  constexpr size_t times = 200;
+  constexpr size_t x = 3'300'000;
+  Prepare(concurrent);
+
+  auto async = [x](caf::event_based_actor* self, caf::actor balancer) {
+    auto dummy = [](size_t) {};
+    for (size_t i = 0; i < times; ++i) {
+      self->request(balancer, caf::infinite, factorial_atom::value, x)
+          .then(dummy);
+    }
+  };
+  caf::scoped_actor self{system_};
+  auto actor = self->spawn(async, balancer_);
+  self->wait_for(actor);
+
+  EXPECT_THAT(workers_, AllExecutedTimesNear(times / concurrent, 1));
 }

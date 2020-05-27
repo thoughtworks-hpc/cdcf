@@ -45,14 +45,17 @@ void Router::enqueue(caf::mailbox_element_ptr what, caf::execution_unit *host) {
   if (Filter(guard, what, host)) {
     return;
   }
-  if (what->mid.is_response()) {
+  const auto is_response = what->mid.is_response();
+  if (is_response) {
     auto from = caf::actor_cast<caf::actor>(what->sender);
     --metrics_[from].load;
-    return proxy_->Reply(ctrl(), what, host, guard, workers_);
-  } else {
-    auto to = policy_(workers_, GetMetrics(), what);
+    proxy_->Reply(ctrl(), what, host, guard, workers_);
+  }
+  auto this_mail = is_response ? nullptr : std::move(what);
+  auto [to, next_mail] = policy_(workers_, GetMetrics(), this_mail);
+  if (to && next_mail) {
     ++metrics_[to].load;
-    return proxy_->Relay(ctrl(), what, host, guard, to);
+    proxy_->Relay(ctrl(), next_mail, host, guard, to);
   }
 }
 
