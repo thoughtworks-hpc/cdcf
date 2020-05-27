@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+
+#ifndef ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
+#define ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
+
+#include <utility>
+
+#include <caf/all.hpp>
+#include <caf/io/all.hpp>
+
+class ActorGuard {
+ public:
+  ActorGuard(caf::actor& keepActor,
+             std::function<caf::actor(std::atomic<bool>&)> restart,
+             caf::actor_system& system)
+      : keep_actor_(keepActor),
+        restart_fun_(std::move(restart)),
+        sender_actor_(system) {}
+
+  template <class... send_type, class return_function_type>
+  bool SendAndReceive(return_function_type return_function,
+                      std::function<void(caf::error)> error_deal_function,
+                      const send_type&... messages) {
+    if (active_) {
+      caf::message send_message = caf::make_message(messages...);
+
+      sender_actor_->request(keep_actor_, std::chrono::seconds(1), messages...)
+          .receive(return_function, [&](caf::error err) {
+            HandleSendFailed(send_message, return_function, error_deal_function,
+                             err);
+          });
+    }
+
+    return active_;
+  }
+
+ private:
+  template <class return_function_type>
+  void HandleSendFailed(const caf::message& message,
+                        return_function_type return_function,
+                        std::function<void(caf::error)> error_deal_function,
+                        caf::error err) {
+    if ("system" != caf::to_string(err.category())) {
+      // not system error, mean actor not down, this is a business error.
+      error_deal_function(err);
+      return;
+    }
+
+    std::cout << "send msg failed, try restart dest actor." << std::endl;
+    keep_actor_ = restart_fun_(active_);
+
+    if (active_) {
+      std::cout << "restart actor success." << std::endl;
+      (void)SendAndReceive(return_function, error_deal_function, message);
+    } else {
+      std::cout << "restart actor failed. message:" << caf::to_string(message)
+                << " will not deliver." << std::endl;
+    }
+  }
+
+  caf::actor keep_actor_;
+  caf::scoped_actor sender_actor_;
+  std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
+  std::atomic<bool> active_ = true;
+};
+
+#endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_

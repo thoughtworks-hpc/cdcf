@@ -7,7 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-// anti clang-format sort
+
 #include <asio.hpp>
 
 #include "./config.h"

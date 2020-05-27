@@ -22,7 +22,7 @@ typename Inspector::result_type inspect(Inspector& f,
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
-class config : public cdcf_config {
+class config : public CDCFConfig {
  public:
   uint16_t port = 0;
   std::string host = "localhost";
