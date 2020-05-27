@@ -7,10 +7,13 @@
 
 caf::behavior CalculatorFun(caf::stateful_actor<size_t>* self) {
   return {
-      [=](int a, int b) -> int {
-        caf::aout(self) << "received task from a remote node" << std::endl;
+      [=](size_t x) {
         ++self->state;
-        return a + b;
+        size_t result = 1;
+        for (size_t i = 1; i <= x; ++i) {
+          result *= i;
+        }
+        return result;
       },
       [=](int dummy) { return self->state; },
   };

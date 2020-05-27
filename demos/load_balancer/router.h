@@ -70,10 +70,9 @@ class WorkerRouter : public actor_system::cluster::Observer {
     }
   }
 
-  void Start(size_t count, size_t duration_us) {
+  void Start(size_t count, size_t x = size_t{3'300'000}) {
     for (size_t i = 0; i < count; ++i) {
-      caf::anon_send(balancer_, rand(), rand());
-      std::this_thread::sleep_for(std::chrono::microseconds(duration_us));
+      caf::anon_send(balancer_, x);
     }
   }
 

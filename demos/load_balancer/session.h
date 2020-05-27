@@ -27,10 +27,11 @@ class Session : public std::enable_shared_from_this<Session> {
 
   std::string HandleStart(std::istream& in) const {
     size_t count = 0;
-    size_t duration_us = 250;
-    in >> count >> duration_us;
-    router_.Start(count, duration_us);
-    return "";
+    size_t x = 3'300'000;
+    in >> count >> x;
+    router_.Start(count, x);
+    return std::to_string(count) + " tasks of factorial(" + std::to_string(x) +
+           ") were sent\n";
   }
 
   std::string HandleRequest(const std::string& request) {
