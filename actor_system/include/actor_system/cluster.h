@@ -14,10 +14,16 @@
 namespace actor_system {
 namespace cluster {
 struct Member {
+  std::string name;
   std::string host;
   uint16_t port;
   enum Status { Up, Down };
   Status status{Status::Up};
+
+  Member(const std::string& name, const std::string& host, uint16_t port,
+         Status status = Up)
+      : name(name), host(host), port(port), status(status) {}
+
   bool operator==(const struct Member& other) const {
     return host == other.host && port == other.port;
   }
