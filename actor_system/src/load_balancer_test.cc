@@ -92,8 +92,10 @@ class LoadBalancerTest : public ::testing::Test {
   }
 
   void TearDown() override {
-    for (const auto& actor : workers_) {
-      caf::actor_cast<Worker*>(actor)->state.Unlock();
+    if (should_cleanup_) {
+      for (const auto& actor : workers_) {
+        caf::actor_cast<Worker*>(actor)->state.Unlock();
+      }
     }
   }
 
@@ -102,6 +104,7 @@ class LoadBalancerTest : public ::testing::Test {
   caf::scoped_execution_unit context{&system_};
   caf::actor balancer_;
   std::vector<caf::actor> workers_;
+  bool should_cleanup_{true};
 };
 
 TEST_F(LoadBalancerTest, should_work_behind_load_balancer) {
@@ -222,6 +225,7 @@ TEST_F(LoadBalancerTest, should_exit_workers_while_send_exit_to_balancer) {
 
   auto actual = promise.get_future().get();
   EXPECT_THAT(actual, Eq(reason));
+  should_cleanup_ = false;
 }
 
 TEST_F(LoadBalancerTest, should_route_even_under_throughput_load) {
