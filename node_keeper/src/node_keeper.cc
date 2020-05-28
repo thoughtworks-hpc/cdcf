@@ -17,13 +17,17 @@
 
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
-                       const std::vector<gossip::Address>& seeds)
+                       const std::vector<gossip::Address>& seeds,
+                       const std::string& logfile)
     : membership_() {
   std::shared_ptr<gossip::Transportable> transport =
       gossip::CreateTransport(address, address);
 
   membership::Config config;
   config.SetHostMember(name, address.host, address.port);
+  if (!logfile.empty()) {
+    config.SetLogFilePathAndName(logfile);
+  }
 
   const bool is_primary_seed = seeds.empty() || seeds[0] == address;
   if (!is_primary_seed) {

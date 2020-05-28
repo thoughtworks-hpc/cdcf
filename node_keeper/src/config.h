@@ -28,6 +28,7 @@ class Config : public CDCFConfig {
   uint16_t port_ = 4748;
   std::string host_ = "localhost";
   std::string seeds_ = "";
+  std::string logfile_ = "node_keeper.log";
 
   Config() {
     opt_group{custom_options_, "global"}
@@ -35,7 +36,10 @@ class Config : public CDCFConfig {
         .add(port_, "port,p", "set port")
         .add(host_, "host,H", "set host")
         .add(seeds_, "seeds,s",
-             "seeds of cluster, format in: `host:port,host:port`");
+             "seeds of cluster, format in: `host:port,host:port`")
+        .add(logfile_, "log-file",
+             "set log file name, default: node_keeper.log, format in: "
+             "/user/cdcf/node_keeper.log");
   }
 
   std::vector<gossip::Address> GetSeeds() const {

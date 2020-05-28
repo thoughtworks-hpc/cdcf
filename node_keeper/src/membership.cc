@@ -64,6 +64,11 @@ int membership::Membership::Init(
 
   transport_ = transport;
 
+  logger_ = std::make_shared<cdcf::Logger>("node_keeper",
+                                           config.GetLogFilePathAndName());
+  logger_->Info("Node {} {}:{} initializing...", member.GetNodeName(),
+                member.GetIpAddress(), member.GetPort());
+
   if_notify_leave_ = !config.IsLeaveWithoutNotificationEnabled();
 
   gossip_queue_ = std::make_unique<queue::TimedFunctorQueue>(
@@ -158,6 +163,10 @@ int membership::Membership::AddMember(const membership::Member& member) {
     const std::lock_guard<std::mutex> lock(mutex_members_);
     members_[member] = incarnation_;
   }
+
+  logger_->Info("Add new member {} {}:{}", member.GetNodeName(),
+                member.GetIpAddress(), member.GetPort());
+
   Notify();
 
   return 0;
@@ -193,6 +202,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
+    logger_->Info("Receive gossip up message for {}:{}", member.GetIpAddress(),
+                  member.GetPort());
     // Ignore left members
     if (left_members_.find(member) != left_members_.end()) {
       return;

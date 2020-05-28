@@ -15,7 +15,8 @@ class NodeKeeper {
 
  public:
   NodeKeeper(const std::string& name, const gossip::Address& address,
-             const std::vector<gossip::Address>& seeds = {});
+             const std::vector<gossip::Address>& seeds = {},
+             const std::string& logfile = {});
 
   std::vector<membership::Member> GetMembers() const {
     return membership_.GetMembers();

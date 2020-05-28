@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     }
   }
   node_keeper::NodeKeeper keeper(config.name_, {config.host_, config.port_},
-                                 seeds);
+                                 seeds, config.logfile_);
   keeper.Run();
   return 0;
 }

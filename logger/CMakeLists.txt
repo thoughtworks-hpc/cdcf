@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(logging)
+project(logger)
 
 aux_source_directory(src ALL_SOURCES)
 

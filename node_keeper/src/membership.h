@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../logger/include/logger.h"
 #include "src/gossip.h"
 #include "src/queue.h"
 
@@ -62,7 +63,8 @@ class Config {
         failure_detector_interval_(1000),
         leave_without_notification_(false),
         failure_detector_off_(false),
-        relay_ping_enabled_(false) {}
+        relay_ping_enabled_(false),
+        filename_("node_keeper.log") {}
 
   int SetHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
@@ -99,6 +101,11 @@ class Config {
   void EnableRelayPing() { relay_ping_enabled_ = true; }
   bool IsRelayPingEnabled() const { return relay_ping_enabled_; }
 
+  void SetLogFilePathAndName(const std::string& filename) {
+    filename_ = filename;
+  }
+  std::string GetLogFilePathAndName() const { return filename_; }
+
  private:
   Member host_;
   std::vector<Member> seed_members_;
@@ -108,6 +115,7 @@ class Config {
   bool leave_without_notification_;
   bool failure_detector_off_;
   bool relay_ping_enabled_;
+  std::string filename_;
 };
 
 class Subscriber {
@@ -176,6 +184,7 @@ class Membership {
   int retransmit_multiplier_;
   bool if_notify_leave_;
   bool is_relay_ping_enabled_;
+  std::shared_ptr<cdcf::Logger> logger_;
 };
 
 };  // namespace membership
