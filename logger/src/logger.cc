@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
+
 #include "../include/logger.h"
 
 #include <spdlog/sinks/basic_file_sink.h>
@@ -10,11 +11,16 @@
 cdcf::Logger::Logger(const std::string& module_name,
                      const std::string& file_name, int file_size,
                      int file_number) {
-  if (file_size == 0) {
-    logger_ = spdlog::basic_logger_mt(module_name, file_name);
+  auto logger = spdlog::get(module_name);
+  if (logger == nullptr) {
+    if (file_size == 0) {
+      logger_ = spdlog::basic_logger_mt(module_name, file_name);
+    } else {
+      logger_ = spdlog::rotating_logger_mt(module_name, file_name, file_size,
+                                           file_number);
+    }
   } else {
-    logger_ = spdlog::rotating_logger_mt(module_name, file_name, file_size,
-                                         file_number);
+    logger_ = logger;
   }
 }
 
