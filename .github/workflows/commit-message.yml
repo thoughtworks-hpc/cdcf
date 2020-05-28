@@ -22,7 +22,7 @@ jobs:
       - name: Check Title Line Length
         uses: gsactions/commit-message-checker@v1
         with:
-          pattern: '^([^\n]{1,50}|Merge pull request.*|Merge branch .*)(\n.*)?$'
+          pattern: '^([^\n]{1,50}|Merge request.*|Merge .*branch .*)(\n.*)?$'
           flags: 's'
           error: 'The maximum title line length of 50 characters is exceeded, read CONTRIBUTING.md for more details.'
       - name: Check Title Line Separator

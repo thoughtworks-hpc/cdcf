@@ -21,6 +21,9 @@ cmake_install.cmake
 Makefile
 cmake-build-debug
 .idea
+compile_commands.json
+DartConfiguration.tcl
+**/*.cbp
 
 **/*.grpc.pb.cc
 **/*.grpc.pb.h
@@ -28,3 +31,4 @@ cmake-build-debug
 **/*.pb.h
 
 tags
+__pycache__
