@@ -49,6 +49,8 @@ void TimedFunctorQueue::CallFunctors() {
         pair.first();
         std::this_thread::sleep_for(interval_);
       }
+    } else {
+      std::this_thread::sleep_for(interval_);
     }
   }
 }

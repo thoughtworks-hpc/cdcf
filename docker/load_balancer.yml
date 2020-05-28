@@ -1,11 +1,12 @@
-version: "3.7"
+version: "2.2"
 services:
   node_a:
     image: cdcf:latest
     environment:
+      APP: /bin/load_balancer
       HOST: node_a
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      NAME: server
     ports:
       - 50051:50051
       - 3335:3335
@@ -14,9 +15,10 @@ services:
   node_b:
     image: cdcf:latest
     environment:
+      APP: /bin/load_balancer
       HOST: node_b
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      NAME: worker_1
     ports:
       - 50052:50051
     networks:
@@ -24,12 +26,14 @@ services:
   node_c:
     image: cdcf:latest
     environment:
+      APP: /bin/load_balancer
       HOST: node_c
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      NAME: worker_2
     ports:
       - 50053:50051
     networks:
       - cdcf
+    cpus: '0.20'
 networks:
   cdcf:

@@ -11,11 +11,13 @@
 namespace actor_system {
 class Config : public CDCFConfig {
  public:
+  std::string name_ = "";
   std::string host_ = "localhost";
   uint16_t port_ = 4750;
 
   Config() {
     opt_group{custom_options_, "global"}
+        .add(name_, "name,n", "set node name")
         .add(host_, "host,H", "set host")
         .add(port_, "actor_system_port,a", "set port for actor_system");
   }

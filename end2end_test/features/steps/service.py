@@ -1,6 +1,7 @@
 import docker
 import socket
 
+
 class Node:
     Network = 'cdcf_end2end_test'
     Port = 3335
@@ -28,9 +29,9 @@ class Node:
         self.port = Node.Port + 1
         Node.Port = self.port
         self.container = client.containers.run('cdcf', detach=True, network=Node.Network,
-                name=self.name,
-                environment=[f"HOST={self.name}", f"SEEDS={self.seeds}"],
-                ports={'3335/tcp': self.port})
+                                               name=self.name,
+                                               environment=[f"HOST={self.name}", f"SEEDS={self.seeds}"],
+                                               ports={'3335/tcp': self.port})
         return True
 
     def members(self):
@@ -69,6 +70,7 @@ class Node:
         client = docker.from_env()
         network = client.networks.get(Node.Network)
         network.disconnect(self.container)
+
 
 def configure_node(name, seeds):
     return Node(name, seeds)
