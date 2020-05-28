@@ -25,15 +25,37 @@ set(NODE_KEEPER_GRPC_HDRS "${PB_DIR}/node_keeper.grpc.pb.h")
 # gRPC's cmake installation is alternative.
 set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
 add_custom_command(
-      OUTPUT "${NODE_KEEPER_PROTO_SRCS}" "${NODE_KEEPER_PROTO_HDRS}" "${NODE_KEEPER_GRPC_SRCS}" "${NODE_KEEPER_GRPC_HDRS}"
-      COMMAND $<TARGET_FILE:protobuf::protoc>
-      ARGS --grpc_out "${PB_DIR}"
-          --cpp_out "${PB_DIR}"
-          -I "${CMAKE_CURRENT_SOURCE_DIR}/protobuf"
-          --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
-          "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_keeper.proto"
-      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_keeper.proto")
+        OUTPUT "${NODE_KEEPER_PROTO_SRCS}" "${NODE_KEEPER_PROTO_HDRS}" "${NODE_KEEPER_GRPC_SRCS}" "${NODE_KEEPER_GRPC_HDRS}"
+        COMMAND $<TARGET_FILE:protobuf::protoc>
+        ARGS --grpc_out "${PB_DIR}"
+        --cpp_out "${PB_DIR}"
+        -I "${CMAKE_CURRENT_SOURCE_DIR}/protobuf"
+        --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+        "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_keeper.proto"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_keeper.proto")
 list(APPEND ALL_SOURCES ${NODE_KEEPER_PROTO_SRCS} ${NODE_KEEPER_GRPC_SRCS})
+#message("==================================================")
+#message("PB_DIR="${PB_DIR})
+#message("CMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR})
+#message("GRPC_CPP_PLUGIN="${GRPC_CPP_PLUGIN})
+#message("CMAKE_CURRENT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR})
+
+
+set(NODE_MONITOR_PROTO_SRCS "${PB_DIR}/node_monitor.pb.cc")
+set(NODE_MONITOR_PROTO_HDRS "${PB_DIR}/node_monitor.pb.h")
+set(NODE_MONITOR_GRPC_SRCS "${PB_DIR}/node_monitor.grpc.pb.cc")
+set(NODE_MONITOR_GRPC_HDRS "${PB_DIR}/node_monitor.grpc.pb.h")
+add_custom_command(
+        OUTPUT "${NODE_MONITOR_PROTO_SRCS}" "${NODE_MONITOR_PROTO_HDRS}" "${NODE_MONITOR_GRPC_SRCS}" "${NODE_MONITOR_GRPC_HDRS}"
+        COMMAND $<TARGET_FILE:protobuf::protoc>
+        ARGS --grpc_out "${PB_DIR}"
+        --cpp_out "${PB_DIR}"
+        -I "${CMAKE_CURRENT_SOURCE_DIR}/protobuf"
+        --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+        "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_monitor.proto"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/node_monitor.proto")
+list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
+
 
 set(EXE_SOURCES ${ALL_SOURCES})
 list(FILTER EXE_SOURCES EXCLUDE REGEX "^.*_test.cc$")
