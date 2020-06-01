@@ -153,7 +153,8 @@ std::pair<bool, membership::Member> membership::Membership::GetRandomMember()
   return std::make_pair(true, members_without_self[dis(gen)]);
 }
 
-std::pair<bool, membership::Member> membership::Membership::GetRandomPingTarget() const {
+std::pair<bool, membership::Member>
+membership::Membership::GetRandomPingTarget() const {
   std::vector<Member> members_without_self;
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
@@ -169,7 +170,7 @@ std::pair<bool, membership::Member> membership::Membership::GetRandomPingTarget(
       }
     }
 
-    for (const auto &[member, _]: suspects_) {
+    for (const auto& [member, _] : suspects_) {
       members_without_self.push_back(member);
     }
   }
@@ -256,6 +257,14 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
         message.GetIncarnation() >= GetMemberLocalIncarnation(member)) {
       Suspect(member, message.GetIncarnation());
     }
+  } else if (message.IsRecoveryMessage()) {
+    if (!IfBelongsToSuspects(member)) {
+      return;
+    }
+    if (message.GetIncarnation() < GetSuspectLocalIncarnation(member)) {
+      return;
+    }
+    RecoverySuspect(member);
   }
 }
 
@@ -314,8 +323,7 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     std::vector<Member> members;
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
-                           member.first.GetIpAddress(),
-                           member.first.GetPort());
+                           member.first.GetIpAddress(), member.first.GetPort());
     }
     response.InitAsFullStateMessage(members);
 
@@ -402,7 +410,7 @@ void membership::Membership::Ping() {
             if (result.first == gossip::ErrorCode::kOK &&
                 IfBelongsToSuspects(ping_target)) {
               RecoverySuspect(ping_target);
-              return ;
+              return;
             }
 
             if (result.first != gossip::ErrorCode::kOK &&
@@ -543,7 +551,6 @@ void membership::Membership::Notify() {
 
 void membership::Membership::MergeUpUpdate(const Member& member,
                                            unsigned int incarnation) {
-
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
 
@@ -581,16 +588,24 @@ int membership::Membership::GetRetransmitLimit() const {
          static_cast<int>(ceil(log10(members_.size())));
 }
 void membership::Membership::RecoverySuspect(const membership::Member& member) {
+  int incarnation;
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
     members_[member] = suspects_[member];
+    incarnation = members_[member];
   }
   {
     const std::lock_guard<std::mutex> lock(mutex_suspects_);
     suspects_.erase(member);
   }
 
-  // TODO: 这里应该把节点恢复的消息传播出去
+  UpdateMessage message;
+  message.InitAsRecoveryMessage(member, incarnation);
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+
+  gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                      GetRetransmitLimit());
 
   Notify();
 }

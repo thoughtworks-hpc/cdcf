@@ -166,6 +166,7 @@ TEST(Membership, CreateHostMemberWithEmptyConfig) {
             membership::MEMBERSHIP_INIT_HOSTMEMBER_EMPTY);
 }
 
+// TODO: remove duplicate code
 void SimulateReceivingUpMessage(const membership::Member& member,
                                 std::shared_ptr<MockTransport> transport) {
   gossip::Address address{member.GetIpAddress(), member.GetPort()};
@@ -190,6 +191,36 @@ void SimulateReceivingDownMessage(const membership::Member& member,
   transport->CallGossipHandler(address, payload);
 }
 
+void SimulateReceivingSuspectMessage(const membership::Member& member,
+                                     std::shared_ptr<MockTransport> transport) {
+  gossip::Address address{member.GetIpAddress(), member.GetPort()};
+
+  membership::UpdateMessage message;
+  message.InitAsSuspectMessage(member, 1);
+  std::string serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
+
+  transport->CallGossipHandler(address, payload);
+}
+
+void SimulateReceiveMessage(membership::UpdateMessage message,
+                            std::shared_ptr<MockTransport> transport) {
+  auto member = message.GetMember();
+  gossip::Address address{member.GetIpAddress(), member.GetPort()};
+  std::string serialized_msg = message.SerializeToString();
+  gossip::Payload payload(serialized_msg);
+
+  transport->CallGossipHandler(address, payload);
+}
+
+void SimulateReceivingRecoveryMessage(
+    const membership::Member& member,
+    std::shared_ptr<MockTransport> transport) {
+  membership::UpdateMessage message;
+  message.InitAsRecoveryMessage(member, 1);
+  SimulateReceiveMessage(message, transport);
+}
+
 TEST(Membership, NewUpMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
@@ -206,6 +237,32 @@ TEST(Membership, NewUpMessageReceived) {
 
   EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
   EXPECT_TRUE(CompareMembers(my_membership.GetMembers(), members));
+}
+
+TEST(Membership, NewRecoverMessageReceived) {
+  membership::Membership my_membership;
+  auto transport = std::make_shared<MockTransport>();
+  membership::Config config;
+  membership::Member node1{"node1", "127.0.0.1", 27777};
+  config.SetHostMember(node1.GetNodeName(), node1.GetIpAddress(),
+                       node1.GetPort());
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  my_membership.Init(transport, config);
+
+  membership::Member node2{"node2", "127.0.0.1", 28888};
+  SimulateReceivingUpMessage(node2, transport);
+
+  std::vector<membership::Member> members{node1, node2};
+
+  SimulateReceivingSuspectMessage(node2, transport);
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  EXPECT_EQ(1, my_membership.GetSuspects().size());
+  EXPECT_EQ(1, my_membership.GetMembers().size());
+
+  SimulateReceivingRecoveryMessage(node2, transport);
+  EXPECT_EQ(0, my_membership.GetSuspects().size());
+  EXPECT_EQ(2, my_membership.GetMembers().size());
 }
 
 TEST(Membership, DuplicateUpMessageReceived) {
