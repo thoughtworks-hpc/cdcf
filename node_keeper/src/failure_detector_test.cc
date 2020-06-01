@@ -19,7 +19,7 @@
  * then B will notice that
  */
 TEST(FailureDetector,
-     should_detect_node_a_fail_when_node_a_leave_without_notify_and_rejoin_when_node_a_restart) {
+     DISABLED_should_detect_node_a_fail_when_node_a_leave_without_notify_and_rejoin_when_node_a_restart) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
   gossip::Address address_a{"127.0.0.1", 5000};
