@@ -166,43 +166,6 @@ TEST(Membership, CreateHostMemberWithEmptyConfig) {
             membership::MEMBERSHIP_INIT_HOSTMEMBER_EMPTY);
 }
 
-// TODO: remove duplicate code
-void SimulateReceivingUpMessage(const membership::Member& member,
-                                std::shared_ptr<MockTransport> transport) {
-  gossip::Address address{member.GetIpAddress(), member.GetPort()};
-
-  membership::UpdateMessage message;
-  message.InitAsUpMessage(member, 1);
-  std::string serialized_msg = message.SerializeToString();
-  gossip::Payload payload(serialized_msg);
-
-  transport->CallGossipHandler(address, payload);
-}
-
-void SimulateReceivingDownMessage(const membership::Member& member,
-                                  std::shared_ptr<MockTransport> transport) {
-  gossip::Address address{member.GetIpAddress(), member.GetPort()};
-
-  membership::UpdateMessage message;
-  message.InitAsDownMessage(member, 1);
-  std::string serialized_msg = message.SerializeToString();
-  gossip::Payload payload(serialized_msg);
-
-  transport->CallGossipHandler(address, payload);
-}
-
-void SimulateReceivingSuspectMessage(const membership::Member& member,
-                                     std::shared_ptr<MockTransport> transport) {
-  gossip::Address address{member.GetIpAddress(), member.GetPort()};
-
-  membership::UpdateMessage message;
-  message.InitAsSuspectMessage(member, 1);
-  std::string serialized_msg = message.SerializeToString();
-  gossip::Payload payload(serialized_msg);
-
-  transport->CallGossipHandler(address, payload);
-}
-
 void SimulateReceiveMessage(membership::UpdateMessage message,
                             std::shared_ptr<MockTransport> transport) {
   auto member = message.GetMember();
@@ -211,6 +174,28 @@ void SimulateReceiveMessage(membership::UpdateMessage message,
   gossip::Payload payload(serialized_msg);
 
   transport->CallGossipHandler(address, payload);
+}
+
+
+void SimulateReceivingUpMessage(const membership::Member& member,
+                                std::shared_ptr<MockTransport> transport) {
+  membership::UpdateMessage message;
+  message.InitAsUpMessage(member, 1);
+  SimulateReceiveMessage(message, transport);
+}
+
+void SimulateReceivingDownMessage(const membership::Member& member,
+                                  std::shared_ptr<MockTransport> transport) {
+  membership::UpdateMessage message;
+  message.InitAsDownMessage(member, 1);
+  SimulateReceiveMessage(message, transport);
+}
+
+void SimulateReceivingSuspectMessage(const membership::Member& member,
+                                     std::shared_ptr<MockTransport> transport) {
+  membership::UpdateMessage message;
+  message.InitAsSuspectMessage(member, 1);
+  SimulateReceiveMessage(message, transport);
 }
 
 void SimulateReceivingRecoveryMessage(

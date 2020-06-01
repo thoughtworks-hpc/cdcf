@@ -153,6 +153,7 @@ std::pair<bool, membership::Member> membership::Membership::GetRandomMember()
   return std::make_pair(true, members_without_self[dis(gen)]);
 }
 
+// TODO: performance can be improve
 std::pair<bool, membership::Member>
 membership::Membership::GetRandomPingTarget() const {
   std::vector<Member> members_without_self;
