@@ -176,7 +176,6 @@ void SimulateReceiveMessage(membership::UpdateMessage message,
   transport->CallGossipHandler(address, payload);
 }
 
-
 void SimulateReceivingUpMessage(const membership::Member& member,
                                 std::shared_ptr<MockTransport> transport) {
   membership::UpdateMessage message;
