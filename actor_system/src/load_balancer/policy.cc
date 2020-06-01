@@ -65,6 +65,9 @@ class MinLoadImpl {
   }
 
   void Release(caf::mailbox_element_ptr &mail) {
+    if (mails_.empty()) {
+      return;
+    }
     if (mail) {
       mails_.emplace(std::move(mail));
     }
