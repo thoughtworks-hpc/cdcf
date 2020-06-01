@@ -153,7 +153,7 @@ std::pair<bool, membership::Member> membership::Membership::GetRandomMember()
   return std::make_pair(true, members_without_self[dis(gen)]);
 }
 
-// TODO: performance can be improve
+// TODO(Yujia.Li): performance can be improve
 std::pair<bool, membership::Member>
 membership::Membership::GetRandomPingTarget() const {
   std::vector<Member> members_without_self;
@@ -223,7 +223,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
-    // TODO: member's address here would be `HOST` in config
+    // TODO(Yujia.Li): member's address here would be `HOST` in config
 
     if (IfBelongsToSuspects(member) &&
         GetSuspectLocalIncarnation(member) >= message.GetIncarnation()) {
@@ -320,7 +320,7 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   if (message.IsFullStateType()) {
     FullStateMessage response;
 
-    // TODO: message's IP here would be IPv4
+    // TODO(Yujia.Li): message's IP here would be IPv4
     std::vector<Member> members;
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
