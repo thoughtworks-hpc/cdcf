@@ -246,6 +246,6 @@ TEST_F(LoadBalancerTest, should_roughly_route_even_under_throughput_load) {
   auto actor = self->spawn(async, balancer_);
   self->wait_for(actor);
 
-  EXPECT_THAT(workers_,
-              AllExecutedTimesNear(times / concurrent, load_threshold * 2));
+  EXPECT_THAT(workers_, AllExecutedTimesNear(times / concurrent,
+                                             load_threshold * concurrent));
 }
