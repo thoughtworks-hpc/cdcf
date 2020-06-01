@@ -125,8 +125,7 @@ class PortOccupied : public std::runtime_error {
       : std::runtime_error(e.what()) {}
 };
 
-// TODO: typo upd => udp
-std::unique_ptr<Transportable> CreateTransport(const Address &upd,
+std::unique_ptr<Transportable> CreateTransport(const Address &udp,
                                                const Address &tcp);
 
 class Transport : public Transportable {

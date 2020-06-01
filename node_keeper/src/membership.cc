@@ -221,7 +221,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
-    // TODO: 这里的地址会收到配置文件里面配置的HOST
+    // TODO: member's address here would be `HOST` in config
 
     if (IfBelongsToSuspects(member) &&
         GetSuspectLocalIncarnation(member) >= message.GetIncarnation()) {
@@ -310,7 +310,7 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   if (message.IsFullStateType()) {
     FullStateMessage response;
 
-    // TODO: 这里的IpAddress会收到IPv4
+    // TODO: message's IP here would be IPv4
     std::vector<Member> members;
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
@@ -595,15 +595,10 @@ void membership::Membership::RecoverySuspect(const membership::Member& member) {
   Notify();
 }
 
-// TODO: simplify
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
-  if (lhs.GetIpAddress() == rhs.GetIpAddress() &&
-      lhs.GetPort() == rhs.GetPort()) {
-    return true;
-  } else {
-    return false;
-  }
+  return lhs.GetIpAddress() == rhs.GetIpAddress() &&
+         lhs.GetPort() == rhs.GetPort();
 }
 
 bool membership::operator!=(const membership::Member& lhs,
