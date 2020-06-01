@@ -153,6 +153,34 @@ std::pair<bool, membership::Member> membership::Membership::GetRandomMember()
   return std::make_pair(true, members_without_self[dis(gen)]);
 }
 
+std::pair<bool, membership::Member> membership::Membership::GetRandomPingTarget() const {
+  std::vector<Member> members_without_self;
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    const std::lock_guard<std::mutex> lock_suspect(mutex_suspects_);
+
+    if (members_.size() + suspects_.size() <= 1) {
+      return std::make_pair(false, Member());
+    }
+
+    for (const auto& [member, _] : members_) {
+      if (member != self_) {
+        members_without_self.push_back(member);
+      }
+    }
+
+    for (const auto &[member, _]: suspects_) {
+      members_without_self.push_back(member);
+    }
+  }
+
+  static std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(0, members_without_self.size() - 1);
+
+  return std::make_pair(true, members_without_self[dis(gen)]);
+}
+
 int membership::Membership::AddMember(const membership::Member& member) {
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
@@ -193,10 +221,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
-    // Ignore left members
-    if (left_members_.find(member) != left_members_.end()) {
-      return;
-    }
+    // TODO: 这里的地址会收到配置文件里面配置的HOST
 
     if (IfBelongsToSuspects(member) &&
         GetSuspectLocalIncarnation(member) >= message.GetIncarnation()) {
@@ -277,16 +302,6 @@ void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
   }
 }
 
-bool membership::Membership::IsLeftMember(const gossip::Address& address) {
-  for (auto member : left_members_) {
-    if (member.GetPort() == address.port &&
-        member.GetIpAddress() == address.host) {
-      return true;
-    }
-  }
-  return false;
-}
-
 std::vector<uint8_t> membership::Membership::HandlePull(
     const gossip::Address& address, const void* data, size_t size) {
   std::string message_serialized = "pull";
@@ -295,17 +310,14 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   if (message.IsFullStateType()) {
     FullStateMessage response;
 
-    if (IsLeftMember(address)) {
-      response.InitAsReentryRejected();
-    } else {
-      std::vector<Member> members;
-      for (const auto& member : members_) {
-        members.emplace_back(member.first.GetNodeName(),
-                             member.first.GetIpAddress(),
-                             member.first.GetPort());
-      }
-      response.InitAsFullStateMessage(members);
+    // TODO: 这里的IpAddress会收到IPv4
+    std::vector<Member> members;
+    for (const auto& member : members_) {
+      members.emplace_back(member.first.GetNodeName(),
+                           member.first.GetIpAddress(),
+                           member.first.GetPort());
     }
+    response.InitAsFullStateMessage(members);
 
     message_serialized = response.SerializeToString();
   } else if (message.IsPingType()) {
@@ -375,19 +387,24 @@ void membership::Membership::Ping() {
       message.InitAsPingType();
       std::string pull_request_message = message.SerializeToString();
 
-      auto pair = GetRandomMember();
-      if (!pair.first) {
+      auto [get_success, random_member] = GetRandomPingTarget();
+      if (!get_success) {
         Ping();
         return;
       }
 
-      auto ping_target = pair.second;
+      auto ping_target = random_member;
       gossip::Address address{ping_target.GetIpAddress(),
                               ping_target.GetPort()};
-
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
+            if (result.first == gossip::ErrorCode::kOK &&
+                IfBelongsToSuspects(ping_target)) {
+              RecoverySuspect(ping_target);
+              return ;
+            }
+
             if (result.first != gossip::ErrorCode::kOK &&
                 IfBelongsToMembers(ping_target)) {
               if (is_relay_ping_enabled_) {
@@ -441,8 +458,6 @@ void membership::Membership::RelayPing(const membership::Member& ping_target,
 void membership::Membership::Suspect(const Member& member,
                                      unsigned int incarnation) {
   if (IfBelongsToMembers(member)) {
-    left_members_.insert(member);
-
     AddOrUpdateSuspect(member, incarnation);
 
     UpdateMessage update;
@@ -528,9 +543,6 @@ void membership::Membership::Notify() {
 
 void membership::Membership::MergeUpUpdate(const Member& member,
                                            unsigned int incarnation) {
-  if (left_members_.find(member) != left_members_.end()) {
-    return;
-  }
 
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
@@ -557,7 +569,6 @@ void membership::Membership::MergeDownUpdate(const Member& member,
     if (members_.find(member) == members_.end()) {
       return;
     }
-    left_members_.insert(member);
     members_.erase(member);
   }
 
@@ -569,7 +580,22 @@ int membership::Membership::GetRetransmitLimit() const {
   return retransmit_multiplier_ *
          static_cast<int>(ceil(log10(members_.size())));
 }
+void membership::Membership::RecoverySuspect(const membership::Member& member) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    members_[member] = suspects_[member];
+  }
+  {
+    const std::lock_guard<std::mutex> lock(mutex_suspects_);
+    suspects_.erase(member);
+  }
 
+  // TODO: 这里应该把节点恢复的消息传播出去
+
+  Notify();
+}
+
+// TODO: simplify
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
   if (lhs.GetIpAddress() == rhs.GetIpAddress() &&
