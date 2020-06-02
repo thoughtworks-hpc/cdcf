@@ -28,5 +28,10 @@ services:
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
       - cdcf
+  yanghui_monitor:
+    image: cdcf:latest
+    networks:
+      - cdcf
+    command: /bin/bash -c "sleep 1000000000"
 networks:
   cdcf:
