@@ -1,18 +1,24 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/field_mask.proto";
-import "google/protobuf/any.proto";
 
 service NodeMonitor {
     rpc GetStatus (google.protobuf.Empty) returns (NodeStatus) {
+    }
+    rpc GetAllNodeStatus (google.protobuf.Empty) returns (AllNodeStatus) {
     }
 }
 
 message NodeStatus {
     double cpu_use_rate = 1;
     double mem_use_rate = 2;
-    int64 max_memory = 3;
-    int64 use_memory = 4;
+    uint64 max_memory = 3;
+    uint64 use_memory = 4;
+    string ip = 5;
+    string error_message = 6;
+}
+
+message AllNodeStatus {
+    repeated NodeStatus node_status = 1;
 }
 

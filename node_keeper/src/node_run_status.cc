@@ -1,8 +1,8 @@
-//
-// Created by Mingfei Deng on 2020/5/15.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
-#include "../include/NodeRunStatus.h"
+#include "node_run_status.h"
 
 #include <unistd.h>
 
@@ -32,11 +32,11 @@ NodeRunStatus *NodeRunStatus::GetInstance() {
       instance = nullptr;
       if (nullptr == cpu_info) {
         std::cout << "init NodeRunStatus singleton failed. cpu info read form "
-                  << *kCpuInfoFilePath << " failed.";
+                  << std::string(kCpuInfoFilePath) << " failed." << std::endl;
       } else {
         std::cout
             << "init NodeRunStatus singleton failed. memory info read form "
-            << *kMemoryInfoFilePath << " failed.";
+            << std::string(kMemoryInfoFilePath) << " failed." << std::endl;
       }
     }
   }

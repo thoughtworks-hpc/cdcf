@@ -15,4 +15,5 @@ add_subdirectory(actor_monitor)
 add_subdirectory(actor_system)
 add_subdirectory(demos)
 add_subdirectory(actor_fault_tolerance)
-add_subdirectory(supervisory)
+add_subdirectory(cluster_monitor)
+

@@ -19,6 +19,7 @@ COPY actor_fault_tolerance actor_fault_tolerance
 COPY actor_monitor actor_monitor
 COPY actor_system actor_system
 COPY demos demos
+COPY cluster_monitor cluster_monitor
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
     && cmake --build . -j 8 \
     && ctest --output-on-failure
@@ -28,6 +29,8 @@ COPY --from=builder /cdcf/node_keeper/node_keeper /bin/node_keeper
 COPY --from=builder /cdcf/demos/cluster/cluster /bin/cluster
 COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root_v2 /bin/yanghui_cluster_root_v2
 COPY --from=builder /cdcf/demos/load_balancer/load_balancer /bin/load_balancer
+COPY --from=builder /cdcf/cluster_monitor/cluster_monitor_client /bin/cluster_monitor_client
+
 COPY docker/script.sh /bin/script.sh
 ENV APP=/bin/cluster
 #ENTRYPOINT ["/bin/script.sh"]

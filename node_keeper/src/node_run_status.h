@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/5/15.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
 #ifndef UNTITLED_NODERUNSTATUS_H
 #define UNTITLED_NODERUNSTATUS_H
