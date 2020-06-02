@@ -60,13 +60,17 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
     ::NodeStatus resp;
     grpc::Status status = client.GetStatus(&query_context, {}, &resp);
 
+    auto new_node_status = response->add_node_status();
+
     if (status.ok()) {
-      auto new_node_status = response->add_node_status();
       new_node_status->set_max_memory(resp.max_memory());
       new_node_status->set_use_memory(resp.use_memory());
       new_node_status->set_mem_use_rate(resp.mem_use_rate());
       new_node_status->set_cpu_use_rate(resp.cpu_use_rate());
       new_node_status->set_ip(host_ip);
+    } else {
+      new_node_status->set_ip(host_ip);
+      new_node_status->set_error_message(status.error_message());
     }
   }
 
