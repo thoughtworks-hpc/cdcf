@@ -11,6 +11,7 @@ message MemberUpdate {
         UP = 0;
         DOWN = 1;
         SUSPECT = 2;
+        RECOVERY = 3;
     }
 
     required MemberStatus status = 4;

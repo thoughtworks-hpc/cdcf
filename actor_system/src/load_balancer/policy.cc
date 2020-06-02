@@ -60,13 +60,14 @@ class MinLoadImpl {
 
   void Hold(caf::mailbox_element_ptr &mail) {
     if (mail) {
-      auto m = make_mailbox_element(mail->sender, mail->mid, mail->stages,
-                                    mail->copy_content_to_message());
-      mails_.emplace(std::move(m));
+      mails_.emplace(std::move(mail));
     }
   }
 
   void Release(caf::mailbox_element_ptr &mail) {
+    if (mails_.empty()) {
+      return;
+    }
     if (mail) {
       mails_.emplace(std::move(mail));
     }

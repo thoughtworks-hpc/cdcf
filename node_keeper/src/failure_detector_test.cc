@@ -15,24 +15,31 @@
  * given a cluster of two nodes A B running normally
  * when A leaves without notifying B
  * then B will detect A fails
+ * and A restart
+ * then B will notice that
  */
 TEST(FailureDetector,
-     DISABLED_should_detect_node_a_fail_when_node_a_leave_without_notify) {
+     DISABLED_should_detect_node_a_fail_and_rejoin_when_node_a_restart) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
-  config_a.SetHostMember("node_a", "127.0.0.1", 50000);
+  gossip::Address address_a{"127.0.0.1", 5000};
+  std::string name_a = "node_a";
+  config_a.SetHostMember(name_a, address_a.host, address_a.port);
   config_a.EnableLeaveWithoutNotification();
+
   std::shared_ptr<gossip::Transportable> transport_a =
-      gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
+      gossip::CreateTransport(address_a, address_a);
   node_a_ptr->Init(transport_a, config_a);
 
   membership::Membership node_b;
   membership::Config config_b;
-  config_b.SetHostMember("node_b", "127.0.0.1", 50001);
-  config_b.AddOneSeedMember("node_a", "127.0.0.1", 50000);
+  gossip::Address address_b{"127.0.0.1", 50001};
+  std::string name_b = "node_b";
+  config_b.SetHostMember(name_b, address_b.host, address_b.port);
+  config_b.AddOneSeedMember(name_a, address_a.host, address_a.port);
   config_b.SetFailureDetectorIntervalInMilliSeconds(500);
   std::shared_ptr<gossip::Transportable> transport_b =
-      gossip::CreateTransport({"127.0.0.1", 50001}, {"127.0.0.1", 50001});
+      gossip::CreateTransport(address_b, address_b);
   node_b.Init(transport_b, config_b);
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -49,8 +56,18 @@ TEST(FailureDetector,
   EXPECT_EQ(1, node_b.GetMembers().size());
   EXPECT_EQ(1, node_b.GetSuspects().size());
   auto expected_suspects =
-      std::vector<membership::Member>{{"node_a", "127.0.0.1", 50000}};
+      std::vector<membership::Member>{{name_a, address_a.host, address_a.port}};
   EXPECT_EQ(expected_suspects, node_b.GetSuspects());
+
+  // node restart
+  node_a_ptr = std::make_unique<membership::Membership>();
+  transport_a = gossip::CreateTransport(address_a, address_a);
+  node_a_ptr->Init(transport_a, config_a);
+
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  EXPECT_EQ(2, node_b.GetMembers().size());
+  EXPECT_TRUE(node_b.GetSuspects().empty());
 }
 
 /*

@@ -43,6 +43,15 @@ void membership::UpdateMessage::InitAsSuspectMessage(const Member& member,
   update_.set_incarnation(incarnation);
 }
 
+void membership::UpdateMessage::InitAsRecoveryMessage(
+    const Member& member, unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_status(MemberUpdate::RECOVERY);
+  update_.set_incarnation(incarnation);
+}
+
 membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
                 static_cast<uint16_t>(update_.port())};
@@ -59,6 +68,11 @@ bool membership::UpdateMessage::IsDownMessage() const {
 bool membership::UpdateMessage::IsSuspectMessage() const {
   return !(!update_.IsInitialized() ||
            update_.status() != MemberUpdate::SUSPECT);
+}
+
+bool membership::UpdateMessage::IsRecoveryMessage() const {
+  return !(!update_.IsInitialized() ||
+           update_.status() != MemberUpdate::RECOVERY);
 }
 
 void membership::FullStateMessage::InitAsFullStateMessage(

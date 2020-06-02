@@ -105,7 +105,7 @@ int NodeRunStatus::GetMemoryState(MemoryStatus &memory_info) {
 
   fgets(buff, sizeof(buff), memory_file);
   // memory_available = strtoul(buff, &check_str, 10);
-  sscanf(buff, "%s %lu ", check_str, &memory_available);
+  sscanf(buff, "%s %llu ", check_str, &memory_available);
   if (0 != strcmp(check_str, kMemoryAvailable)) {
     std::cout << "line head(" << kMemoryAvailable
               << ") not match when read memory file" << std::endl;
