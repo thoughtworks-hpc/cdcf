@@ -2,15 +2,15 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef UNTITLED_NODERUNSTATUS_H
-#define UNTITLED_NODERUNSTATUS_H
+#ifndef NODE_KEEPER_SRC_NODE_RUN_STATUS_H_
+#define NODE_KEEPER_SRC_NODE_RUN_STATUS_H_
 #include <cstdio>
 #include <memory>
 #include <mutex>
 
 struct MemoryStatus {
-  unsigned long max_memory;
-  unsigned long use_memory;
+  uint64_t max_memory;
+  uint64_t use_memory;
   double useRate;
 };
 
@@ -22,13 +22,13 @@ class NodeRunStatus {
 
  private:
   struct CpuInfo {
-    unsigned long user;
-    unsigned long nice;
-    unsigned long system;
-    unsigned long idle;
-    unsigned long io_wait;
-    unsigned long irq;
-    unsigned long soft_irq;
+    uint64_t user;
+    uint64_t nice;
+    uint64_t system;
+    uint64_t idle;
+    uint64_t io_wait;
+    uint64_t irq;
+    uint64_t soft_irq;
   };
 
   NodeRunStatus(FILE *memoryFile, FILE *cpuFile);
@@ -38,4 +38,4 @@ class NodeRunStatus {
   FILE *cpu_file;
 };
 
-#endif  // UNTITLED_NODERUNSTATUS_H
+#endif  // NODE_KEEPER_SRC_NODE_RUN_STATUS_H_

@@ -2,15 +2,14 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#include "node_run_status.h"
+#include "src/node_run_status.h"
 
 #include <unistd.h>
 
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <mutex>
-#include <thread>
+#include <string>
 
 static const char *kCpuInfoFilePath = "/proc/stat";
 static const char *kMemoryInfoFilePath = "/proc/meminfo";
@@ -57,9 +56,9 @@ void NodeRunStatus::GetCpuInfo(CpuInfo &cpu_info) {
 
   fgets(buff, sizeof(buff), cpu_file);
 
-  sscanf(buff, "%s %lu %lu %lu %lu %lu %lu %lu", cpu_name, &cpu_info.user,
-         &cpu_info.nice, &cpu_info.system, &cpu_info.idle, &cpu_info.io_wait,
-         &cpu_info.irq, &cpu_info.soft_irq);
+  sscanf(buff, "%s %llu %llu %llu %llu %llu %llu %llu", cpu_name,
+         &cpu_info.user, &cpu_info.nice, &cpu_info.system, &cpu_info.idle,
+         &cpu_info.io_wait, &cpu_info.irq, &cpu_info.soft_irq);
 }
 
 double NodeRunStatus::GetCpuRate() {
@@ -70,13 +69,13 @@ double NodeRunStatus::GetCpuRate() {
   usleep(100000);
   GetCpuInfo(cpu_info2);
 
-  unsigned long sum = (cpu_info2.user + cpu_info2.nice + cpu_info2.idle +
-                       cpu_info2.io_wait + cpu_info2.irq + cpu_info2.soft_irq) -
-                      (cpu_info1.user + cpu_info1.nice + cpu_info1.idle +
-                       cpu_info1.io_wait + cpu_info1.irq + cpu_info1.soft_irq);
-  unsigned long idle = cpu_info2.idle - cpu_info1.idle;
+  uint64_t sum = (cpu_info2.user + cpu_info2.nice + cpu_info2.idle +
+                  cpu_info2.io_wait + cpu_info2.irq + cpu_info2.soft_irq) -
+                 (cpu_info1.user + cpu_info1.nice + cpu_info1.idle +
+                  cpu_info1.io_wait + cpu_info1.irq + cpu_info1.soft_irq);
+  uint64_t idle = cpu_info2.idle - cpu_info1.idle;
 
-  return double(sum - idle) / double(sum);
+  return static_cast<double>(sum - idle) / static_cast<double>(sum);
 }
 
 static const char *kMemoryTotal = "MemTotal:";
@@ -85,15 +84,15 @@ static const char *kMemoryAvailable = "MemAvailable:";
 int NodeRunStatus::GetMemoryState(MemoryStatus &memory_info) {
   char buff[256];
   char check_str[20];
-  unsigned long memory_total;
+  uint64_t memory_total;
   // unsigned long memory_free;
-  unsigned long memory_available;
+  uint64_t memory_available;
 
   fflush(memory_file);
   rewind(memory_file);
   fgets(buff, sizeof(buff), memory_file);
 
-  sscanf(buff, "%s %lu ", check_str, &memory_total);
+  sscanf(buff, "%s %llu ", check_str, &memory_total);
   if (0 != strcmp(check_str, kMemoryTotal)) {
     std::cout << "line head(" << kMemoryTotal
               << ") not match when read memory file" << std::endl;
@@ -115,8 +114,8 @@ int NodeRunStatus::GetMemoryState(MemoryStatus &memory_info) {
 
   memory_info.max_memory = memory_total;
   memory_info.use_memory = memory_total - memory_available;
-  memory_info.useRate =
-      double(memory_info.use_memory) * 1.0 / double(memory_total);
+  memory_info.useRate = static_cast<double>(memory_info.use_memory) * 1.0 /
+                        static_cast<double>(memory_total);
 
   return 0;
 }

@@ -1,16 +1,16 @@
-//
-// Created by Mingfei Deng on 2020/5/28.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
-#ifndef CDCF_NODE_STATUS_GRPC_IMPL_H
-#define CDCF_NODE_STATUS_GRPC_IMPL_H
+#ifndef NODE_KEEPER_SRC_NODE_STATUS_GRPC_IMPL_H_
+#define NODE_KEEPER_SRC_NODE_STATUS_GRPC_IMPL_H_
 #include "src/membership.h"
 #include "src/node_monitor.grpc.pb.h"
 
 namespace node_keeper {
 class NodeStatusGRPCImpl final : public ::NodeMonitor::Service {
  public:
-  NodeStatusGRPCImpl(membership::Membership& clusterMember);
+  explicit NodeStatusGRPCImpl(membership::Membership& clusterMember);
   ~NodeStatusGRPCImpl() override;
   ::grpc::Status GetStatus(::grpc::ServerContext* context,
                            const ::google::protobuf::Empty* request,
@@ -24,4 +24,4 @@ class NodeStatusGRPCImpl final : public ::NodeMonitor::Service {
 };
 }  // namespace node_keeper
 
-#endif  // CDCF_NODE_STATUS_GRPC_IMPL_H
+#endif  // NODE_KEEPER_SRC_NODE_STATUS_GRPC_IMPL_H_

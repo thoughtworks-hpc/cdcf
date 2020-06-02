@@ -1,12 +1,15 @@
-//
-// Created by Mingfei Deng on 2020/5/28.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
-#include "node_status_grpc_impl.h"
+#include "src/node_status_grpc_impl.h"
 
 #include <grpcpp/create_channel.h>
 
-#include "node_run_status.h"
+#include <string>
+#include <vector>
+
+#include "./node_run_status.h"
 
 node_keeper::NodeStatusGRPCImpl::~NodeStatusGRPCImpl() = default;
 
