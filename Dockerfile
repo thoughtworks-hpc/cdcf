@@ -18,6 +18,7 @@ COPY node_keeper node_keeper
 COPY actor_fault_tolerance actor_fault_tolerance
 COPY actor_monitor actor_monitor
 COPY actor_system actor_system
+COPY logger logger
 COPY demos demos
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
     && cmake --build . -j 8 \

@@ -3,7 +3,7 @@ echo "running on host: $HOST"
 echo "seeds: $SEEDS"
 NAME=${NAME:-$HOST}
 echo "name: ${NAME}"
-echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445
-/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 &
+echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 --log-file=$LOGFILE --log-level=$LOGLEVEL --log-file-size=$LOGFILESIZE
+/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 --log-file=$LOGFILE --log-level=$LOGLEVEL --log-file-size=$LOGFILESIZE&
 echo $APP --host=$HOST --name=$NAME $APP_ARGS
 $APP --host=$HOST --name=$NAME $APP_ARGS
