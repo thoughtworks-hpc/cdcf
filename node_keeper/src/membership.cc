@@ -55,19 +55,20 @@ int membership::Membership::Init(
   if (member.IsEmptyMember()) {
     return MEMBERSHIP_INIT_HOSTMEMBER_EMPTY;
   }
+
+  logger_ = std::make_shared<cdcf::Logger>(config.GetLoggerName());
+  logger_->Info("Node {} {}:{} initializing...", member.GetNodeName(),
+                member.GetIpAddress(), member.GetPort());
+
   self_ = member;
   AddMember(member);
 
   if (transport == nullptr) {
+    logger_->Critical("No transport layer specified!");
     return MEMBERSHIP_INIT_TRANSPORT_EMPTY;
   }
 
   transport_ = transport;
-
-  logger_ = std::make_shared<cdcf::Logger>("node_keeper",
-                                           config.GetLogFilePathAndName());
-  logger_->Info("Node {} {}:{} initializing...", member.GetNodeName(),
-                member.GetIpAddress(), member.GetPort());
 
   if_notify_leave_ = !config.IsLeaveWithoutNotificationEnabled();
 
@@ -114,7 +115,10 @@ void membership::Membership::PullFromSeedMember() {
   std::string pull_request_message = message.SerializeToString();
 
   if (transport_) {
-    transport_->Pull(GetRandomSeedAddress(), pull_request_message.data(),
+    auto random_address = GetRandomSeedAddress();
+    logger_->Info("Try to pull from seed {}:{}", random_address.host,
+                  random_address.port);
+    transport_->Pull(random_address, pull_request_message.data(),
                      pull_request_message.size(),
                      [this](const gossip::Transportable::PullResult& result) {
                        if (result.first == gossip::ErrorCode::kOK) {
@@ -223,6 +227,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
                         GetRetransmitLimit());
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
   } else if (message.IsDownMessage()) {
+    logger_->Info("Receive gossip down message for {}:{}",
+                  member.GetIpAddress(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -465,7 +471,8 @@ void membership::Membership::Suspect(const Member& member,
       const std::lock_guard<std::mutex> lock(mutex_members_);
       members_.erase(member);
     }
-
+    logger_->Info("Start to suspect member {} {}:{}", member.GetNodeName(),
+                  member.GetIpAddress(), member.GetPort());
     gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                         GetRetransmitLimit());
 

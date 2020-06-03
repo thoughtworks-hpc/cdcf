@@ -1,11 +1,11 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "src/config.h"
-
 #include <gmock/gmock.h>
 
 #include <array>
+
+#include "src/node_keeper.h"
 
 using testing::ContainerEq, testing::Eq;
 

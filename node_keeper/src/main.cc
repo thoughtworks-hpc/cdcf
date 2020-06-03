@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "src/config.h"
 #include "src/node_keeper.h"
 
 int main(int argc, char *argv[]) {
@@ -19,7 +18,7 @@ int main(int argc, char *argv[]) {
     }
   }
   node_keeper::NodeKeeper keeper(config.name_, {config.host_, config.port_},
-                                 seeds, config.logfile_);
+                                 seeds, config);
   keeper.Run();
   return 0;
 }

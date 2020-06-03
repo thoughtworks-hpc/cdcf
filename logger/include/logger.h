@@ -24,8 +24,9 @@ class Logger {
     LOG_LEVEL_OFF = 6,
   };
 
-  Logger(const std::string& module_name, const std::string& file_name,
-         int file_size = 0, int file_number = 0);
+  Logger(const std::string& module_name,
+         const std::string& file_name = "default.log",
+         int file_size_in_bytes = 0, int file_number = 0);
 
   template <typename... Args>
   void Trace(const std::string& fmt, const Args&... args) {
@@ -129,7 +130,7 @@ class Logger {
     }
   }
 
-  void SetLevel(enum log_level level);
+  void SetLevel(const std::string& level);
   void EnableFileNameAndLineNumber();
   void DisableFileNameAndLineNumber();
 

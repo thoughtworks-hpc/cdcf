@@ -18,27 +18,39 @@
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
                        const std::vector<gossip::Address>& seeds,
-                       const std::string& logfile)
+                       const Config& other_config)
     : membership_() {
+  std::string log_file{other_config.log_file_};
+  std::string log_level{other_config.log_level_};
+  uint16_t log_file_size = other_config.log_file_size_in_bytes_;
+  uint16_t log_file_num = other_config.log_file_number_;
+
+  logger_ = std::make_shared<cdcf::Logger>(logger_name_, log_file,
+                                           log_file_size, log_file_num);
+  logger_->SetLevel(log_level);
+
+  CDCF_LOGGER_DEBUG(logger_, "Log file name is {}", log_file);
+  CDCF_LOGGER_DEBUG(logger_, "Log file level is {}", log_level);
+  CDCF_LOGGER_DEBUG(logger_, "Log file size is {}", log_file_size);
+  CDCF_LOGGER_DEBUG(logger_, "Log file number is {}", log_file_num);
+
   std::shared_ptr<gossip::Transportable> transport =
       gossip::CreateTransport(address, address);
 
-  membership::Config config;
-  config.SetHostMember(name, address.host, address.port);
-  if (!logfile.empty()) {
-    config.SetLogFilePathAndName(logfile);
-  }
+  membership::Config membership_config;
+  membership_config.SetHostMember(name, address.host, address.port);
+  membership_config.SetLoggerName(logger_name_);
 
   const bool is_primary_seed = seeds.empty() || seeds[0] == address;
   if (!is_primary_seed) {
     for (auto& seed : seeds) {
       if (address != seed) {
-        config.AddOneSeedMember("", seed.host, seed.port);
+        membership_config.AddOneSeedMember("", seed.host, seed.port);
       }
     }
   }
 
-  membership_.Init(transport, config);
+  membership_.Init(transport, membership_config);
 }
 
 class Subscriber : public membership::Subscriber {
