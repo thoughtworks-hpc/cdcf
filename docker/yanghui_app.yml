@@ -43,6 +43,11 @@ services:
       - cdcf
     volumes:
       - /tmp:/tmp
+  yanghui_monitor:
+    image: cdcf:latest
+    networks:
+      - cdcf
+    command: /bin/bash -c "sleep 1000000000"
 networks:
   cdcf:
     driver: bridge

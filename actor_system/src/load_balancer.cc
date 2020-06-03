@@ -135,6 +135,7 @@ void Router::ClearWorker(Lock &guard) {
     worker->detach(token);
   }
   workers_.clear();
+  metrics_.clear();
 }
 
 void Router::Exit(Lock &guard, caf::execution_unit *eu,

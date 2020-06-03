@@ -148,6 +148,7 @@ class Membership {
                     const gossip::Payload& payload);
   gossip::Address GetRandomSeedAddress() const;
   std::pair<bool, membership::Member> GetRandomMember() const;
+  std::pair<bool, membership::Member> GetRandomPingTarget() const;
   std::pair<bool, membership::Member> GetRelayMember(
       const std::set<Member>& exclude_members) const;
   std::vector<gossip::Address> GetAllMemberAddress();
@@ -162,7 +163,7 @@ class Membership {
   void Ping();
   void RelayPing(const Member& ping_target, std::set<Member> exclude_members);
   void Suspect(const Member& member, unsigned int incarnation);
-  bool IsLeftMember(const gossip::Address& address);
+  void RecoverySuspect(const Member& member);
   int GetRetransmitLimit() const;
 
   void NotifyLeave();
@@ -173,7 +174,6 @@ class Membership {
   mutable std::mutex mutex_suspects_;
   Member self_;
   std::vector<Member> seed_members_;
-  std::set<Member> left_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;
   // queue must be destroyed before transport i.e. put after transport otherwise

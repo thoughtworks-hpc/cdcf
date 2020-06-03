@@ -14,6 +14,7 @@
 
 #include "src/event.h"
 #include "src/grpc.h"
+#include "src/node_status_grpc_impl.h"
 
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
@@ -73,7 +74,8 @@ class Subscriber : public membership::Subscriber {
 void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
   GRPCImpl service;
-  GRPCServer server(server_address, {&service});
+  NodeStatusGRPCImpl node_status_service(membership_);
+  GRPCServer server(server_address, {&service, &node_status_service});
   std::cout << "gRPC Server listening on " << server_address << std::endl;
 
   auto subscriber = std::make_shared<Subscriber>();
