@@ -3,6 +3,7 @@
  */
 #ifndef NODE_KEEPER_SRC_NODE_KEEPER_H_
 #define NODE_KEEPER_SRC_NODE_KEEPER_H_
+#include <memory>
 #include <string>
 #include <vector>
 
