@@ -1,4 +1,4 @@
-FROM gcc:latest AS builder
+FROM gcc:8.4.0 AS builder
 
 RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
 RUN apt-get clean \
