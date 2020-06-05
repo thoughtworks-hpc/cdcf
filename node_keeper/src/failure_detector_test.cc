@@ -22,7 +22,7 @@ TEST(FailureDetector,
      DISABLED_should_detect_node_a_fail_and_rejoin_when_node_a_restart) {
   auto node_a_ptr = std::make_unique<membership::Membership>();
   membership::Config config_a;
-  gossip::Address address_a{"127.0.0.1", 5000};
+  gossip::Address address_a{"127.0.0.1", 50000};
   std::string name_a = "node_a";
   config_a.SetHostMember(name_a, address_a.host, address_a.port);
   config_a.EnableLeaveWithoutNotification();
