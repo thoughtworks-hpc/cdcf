@@ -7,8 +7,9 @@
 
 #include <iostream>
 
-void PosixProcessManager::CreateProcess(const std::string& path,
-                                        const std::vector<std::string>& args) {
+void PosixProcessManager::CreateProcess(
+    const std::string& path, const std::vector<std::string>& args,
+    std::shared_ptr<void> child_process_info) {
   std::vector<char*> argv{const_cast<char*>(path.c_str())};
 
   for (auto& arg : args) {
@@ -17,7 +18,6 @@ void PosixProcessManager::CreateProcess(const std::string& path,
   argv.push_back(nullptr);
 
   auto pid = fork();
-
   if (pid < 0) {
     // TODO(Yujia.Li): log
     std::cout << "fork failed" << std::endl;
@@ -36,7 +36,10 @@ void PosixProcessManager::CreateProcess(const std::string& path,
   // child read: 2 4
 
   // parent
-  // do nothing
-//  std::cout << "child pid " << pid << std::endl;
-//  while (1);
+  auto process_info = (process_info_t*)child_process_info.get();
+  *process_info = pid;
+//    while (1);
+}
+std::shared_ptr<void> PosixProcessManager::NewProcessInfo() {
+  return std::make_shared<process_info_t>();
 }

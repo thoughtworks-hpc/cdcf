@@ -16,6 +16,7 @@ class Daemon {
   std::thread thread_;
   std::string path_;
   std::vector<std::string> args_;
+  std::shared_ptr<void> app_process_info_;
 
  public:
   Daemon(ProcessManager& process_manager, const std::string& path,

@@ -9,5 +9,6 @@
 TEST(PosixProcessManager, DISABLED_should_create_process_correctly) {
   PosixProcessManager process_manager;
 
-  process_manager.CreateProcess("/bin/ls", {"-l"});
+  auto process_info = process_manager.NewProcessInfo();
+  process_manager.CreateProcess("/bin/ls", {"-l"}, process_info);
 }
