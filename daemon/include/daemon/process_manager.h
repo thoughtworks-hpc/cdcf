@@ -14,6 +14,7 @@ class ProcessManager {
   virtual void CreateProcess(const std::string& path,
                              const std::vector<std::string>& args,
                              std::shared_ptr<void> child_process_info) = 0;
+  virtual void WaitProcessExit(std::shared_ptr<void> process_info) = 0;
 };
 
 class PosixProcessManager : public ProcessManager {
@@ -24,6 +25,7 @@ class PosixProcessManager : public ProcessManager {
   void CreateProcess(const std::string& path,
                      const std::vector<std::string>& args,
                      std::shared_ptr<void> child_process_info) override;
+  void WaitProcessExit(std::shared_ptr<void> process_info) override;
 };
 
 #endif  // DAEMON_INCLUDE_DAEMON_PROCESS_MANAGER_H_

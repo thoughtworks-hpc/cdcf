@@ -43,3 +43,13 @@ void PosixProcessManager::CreateProcess(
 std::shared_ptr<void> PosixProcessManager::NewProcessInfo() {
   return std::make_shared<process_info_t>();
 }
+void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
+  auto pid = *((process_info_t*) process_info.get());
+  int status;
+  while (true) {
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status) || WIFSIGNALED(status)) {
+      break;
+    }
+  }
+}

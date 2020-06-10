@@ -12,3 +12,11 @@ TEST(PosixProcessManager, DISABLED_should_create_process_correctly) {
   auto process_info = process_manager.NewProcessInfo();
   process_manager.CreateProcess("/bin/ls", {"-l"}, process_info);
 }
+
+TEST(PosixProcessManager, should_return_when_process_exit) {
+  PosixProcessManager process_manager;
+
+  auto process_info = process_manager.NewProcessInfo();
+  process_manager.CreateProcess("/bin/ls", {"-l"}, process_info);
+  process_manager.WaitProcessExit(process_info);
+}

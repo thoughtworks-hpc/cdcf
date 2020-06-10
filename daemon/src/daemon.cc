@@ -13,6 +13,8 @@ Daemon::Daemon(ProcessManager& process_manager, const std::string& path,
 void Daemon::Run() {
   app_process_info_ = process_manager_.NewProcessInfo();
   process_manager_.CreateProcess(path_, args_, app_process_info_);
+  process_manager_.WaitProcessExit(app_process_info_);
+  process_manager_.CreateProcess(path_, args_, app_process_info_);
 }
 Daemon::~Daemon() {
   if (thread_.joinable()) {

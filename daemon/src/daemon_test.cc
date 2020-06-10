@@ -14,15 +14,17 @@ class MockProcessManager : public ProcessManager {
               (const std::string &, const std::vector<std::string> &,
                std::shared_ptr<void>),
               (override));
+  MOCK_METHOD(void, WaitProcessExit, (std::shared_ptr<void>), (override));
 };
 
-TEST(ADaemon, should_call_process_manager_to_create_pocess) {
+TEST(Daemon, should_create_process_again_when_process_exit) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
-  std::vector<std::string> args{"-l"};
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
-              CreateProcess(path, args, testing::_));
+              CreateProcess(testing::_, testing::_, testing::_))
+      .Times(2);
+  EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_));
 
-  Daemon d(mock_process_manager, path, args);
+  Daemon d(mock_process_manager, path, {"-l"});
 }
