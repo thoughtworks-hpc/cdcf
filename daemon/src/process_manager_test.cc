@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(PosixProcessManager, DISABLED_should_create_process_correctly) {
+TEST(PosixProcessManager, should_create_process_correctly) {
   PosixProcessManager process_manager;
 
   auto process_info = process_manager.NewProcessInfo();

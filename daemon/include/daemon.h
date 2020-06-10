@@ -17,12 +17,16 @@ class Daemon {
   std::string path_;
   std::vector<std::string> args_;
   std::shared_ptr<void> app_process_info_;
+  bool guard = true;
 
  public:
-  Daemon(ProcessManager& process_manager, const std::string& path,
+  // Todo(Yujia.Li): use default args
+  Daemon(ProcessManager& process_manager, std::string path,
          std::vector<std::string> args);
   void Run();
+  void StopGuard();
   virtual ~Daemon();
+  void Start();
 };
 
 #endif  // DAEMON_INCLUDE_DAEMON_H_
