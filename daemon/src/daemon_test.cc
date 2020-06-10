@@ -19,9 +19,10 @@ class MockProcessManager : public ProcessManager {
 TEST(ADaemon, should_call_process_manager_to_create_pocess) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
+  std::vector<std::string> args{"-l"};
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
-              CreateProcess(testing::_, testing::_, testing::_));
+              CreateProcess(path, args, testing::_));
 
-  Daemon d(mock_process_manager, path, {"-l"});
+  Daemon d(mock_process_manager, path, args);
 }
