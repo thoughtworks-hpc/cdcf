@@ -5,6 +5,7 @@
 #ifndef DAEMON_INCLUDE_DAEMON_H_
 #define DAEMON_INCLUDE_DAEMON_H_
 
+#include <chrono>
 #include <string>
 #include <thread>
 #include <vector>
@@ -18,11 +19,18 @@ class Daemon {
   std::vector<std::string> args_;
   std::shared_ptr<void> app_process_info_;
   bool guard = true;
+  size_t restart_ = 0;
+  std::chrono::milliseconds stable_time_;
+
+  void ExitIfProcessNotStable(
+      const std::chrono::system_clock::time_point& start,
+      const std::chrono::system_clock::time_point& end);
 
  public:
-  // Todo(Yujia.Li): use default args
-  Daemon(ProcessManager& process_manager, std::string path,
-         std::vector<std::string> args);
+  Daemon(
+      ProcessManager& process_manager, std::string path,
+      std::vector<std::string> args,
+      std::chrono::milliseconds stable_time = std::chrono::milliseconds(3000));
   void Run();
   void StopGuard();
   virtual ~Daemon();

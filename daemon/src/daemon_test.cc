@@ -20,14 +20,38 @@ class MockProcessManager : public ProcessManager {
 TEST(Daemon, should_guard_process_until_stop_guard) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
-  Daemon d(mock_process_manager, path, {"-l"});
+  Daemon d(mock_process_manager, path, {"-l"}, std::chrono::milliseconds(50));
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
               CreateProcess(testing::_, testing::_, testing::_))
       .Times(2);
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
-      .WillOnce(testing::ReturnNull())
+      .WillOnce(testing::InvokeWithoutArgs([]() {
+        using std::literals::operator""ms;
+        std::this_thread::sleep_for(100ms);
+      }))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
 
   d.Start();
+}
+
+TEST(Daemon, should_exit_when_process_not_stable) {
+  class FakeProcessManager : public ProcessManager {
+   public:
+    std::shared_ptr<void> NewProcessInfo() override {
+      return std::shared_ptr<void>();
+    }
+    void CreateProcess(const std::string &path,
+                       const std::vector<std::string> &args,
+                       std::shared_ptr<void> child_process_info) override {}
+    void WaitProcessExit(std::shared_ptr<void> process_info) override {
+      using std::literals::operator""ms;
+      std::this_thread::sleep_for(50ms);
+    }
+  };
+  FakeProcessManager process_manager;
+  const char *path = "/bin/ls";
+  Daemon d(process_manager, path, {"-l"});
+
+  EXPECT_EXIT(d.Run(), testing::ExitedWithCode(1), "");
 }
