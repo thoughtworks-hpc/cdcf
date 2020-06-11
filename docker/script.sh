@@ -3,5 +3,8 @@ echo "running on host: $HOST"
 echo "seeds: $SEEDS"
 NAME=${NAME:-$HOST}
 echo "name: ${NAME}"
-echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP $APP_ARGS
-/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP $APP_ARGS
+if [ -n "$APP_ARGS" ]; then
+  OPTION_APP_ARGS="--app-args='${APP_ARGS}'"
+fi
+echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP OPTION_APP_ARGS
+/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP OPTION_APP_ARGS
