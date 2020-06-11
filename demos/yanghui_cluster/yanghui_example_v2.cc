@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system.h>
+#include <actor_system/cluster.h>
 
 #include <climits>
 #include <condition_variable>
@@ -80,7 +80,7 @@ class CountCluster : public actor_system::cluster::Observer {
 
     auto worker_actor = StartWorker(system_, *node, type, args, tout, active);
     if (!active) {
-      std::cout << "start work actor1 failed."
+      std::cout << "start work actor failed."
                 << " host:" << host << ", port:" << port << std::endl;
 
       return;
