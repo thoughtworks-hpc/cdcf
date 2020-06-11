@@ -21,6 +21,7 @@ COPY actor_system actor_system
 COPY logger logger
 COPY demos demos
 COPY cluster_monitor cluster_monitor
+COPY daemon daemon
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
     && cmake --build . -j 3 \
     && ctest --output-on-failure

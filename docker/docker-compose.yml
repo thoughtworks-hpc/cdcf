@@ -5,7 +5,7 @@ services:
     environment:
       HOST: node_a
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      APP: /bin/cluster
     ports:
       - 50051:50051
       - 3335:3335
@@ -16,7 +16,7 @@ services:
     environment:
       HOST: node_b
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      APP: /bin/cluster
     ports:
       - 50052:50051
     networks:
@@ -26,7 +26,7 @@ services:
     environment:
       HOST: node_c
       SEEDS: node_a:4445,node_b:4445
-      APP: cluster
+      APP: /bin/cluster
     ports:
       - 50053:50051
     networks:

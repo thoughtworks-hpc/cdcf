@@ -3,8 +3,11 @@
  */
 
 #include <daemon/process_manager.h>
+#include <errno.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <iostream>
 
 void PosixProcessManager::CreateProcess(
@@ -19,15 +22,15 @@ void PosixProcessManager::CreateProcess(
 
   auto pid = fork();
   if (pid < 0) {
-    // TODO(Yujia.Li): log
-    std::cout << "fork failed" << std::endl;
-    return;
+    PrintErrno("fork");
+    exit(1);
   }
   if (pid == 0) {
     // child
+    std::cout << "[exec] app = " << path << std::endl;
     execv(path.c_str(), &argv.front());
-    std::cout << "execv failed" << std::endl;
-    return;
+    PrintErrno("exec");
+    exit(1);
   }
   // parent and child will use same stdin and stdout.
   // if child and parent both need read stdin, behavior will like:
@@ -38,13 +41,17 @@ void PosixProcessManager::CreateProcess(
   // parent
   auto process_info = (process_info_t*)child_process_info.get();
   *process_info = pid;
-//    while (1);
+  //    while (1);
+}
+void PosixProcessManager::PrintErrno(const std::string& sys_call) const {
+  std::cout << "[" << sys_call << " failed], error: " << strerror(errno)
+            << " , errno: " << errno << std::endl;
 }
 std::shared_ptr<void> PosixProcessManager::NewProcessInfo() {
   return std::make_shared<process_info_t>();
 }
 void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
-  auto pid = *((process_info_t*) process_info.get());
+  auto pid = *((process_info_t*)process_info.get());
   int status;
   while (true) {
     waitpid(pid, &status, 0);

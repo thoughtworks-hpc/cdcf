@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class ProcessManager {
  public:
@@ -19,7 +20,7 @@ class ProcessManager {
 
 class PosixProcessManager : public ProcessManager {
   using process_info_t = pid_t;
-
+  void PrintErrno(const std::string& sys_call) const;
  public:
   std::shared_ptr<void> NewProcessInfo() override;
   void CreateProcess(const std::string& path,
