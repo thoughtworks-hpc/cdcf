@@ -1,11 +1,13 @@
-//
-// Created by Mingfei Deng on 2020/6/9.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
-#ifndef CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H
-#define CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H
+#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
+#define ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
 
 #include <grpcpp/server.h>
+
+#include <memory>
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
@@ -35,4 +37,4 @@ class ActorStatusServiceGprcImpl final : public ::NodeActorMonitor::Service {
   std::unique_ptr<grpc::Server> server_;
 };
 
-#endif  // CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H
+#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_

@@ -59,7 +59,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
 
 class typed_calculator : public calculator::base {
  public:
-  typed_calculator(caf::actor_config& cfg) : calculator::base(cfg) {}
+  explicit typed_calculator(caf::actor_config& cfg) : calculator::base(cfg) {}
 
   behavior_type make_behavior() override { return calculator_fun(this); }
 };

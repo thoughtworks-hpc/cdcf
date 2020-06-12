@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/6/11.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 #include "../../actor_system/include/actor_status_monitor.h"
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"

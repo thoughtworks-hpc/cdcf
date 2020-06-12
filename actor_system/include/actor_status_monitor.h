@@ -1,11 +1,13 @@
-//
-// Created by Mingfei Deng on 2020/6/5.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
-#ifndef CDCF_ACTOR_STATUS_MONITOR_H
-#define CDCF_ACTOR_STATUS_MONITOR_H
+#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
+#define ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
 
 #include <map>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -34,4 +36,4 @@ class ActorStatusMonitor {
   caf::actor actor_monitor_;
 };
 
-#endif  // CDCF_ACTOR_STATUS_MONITOR_H
+#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_

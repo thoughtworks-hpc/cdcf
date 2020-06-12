@@ -1,7 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/6/5.
-//
-
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 #include "../include/actor_status_monitor.h"
 
 ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
