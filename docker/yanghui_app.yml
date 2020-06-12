@@ -5,44 +5,38 @@ services:
     environment:
       HOST: yanghui_root_v2
       SEEDS: yanghui_root_v2:4445
-      LOGFILE: /tmp/log/yanghui_root_v2.log
-      LOGLEVEL: info
-      LOGFILESIZE: 2048
+      LOG_COMMANDS: --log-file=/tmp/log/yanghui_root_v2.log --log-level=info --log-file-size=2048
       APP: yanghui_cluster_root_v2
       APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
       - cdcf
     volumes:
-      - /tmp:/tmp
+      - /tmp/log:/tmp/log
     command: /bin/bash -c "sleep 1000000000"
   yanghui_worker1_v2:
     image: cdcf:latest
     environment:
       HOST: yanghui_worker1_v2
       SEEDS: yanghui_root_v2:4445
-      LOGFILE: /tmp/log/yanghui_worker1_v2.log
-      LOGLEVEL: info
-      LOGFILESIZE: 2048
+      LOG_COMMANDS: --log-file=/tmp/log/yanghui_worker1_v2.log --log-level=info --log-file-size=2048
       APP: yanghui_cluster_root_v2
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
       - cdcf
     volumes:
-      - /tmp:/tmp
+      - /tmp/log:/tmp/log
   yanghui_worker2_v2:
     image: cdcf:latest
     environment:
       HOST: yanghui_worker2_v2
       SEEDS: yanghui_root_v2:4445
-      LOGFILE: /tmp/log/yanghui_worker2_v2.log
-      LOGLEVEL: info
-      LOGFILESIZE: 2048
+      LOG_COMMANDS: --log-file=/tmp/log/yanghui_worker2_v2.log --log-level=info --log-file-size=2048
       APP: yanghui_cluster_root_v2
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
       - cdcf
     volumes:
-      - /tmp:/tmp
+      - /tmp/log:/tmp/log
   yanghui_monitor:
     image: cdcf:latest
     networks:
