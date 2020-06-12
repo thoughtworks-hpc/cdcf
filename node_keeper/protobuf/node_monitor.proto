@@ -9,6 +9,11 @@ service NodeMonitor {
     }
 }
 
+service NodeActorMonitor {
+    rpc GetNodeActorStatus (google.protobuf.Empty) returns (ActorStatus) {
+    }
+}
+
 message NodeStatus {
     double cpu_use_rate = 1;
     double mem_use_rate = 2;
@@ -22,3 +27,15 @@ message AllNodeStatus {
     repeated NodeStatus node_status = 1;
 }
 
+message ActorInfo {
+    uint64 id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message ActorStatus {
+    repeated ActorInfo actor_infos = 1;
+    int32 actor_worker = 2;
+    string ip = 3;
+    string error_message = 4;
+}

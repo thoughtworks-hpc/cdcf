@@ -29,6 +29,21 @@ add_custom_command(
         DEPENDS "${PB_SOURCE_DIR}/node_keeper.proto")
 list(APPEND ALL_SOURCES ${NODE_KEEPER_PROTO_SRCS} ${NODE_KEEPER_GRPC_SRCS})
 
+set(NODE_MONITOR_PROTO_SRCS "${PB_DIR}/node_monitor.pb.cc")
+set(NODE_MONITOR_PROTO_HDRS "${PB_DIR}/node_monitor.pb.h")
+set(NODE_MONITOR_GRPC_SRCS "${PB_DIR}/node_monitor.grpc.pb.cc")
+set(NODE_MONITOR_GRPC_HDRS "${PB_DIR}/node_monitor.grpc.pb.h")
+add_custom_command(
+        OUTPUT "${NODE_MONITOR_PROTO_SRCS}" "${NODE_MONITOR_PROTO_HDRS}" "${NODE_MONITOR_GRPC_SRCS}" "${NODE_MONITOR_GRPC_HDRS}"
+        COMMAND $<TARGET_FILE:protobuf::protoc>
+        ARGS --grpc_out "${PB_DIR}"
+        --cpp_out "${PB_DIR}"
+        -I "${PB_SOURCE_DIR}"
+        --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+        "${PB_SOURCE_DIR}/node_monitor.proto"
+        DEPENDS "${PB_SOURCE_DIR}/node_monitor.proto")
+list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
+
 set(LIB_SOURCES ${ALL_SOURCES})
 list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_library(${PROJECT_NAME} ${LIB_SOURCES})
