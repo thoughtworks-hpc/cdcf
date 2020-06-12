@@ -316,12 +316,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto yanghui_actor = system.spawn(yanghui, &counter);
-  // auto yanghui_actor_fun = make_function_view(yanghui_actor);
-
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
-  //  caf::scoped_actor self{system};
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
 
