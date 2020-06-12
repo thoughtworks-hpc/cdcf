@@ -140,6 +140,14 @@ class Logger {
   const std::string filename_and_linenumber_format_ = "{file}:{line}: ";
   const std::string filename_arg_ = "file";
   const std::string linenumber_arg_ = "line";
+
+ protected:
+  Logger(std::shared_ptr<spdlog::logger> logger) : logger_(logger) {}
+};
+
+class StdoutLogger : public Logger {
+ public:
+  StdoutLogger();
 };
 
 #define CDCF_LOGGER_TRACE(logger, ...) \

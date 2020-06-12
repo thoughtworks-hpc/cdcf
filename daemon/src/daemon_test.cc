@@ -20,7 +20,10 @@ class MockProcessManager : public ProcessManager {
 TEST(Daemon, should_guard_process_until_stop_guard) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
-  Daemon d(mock_process_manager, path, {"-l"}, std::chrono::milliseconds(50));
+  cdcf::StdoutLogger logger;
+
+  Daemon d(mock_process_manager, logger, path, {"-l"},
+           std::chrono::milliseconds(50));
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
               CreateProcess(testing::_, testing::_, testing::_))
@@ -51,7 +54,8 @@ TEST(Daemon, should_exit_when_process_not_stable) {
   };
   FakeProcessManager process_manager;
   const char *path = "/bin/ls";
-  Daemon d(process_manager, path, {"-l"});
+  cdcf::StdoutLogger logger;
+  Daemon d(process_manager, logger, path, {"-l"});
 
   EXPECT_EXIT(d.Run(), testing::ExitedWithCode(1), "");
 }

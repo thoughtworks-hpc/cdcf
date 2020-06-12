@@ -10,6 +10,7 @@
 #include <thread>
 #include <vector>
 
+#include "../../logger/include/logger.h"
 #include "daemon/process_manager.h"
 
 class Daemon {
@@ -21,6 +22,7 @@ class Daemon {
   bool guard = true;
   size_t restart_ = 0;
   std::chrono::milliseconds stable_time_;
+  cdcf::Logger& logger_;
 
   void ExitIfProcessNotStable(
       const std::chrono::system_clock::time_point& start,
@@ -28,7 +30,7 @@ class Daemon {
 
  public:
   Daemon(
-      ProcessManager& process_manager, std::string path,
+      ProcessManager& process_manager, cdcf::Logger& logger, std::string path,
       std::vector<std::string> args,
       std::chrono::milliseconds stable_time = std::chrono::milliseconds(3000));
   void Run();
