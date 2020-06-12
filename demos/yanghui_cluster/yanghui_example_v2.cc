@@ -13,6 +13,7 @@
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../actor_fault_tolerance/include/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
+#include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "./yanghui_config.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
@@ -33,6 +34,10 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 
   return ret_actor;
 }
+
+const uint16_t k_yanghui_work_port1 = 55001;
+const uint16_t k_yanghui_work_port2 = 55002;
+const uint16_t k_yanghui_work_port3 = 55003;
 
 class CountCluster : public actor_system::cluster::Observer {
  public:
@@ -56,7 +61,9 @@ class CountCluster : public actor_system::cluster::Observer {
     if (event.member.host != host_) {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
-        AddWorkerNode(event.member.host, worker_port_);
+        AddWorkerNode(event.member.host, k_yanghui_work_port1);
+        AddWorkerNode(event.member.host, k_yanghui_work_port2);
+        AddWorkerNode(event.member.host, k_yanghui_work_port3);
       } else {
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
@@ -65,30 +72,37 @@ class CountCluster : public actor_system::cluster::Observer {
   }
 
   void AddWorkerNode(const std::string& host, uint16_t port) {
-    auto node = system_.middleman().connect(host, port);
-    if (!node) {
-      std::cerr << "***new node connect failed, error: "
-                << system_.render(node.error()) << " host:" << host
+    //    auto node = system_.middleman().connect(host, port);
+    //    if (!node) {
+    //      std::cerr << "***new node connect failed, error: "
+    //                << system_.render(node.error()) << " host:" << host
+    //                << ", port:" << port << std::endl;
+    //      return;
+    //    }
+    //
+    //    auto type = "calculator";              // type of the actor we wish to
+    //    spawn auto args = caf::make_message();       // arguments to construct
+    //    the actor auto tout = std::chrono::seconds(30);  // wait no longer
+    //    than 30s bool active = true;
+    //
+    //    auto worker_actor = StartWorker(system_, *node, type, args, tout,
+    //    active); if (!active) {
+    //      std::cout << "start work actor failed."
+    //                << " host:" << host << ", port:" << port << std::endl;
+    //
+    //      return;
+    //    }
+    // auto worker1_exp = system_.middleman().remote_actor("localhost", 51563);
+    auto worker_actor = system_.middleman().remote_actor(host, port);
+    if (!worker_actor) {
+      std::cout << "connect remote actor failed. host:" << host
                 << ", port:" << port << std::endl;
-      return;
     }
 
-    auto type = "calculator";              // type of the actor we wish to spawn
-    auto args = caf::make_message();       // arguments to construct the actor
-    auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-    bool active = true;
+    counter_.AddActor(*worker_actor);
 
-    auto worker_actor = StartWorker(system_, *node, type, args, tout, active);
-    if (!active) {
-      std::cout << "start work actor failed."
-                << " host:" << host << ", port:" << port << std::endl;
-
-      return;
-    }
-
-    counter_.AddActor(worker_actor);
-
-    std::cout << "=======add pool member host:" << host << std::endl;
+    std::cout << "=======add pool member host:" << host << ", port:" << port
+              << std::endl;
   }
 
   int AddNumber(int a, int b, int& result) {
@@ -141,14 +155,37 @@ class CountCluster : public actor_system::cluster::Observer {
 };
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  auto res = system.middleman().open(cfg.worker_port);
-  if (!res) {
-    std::cerr << "*** cannot open port: " << system.render(res.error())
-              << std::endl;
-    return;
-  }
+  auto actor1 = system.spawn<typed_calculator>();
+  system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
+                             k_yanghui_work_port1);
+  std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
+
+  auto actor2 = system.spawn<typed_calculator>();
+  system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
+                             k_yanghui_work_port2);
+  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+
+  auto actor3 = system.spawn<typed_calculator>();
+  system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
+                             k_yanghui_work_port3);
+  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+
+  ActorStatusMonitor actor_status_monitor(system);
+  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+
+  auto form_actor1 = caf::actor_cast<caf::actor>(actor1);
+  auto form_actor2 = caf::actor_cast<caf::actor>(actor2);
+  auto form_actor3 = caf::actor_cast<caf::actor>(actor3);
+
+  actor_status_monitor.RegisterActor(form_actor1, "calculator1",
+                                     "a actor can calculate for yanghui.");
+  actor_status_monitor.RegisterActor(form_actor2, "calculator2",
+                                     "a actor can calculate for yanghui.");
+  actor_status_monitor.RegisterActor(form_actor3, "calculator3",
+                                     "a actor can calculate for yanghui.");
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
+  actor_status_service.Run();
 
   // start compute
   while (true) {
@@ -161,6 +198,12 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
+
+  caf::scoped_actor self{system};
+
+  self->send_exit(actor1, caf::exit_reason::user_shutdown);
+  self->send_exit(actor2, caf::exit_reason::user_shutdown);
+  self->send_exit(actor3, caf::exit_reason::user_shutdown);
 }
 
 caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
@@ -265,13 +308,20 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                        cfg.worker_port);
 
   // local test
-  // counter.AddWorkerNode("localhost", cfg.worker_port);
+  //  counter.AddWorkerNode("localhost", k_yanghui_work_port1);
+  //  counter.AddWorkerNode("localhost", k_yanghui_work_port2);
+  //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
+
+  ActorStatusMonitor actor_status_monitor(system);
+  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto yanghui_actor = system.spawn(yanghui, &counter);
   // auto yanghui_actor_fun = make_function_view(yanghui_actor);
 
-  caf::scoped_actor self{system};
+  actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
+                                     "a actor can count yanghui triangle.");
 
+  //  caf::scoped_actor self{system};
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
 
@@ -283,10 +333,14 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       [&](std::atomic<bool>& active) {
         active = true;
         auto new_yanghui = system.spawn(yanghui, &counter);
+        actor_status_monitor.RegisterActor(
+            yanghui_actor, "Yanghui", "a actor can count yanghui triangle.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
         return new_yanghui;
       },
       system);
+
+  actor_status_service.Run();
 
   // start compute
   while (true) {

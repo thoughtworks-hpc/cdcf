@@ -26,6 +26,7 @@
 }
 void ActorStatusServiceGprcImpl::Run() {
   std::string server_address("0.0.0.0:" + std::to_string(server_port_));
+  std::cout << "actor status service up at port:" << server_port_ << std::endl;
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(this);

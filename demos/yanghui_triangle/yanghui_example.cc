@@ -153,7 +153,12 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   caf::scoped_execution_unit context(&system);
   auto pool = caf::actor_pool::make(&context, caf::actor_pool::round_robin());
 
-  auto worker1_exp = system.middleman().remote_actor("localhost", 51563);
+  auto worker1_exp = system.middleman().remote_actor("localhost", 55001);
+  if (!worker1_exp) {
+    std::cout << "connect remote actor failed. host:localhost"
+              << ", port:" << 51563 << std::endl;
+  }
+
   auto worker1 = std::move(*worker1_exp);
 
   auto worker2_exp = system.middleman().remote_actor("localhost", 51566);

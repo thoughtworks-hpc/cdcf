@@ -17,7 +17,7 @@ class ActorStatusServiceGprcImpl final : public ::NodeActorMonitor::Service {
  public:
   ActorStatusServiceGprcImpl(caf::actor_system& actorSystem,
                              ActorStatusMonitor& actorStatusMonitor,
-                             uint16_t server_port = 50001)
+                             uint16_t server_port = 50052)
       : actor_system_(actorSystem),
         actor_status_monitor_(actorStatusMonitor),
         server_port_(server_port) {}
