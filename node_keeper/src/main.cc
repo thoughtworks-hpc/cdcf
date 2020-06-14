@@ -25,10 +25,10 @@ int main(int argc, char* argv[]) {
   }
   node_keeper::NodeKeeper keeper(config.name_, {config.host_, config.port_},
                                  seeds, config);
-
-  PosixProcessManager process_manager;
+  auto logger = std::make_shared<cdcf::Logger>("node_keeper");
+  PosixProcessManager process_manager(*logger);
   auto args = ConstructAppArgs(config);
-  Daemon daemon(process_manager, config.app_, args);
+  Daemon daemon(process_manager, *logger, config.app_, args);
   daemon.Start();
 
   keeper.Run();

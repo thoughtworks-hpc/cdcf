@@ -19,7 +19,7 @@ class MockProcessManager : public ProcessManager {
 };
 
 TEST(Daemon, should_guard_process_until_stop_guard) {
-  cdcf::StdoutLogger logger;
+  cdcf::StdoutLogger logger("console");
   MockProcessManager mock_process_manager(logger);
   const char *path = "/bin/ls";
 
@@ -55,7 +55,7 @@ TEST(Daemon, should_exit_when_process_not_stable) {
       std::this_thread::sleep_for(50ms);
     }
   };
-  cdcf::StdoutLogger logger;
+  cdcf::StdoutLogger logger("console");
   FakeProcessManager process_manager(logger);
   const char *path = "/bin/ls";
   Daemon d(process_manager, logger, path, {"-l"});

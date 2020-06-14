@@ -67,7 +67,9 @@ class CountCluster : public actor_system::cluster::Observer {
         continue;
       }
       std::cout << "add worker, host: " << m.host << std::endl;
-      AddWorkerNode(m.host, worker_port_);
+      AddWorkerNode(m.host, k_yanghui_work_port1);
+      AddWorkerNode(m.host, k_yanghui_work_port2);
+      AddWorkerNode(m.host, k_yanghui_work_port3);
     }
   }
 

@@ -38,5 +38,16 @@ void cdcf::Logger::EnableFileNameAndLineNumber() {
 void cdcf::Logger::DisableFileNameAndLineNumber() {
   is_filename_and_linenumber_enabled_ = false;
 }
-cdcf::StdoutLogger::StdoutLogger()
-    : Logger(spdlog::stdout_color_mt("console")) {}
+
+std::once_flag cdcf::StdoutLogger::once_flag;
+
+cdcf::StdoutLogger::StdoutLogger(const std::string & module_name) {
+  auto logger = spdlog::get(module_name);
+  if (logger == nullptr) {
+    std::call_once(once_flag, [this, &module_name]() {
+      logger_ = spdlog::stdout_color_mt(module_name);
+    });
+  } else {
+    logger_ = logger;
+  }
+}

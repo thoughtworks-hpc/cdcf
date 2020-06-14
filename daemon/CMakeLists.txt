@@ -9,6 +9,7 @@ set(LIB_SOURCES ${ALL_SOURCES})
 list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_library(${PROJECT_NAME} ${LIB_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_link_libraries(${PROJECT_NAME} logger)
 
 set(TEST_SOURCES ${ALL_SOURCES})
 list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")

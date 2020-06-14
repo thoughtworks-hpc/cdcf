@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 TEST(PosixProcessManager, should_create_process_correctly) {
-  cdcf::StdoutLogger logger;
+  cdcf::StdoutLogger logger("console");
   PosixProcessManager process_manager(logger);
 
   auto process_info = process_manager.NewProcessInfo();
@@ -15,7 +15,7 @@ TEST(PosixProcessManager, should_create_process_correctly) {
 }
 
 TEST(PosixProcessManager, should_return_when_process_exit) {
-  cdcf::StdoutLogger logger;
+  cdcf::StdoutLogger logger("console");
   PosixProcessManager process_manager(logger);
 
   auto process_info = process_manager.NewProcessInfo();
