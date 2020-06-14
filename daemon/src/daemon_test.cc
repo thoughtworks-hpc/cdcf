@@ -9,6 +9,7 @@
 
 class MockProcessManager : public ProcessManager {
  public:
+  explicit MockProcessManager(cdcf::Logger &logger) : ProcessManager(logger) {}
   MOCK_METHOD(std::shared_ptr<void>, NewProcessInfo, (), (override));
   MOCK_METHOD(void, CreateProcess,
               (const std::string &, const std::vector<std::string> &,
@@ -18,9 +19,9 @@ class MockProcessManager : public ProcessManager {
 };
 
 TEST(Daemon, should_guard_process_until_stop_guard) {
-  MockProcessManager mock_process_manager;
-  const char *path = "/bin/ls";
   cdcf::StdoutLogger logger;
+  MockProcessManager mock_process_manager(logger);
+  const char *path = "/bin/ls";
 
   Daemon d(mock_process_manager, logger, path, {"-l"},
            std::chrono::milliseconds(50));
@@ -41,6 +42,8 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
 TEST(Daemon, should_exit_when_process_not_stable) {
   class FakeProcessManager : public ProcessManager {
    public:
+    explicit FakeProcessManager(cdcf::Logger &logger)
+        : ProcessManager(logger) {}
     std::shared_ptr<void> NewProcessInfo() override {
       return std::shared_ptr<void>();
     }
@@ -52,9 +55,9 @@ TEST(Daemon, should_exit_when_process_not_stable) {
       std::this_thread::sleep_for(50ms);
     }
   };
-  FakeProcessManager process_manager;
-  const char *path = "/bin/ls";
   cdcf::StdoutLogger logger;
+  FakeProcessManager process_manager(logger);
+  const char *path = "/bin/ls";
   Daemon d(process_manager, logger, path, {"-l"});
 
   EXPECT_EXIT(d.Run(), testing::ExitedWithCode(1), "");

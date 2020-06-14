@@ -3,7 +3,7 @@
  */
 
 #include <daemon/process_manager.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -43,13 +43,16 @@ void PosixProcessManager::CreateProcess(
   *process_info = pid;
   //    while (1);
 }
+
 void PosixProcessManager::PrintErrno(const std::string& sys_call) const {
   std::cout << "[" << sys_call << " failed], error: " << strerror(errno)
             << " , errno: " << errno << std::endl;
 }
+
 std::shared_ptr<void> PosixProcessManager::NewProcessInfo() {
   return std::make_shared<process_info_t>();
 }
+
 void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
   auto pid = *((process_info_t*)process_info.get());
   int status;
@@ -60,3 +63,8 @@ void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
     }
   }
 }
+
+PosixProcessManager::PosixProcessManager(cdcf::Logger& logger)
+    : ProcessManager(logger) {}
+
+ProcessManager::ProcessManager(cdcf::Logger& logger) : logger_(logger) {}
