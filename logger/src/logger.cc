@@ -41,7 +41,7 @@ void cdcf::Logger::DisableFileNameAndLineNumber() {
 
 std::once_flag cdcf::StdoutLogger::once_flag;
 
-cdcf::StdoutLogger::StdoutLogger(const std::string & module_name) {
+cdcf::StdoutLogger::StdoutLogger(const std::string& module_name) {
   auto logger = spdlog::get(module_name);
   if (logger == nullptr) {
     std::call_once(once_flag, [this, &module_name]() {

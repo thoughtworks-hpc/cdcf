@@ -3,10 +3,10 @@
  */
 
 #include <daemon/process_manager.h>
-#include <cerrno>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstring>
 #include <iostream>
 
