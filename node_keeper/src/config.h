@@ -24,6 +24,8 @@ class Config : public CDCFConfig {
   std::string log_level_ = "info";
   uint16_t log_file_size_in_bytes_ = 0;
   uint16_t log_file_number_ = 0;
+  std::string app_;
+  std::string app_args_;
 
   Config() {
     opt_group{custom_options_, "global"}
@@ -42,7 +44,9 @@ class Config : public CDCFConfig {
              " default: unlimited, format in: 1024")
         .add(log_file_number_, "log-file-num",
              "set maximum rotating log file number, each file has size"
-             " 'log-file-size', default: 0, format in: 1024");
+             " 'log-file-size', default: 0, format in: 1024")
+        .add(app_, "app", "set application path")
+        .add(app_args_, "app-args", "set application arguments");
   }
 
   std::vector<gossip::Address> GetSeeds() const {

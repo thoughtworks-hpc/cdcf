@@ -7,6 +7,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 cdcf::Logger::Logger(const std::string& module_name,
                      const std::string& file_name, int file_size_in_bytes,
@@ -36,4 +37,17 @@ void cdcf::Logger::EnableFileNameAndLineNumber() {
 
 void cdcf::Logger::DisableFileNameAndLineNumber() {
   is_filename_and_linenumber_enabled_ = false;
+}
+
+std::once_flag cdcf::StdoutLogger::once_flag;
+
+cdcf::StdoutLogger::StdoutLogger(const std::string& module_name) {
+  auto logger = spdlog::get(module_name);
+  if (logger == nullptr) {
+    std::call_once(once_flag, [this, &module_name]() {
+      logger_ = spdlog::stdout_color_mt(module_name);
+    });
+  } else {
+    logger_ = logger;
+  }
 }

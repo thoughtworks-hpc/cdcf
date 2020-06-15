@@ -3,7 +3,9 @@ echo "running on host: $HOST"
 echo "seeds: $SEEDS"
 NAME=${NAME:-$HOST}
 echo "name: ${NAME}"
-echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS
-/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS&
-echo $APP --host=$HOST --name=$NAME $APP_ARGS
-$APP --host=$HOST --name=$NAME $APP_ARGS
+if [ -n "$APP_ARGS" ]; then
+  echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP --app-args="${APP_ARGS}"
+  /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP --app-args="${APP_ARGS}"
+fi
+echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP
+/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --app=$APP
