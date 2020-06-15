@@ -30,7 +30,7 @@ void PosixProcessManager::CreateProcess(
     std::cout << "[exec] app = " << path << std::endl;
     execv(path.c_str(), &argv.front());
     PrintErrno("exec");
-    exit(1);
+    _exit(1);
   }
   // parent and child will use same stdin and stdout.
   // if child and parent both need read stdin, behavior will like:
