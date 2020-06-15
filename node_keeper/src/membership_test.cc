@@ -205,6 +205,19 @@ void SimulateReceivingRecoveryMessage(
   SimulateReceiveMessage(message, transport);
 }
 
+void SimulateReceivingPingMessage(
+    const std::map<membership::Member, int>& members,
+    std::shared_ptr<MockTransport> transport) {
+  membership::PullRequestMessage message;
+  message.InitAsPingType(members);
+
+  gossip::Address address;
+  std::string serialized_msg = message.SerializeToString();
+
+  transport->CallPullHandler(address, serialized_msg.data(),
+                             serialized_msg.size());
+}
+
 TEST(Membership, NewUpMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
@@ -492,4 +505,29 @@ TEST(Membership, MemberLeaveFromMultipleNodeCluster) {
   SimulateReceivingDownMessage({"node2", "127.0.0.1", 28888}, transport);
   EXPECT_TRUE(
       CompareMembers(node.GetMembers(), {{"node1", "127.0.0.1", 27777}}));
+}
+
+TEST(Membership, NodeReceivingPingWithMoreMembers) {
+  membership::Member node1{"node1", "127.0.0.1", 27777};
+  membership::Member node2{"node2", "127.0.0.1", 28888};
+  membership::Member node3{"node3", "127.0.0.1", 29999};
+  membership::Member node4{"node4", "127.0.0.1", 30000};
+
+  membership::Membership node;
+  membership::Config config;
+  config.SetHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  node.Init(transport, config);
+
+  SimulateReceivingUpMessage(node2, transport);
+  EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2}));
+
+  std::map<membership::Member, int> members_in_ping;
+  members_in_ping[node3] = 1;
+  members_in_ping[node4] = 1;
+  SimulateReceivingPingMessage(members_in_ping, transport);
+
+  EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2, node3, node4}));
 }

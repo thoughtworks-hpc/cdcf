@@ -42,6 +42,8 @@ message PullRequest {
     optional string self_name = 5;
     optional string self_ip = 6;
     optional int32 self_port = 7;
+
+    repeated MemberUpdate states = 8;
 }
 
 message PullResponse {

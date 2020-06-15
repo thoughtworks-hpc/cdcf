@@ -59,6 +59,7 @@ class PullRequestMessage : public Message {
  public:
   void InitAsFullStateType();
   void InitAsPingType();
+  void InitAsPingType(const std::map<Member, int>& members);
   void InitAsPingRelayType(const Member& self, const Member& target);
   bool IsFullStateType();
   bool IsPingType();
@@ -68,6 +69,8 @@ class PullRequestMessage : public Message {
   unsigned int GetPort();
   std::string GetSelfIpAddress();
   unsigned int GetSelfPort();
+
+  std::map<membership::Member, int> GetMembersWithIncarnation();
 
   google::protobuf::Message& BaseMessage() override { return pull_request_; }
 

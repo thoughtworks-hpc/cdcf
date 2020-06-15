@@ -303,7 +303,6 @@ void membership::Membership::HandleDidPull(
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
 
-      // DisseminateGossip(payload);
       gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                           GetRetransmitLimit());
     } else {
@@ -332,9 +331,9 @@ void membership::Membership::DisseminateGossip(const gossip::Payload& payload) {
 std::vector<uint8_t> membership::Membership::HandlePull(
     const gossip::Address& address, const void* data, size_t size) {
   std::string message_serialized = "pull";
-  PullRequestMessage message;
-  message.DeserializeFromArray(data, size);
-  if (message.IsFullStateType()) {
+  PullRequestMessage request;
+  request.DeserializeFromArray(data, size);
+  if (request.IsFullStateType()) {
     FullStateMessage response;
 
     // TODO(Yujia.Li): message's IP here would be IPv4
@@ -346,23 +345,24 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     response.InitAsFullStateMessage(members);
 
     message_serialized = response.SerializeToString();
-  } else if (message.IsPingType()) {
+  } else if (request.IsPingType()) {
     PullResponseMessage response;
     response.InitAsPingSuccess(self_);
     message_serialized = response.SerializeToString();
-  } else if (message.IsPingRelayType()) {
+    MergeMembers(request.GetMembersWithIncarnation());
+  } else if (request.IsPingRelayType()) {
     if (transport_) {
       PullRequestMessage request_message;
       request_message.InitAsPingType();
       std::string pull_request_message = request_message.SerializeToString();
 
       gossip::Address ping_target_address{
-          message.GetIpAddress(), static_cast<uint16_t>(message.GetPort())};
-      Member ping_target_member{message.GetName(), message.GetIpAddress(),
-                                static_cast<uint16_t>(message.GetPort())};
+          request.GetIpAddress(), static_cast<uint16_t>(request.GetPort())};
+      Member ping_target_member{request.GetName(), request.GetIpAddress(),
+                                static_cast<uint16_t>(request.GetPort())};
       gossip::Address ping_result_destination_address{
-          message.GetSelfIpAddress(),
-          static_cast<uint16_t>(message.GetSelfPort())};
+          request.GetSelfIpAddress(),
+          static_cast<uint16_t>(request.GetSelfPort())};
 
       auto did_pull = [ping_result_destination_address, ping_target_member,
                        this](const gossip::Transportable::PullResult& result) {
@@ -410,7 +410,7 @@ void membership::Membership::Ping() {
   auto failure_detector_functor = [this]() {
     if (transport_) {
       PullRequestMessage message;
-      message.InitAsPingType();
+      message.InitAsPingType(members_);
       std::string pull_request_message = message.SerializeToString();
 
       auto [get_success, random_member] = GetRandomPingTarget();
@@ -422,6 +422,8 @@ void membership::Membership::Ping() {
       auto ping_target = random_member;
       gossip::Address address{ping_target.GetIpAddress(),
                               ping_target.GetPort()};
+      logger_->Debug("Ping member {}:{} to check if it's alive",
+                     ping_target.GetIpAddress(), ping_target.GetPort());
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
@@ -579,6 +581,8 @@ void membership::Membership::MergeUpUpdate(const Member& member,
     }
 
     members_[member] = incarnation;
+    logger_->Info("Add member {}:{} by merging up update",
+                  member.GetIpAddress(), member.GetPort());
   }
 
   Notify();
@@ -596,9 +600,42 @@ void membership::Membership::MergeDownUpdate(const Member& member,
       return;
     }
     members_.erase(member);
+    logger_->Info("Remove member {}:{} by merging down update",
+                  member.GetIpAddress(), member.GetPort());
   }
 
   Notify();
+}
+
+void membership::Membership::MergeMembers(
+    const std::map<membership::Member, int>& members) {
+  bool should_notify = false;
+  {
+    const std::lock_guard<std::mutex> lock_members_(mutex_members_);
+    for (const auto& member_pair : members) {
+      auto member = member_pair.first;
+      int incarnation = member_pair.second;
+      logger_->Debug("Receive update for ping member {}:{}",
+                     member.GetIpAddress(), member.GetPort());
+      if (members_.find(member) != members_.end()) {
+        if (incarnation > members_[member]) {
+          members_[member] = incarnation;
+          should_notify = true;
+          logger_->Info(
+              "Update member {}:{}'s incarnation by merging ping member",
+              member.GetIpAddress(), member.GetPort());
+        }
+      } else {
+        members_[member] = incarnation;
+        should_notify = true;
+        logger_->Info("Add member {}:{} by merging ping member",
+                      member.GetIpAddress(), member.GetPort());
+      }
+    }
+  }
+  if (should_notify) {
+    Notify();
+  }
 }
 
 int membership::Membership::GetRetransmitLimit() const {

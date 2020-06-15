@@ -60,7 +60,7 @@ class Config {
   Config()
       : retransmit_multiplier_(3),
         gossip_interval_(500),
-        failure_detector_interval_(1000),
+        failure_detector_interval_(2000),
         leave_without_notification_(false),
         failure_detector_off_(false),
         relay_ping_enabled_(false),
@@ -143,6 +143,7 @@ class Membership {
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
+  void MergeMembers(const std::map<membership::Member, int>& members);
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);

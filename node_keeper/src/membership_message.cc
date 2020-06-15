@@ -113,6 +113,22 @@ void membership::PullRequestMessage::InitAsPingType() {
   pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
 }
 
+void membership::PullRequestMessage::InitAsPingType(
+    const std::map<Member, int>& members) {
+  pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
+
+  for (const auto& member_pair : members) {
+    auto member = member_pair.first;
+    auto incarnation = member_pair.second;
+    auto new_state = pull_request_.add_states();
+    new_state->set_name(member.GetNodeName());
+    new_state->set_ip(member.GetIpAddress());
+    new_state->set_port(member.GetPort());
+    new_state->set_status(MemberUpdate::UP);
+    new_state->set_incarnation(incarnation);
+  }
+}
+
 void membership::PullRequestMessage::InitAsPingRelayType(const Member& self,
                                                          const Member& target) {
   pull_request_.set_type(
@@ -175,6 +191,20 @@ unsigned int membership::PullRequestMessage::GetSelfPort() {
     port = pull_request_.self_port();
   }
   return port;
+}
+
+std::map<membership::Member, int>
+membership::PullRequestMessage::GetMembersWithIncarnation() {
+  std::map<membership::Member, int> members;
+  for (int i = 0; i < pull_request_.states_size(); i++) {
+    auto update = pull_request_.states(i);
+    if (update.status() == MemberUpdate::UP) {
+      membership::Member member{update.name(), update.ip(),
+                                static_cast<uint16_t>(update.port())};
+      members[member] = update.incarnation();
+    }
+  }
+  return members;
 }
 
 void membership::PullResponseMessage::InitAsPingSuccess(const Member& member) {
