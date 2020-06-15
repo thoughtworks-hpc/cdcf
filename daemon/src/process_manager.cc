@@ -39,7 +39,8 @@ void PosixProcessManager::CreateProcess(
   // child read: 2 4
 
   // parent
-  auto process_info = (process_info_t*)child_process_info.get();
+  auto process_info =
+      reinterpret_cast<process_info_t*>(child_process_info.get());
   *process_info = pid;
   //    while (1);
 }
@@ -54,7 +55,7 @@ std::shared_ptr<void> PosixProcessManager::NewProcessInfo() {
 }
 
 void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
-  auto pid = *((process_info_t*)process_info.get());
+  auto pid = *(reinterpret_cast<process_info_t*>(process_info.get()));
   int status;
   while (true) {
     waitpid(pid, &status, 0);

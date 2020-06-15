@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#include "daemon.h"
+#include <daemon.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -6,6 +6,7 @@
 #define DAEMON_INCLUDE_DAEMON_H_
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
