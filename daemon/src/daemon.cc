@@ -4,6 +4,8 @@
 
 #include <daemon.h>
 
+#include <iostream>
+
 Daemon::Daemon(ProcessManager& process_manager, cdcf::Logger& logger,
                std::string path, std::vector<std::string> args,
                std::chrono::milliseconds stable_time)
@@ -52,6 +54,7 @@ void Daemon::ExitIfProcessNotStable(
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   if (diff < stable_time_) {
     logger_.Error("actor system not stable, node_keeper will exit.");
+    std::cout << "actor system not stable, node_keeper will exit." << std::endl;
     exit(1);
   }
 }
