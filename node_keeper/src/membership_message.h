@@ -5,6 +5,7 @@
 #ifndef NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_
 #define NODE_KEEPER_SRC_MEMBERSHIP_MESSAGE_H_
 
+#include <map>
 #include <string>
 #include <vector>
 

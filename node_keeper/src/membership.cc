@@ -94,8 +94,17 @@ int membership::Membership::Init(
   retransmit_multiplier_ = config.GetRetransmitMultiplier();
 
   if (!config.GetSeedMembers().empty()) {
-    seed_members_ = config.GetSeedMembers();
-    PullFromSeedMember();
+    for (const auto& seed : config.GetSeedMembers()) {
+      if (seed != self_) {
+        seed_members_.push_back(seed);
+      }
+    }
+
+    if (!seed_members_.empty()) {
+      PullFromSeedMember();
+    } else {
+      logger_->Warn("No valid seed provided");
+    }
   }
 
   is_relay_ping_enabled_ = config.IsRelayPingEnabled();
@@ -120,8 +129,12 @@ void membership::Membership::PullFromSeedMember() {
                   random_address.port);
     transport_->Pull(random_address, pull_request_message.data(),
                      pull_request_message.size(),
-                     [this](const gossip::Transportable::PullResult& result) {
+                     [random_address,
+                      this](const gossip::Transportable::PullResult& result) {
                        if (result.first == gossip::ErrorCode::kOK) {
+                         logger_->Info("Pull from seed {}:{} succeeded",
+                                       random_address.host,
+                                       random_address.port);
                          HandleDidPull(result);
                          return;
                        }
