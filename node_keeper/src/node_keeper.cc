@@ -21,6 +21,7 @@ NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
                        const std::vector<gossip::Address>& seeds,
                        const Config& other_config)
     : membership_() {
+  // Todo(Yujia.Li): it seems should not init logger here
   std::string log_file{other_config.log_file_};
   std::string log_level{other_config.log_level_};
   uint16_t log_file_size = other_config.log_file_size_in_bytes_;

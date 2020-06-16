@@ -57,6 +57,13 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
           }};
 }
 
+class typed_calculator : public calculator::base {
+ public:
+  explicit typed_calculator(caf::actor_config& cfg) : calculator::base(cfg) {}
+
+  behavior_type make_behavior() override { return calculator_fun(this); }
+};
+
 class config : public actor_system::Config {
  public:
   uint16_t root_port = 0;

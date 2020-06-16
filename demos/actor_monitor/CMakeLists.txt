@@ -10,4 +10,4 @@ target_link_libraries(${PROJECT_NAME}_supervisor actor_monitor config_manager)
 
 add_executable(${PROJECT_NAME}_actor actor_monitor_worker.cc)
 target_link_libraries(${PROJECT_NAME}_actor caf::caf)
-target_link_libraries(${PROJECT_NAME}_actor actor_monitor config_manager)
+target_link_libraries(${PROJECT_NAME}_actor actor_monitor config_manager config_manager)

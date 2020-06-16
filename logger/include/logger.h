@@ -6,6 +6,7 @@
 #define LOGGER_INCLUDE_LOGGER_H_
 
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "spdlog/spdlog.h"
@@ -135,11 +136,21 @@ class Logger {
   void DisableFileNameAndLineNumber();
 
  private:
-  std::shared_ptr<spdlog::logger> logger_;
   bool is_filename_and_linenumber_enabled_ = true;
   const std::string filename_and_linenumber_format_ = "{file}:{line}: ";
   const std::string filename_arg_ = "file";
   const std::string linenumber_arg_ = "line";
+
+ protected:
+  Logger() = default;
+  std::shared_ptr<spdlog::logger> logger_;
+};
+
+class StdoutLogger : public Logger {
+  static std::once_flag once_flag;
+
+ public:
+  explicit StdoutLogger(const std::string& module_name);
 };
 
 #define CDCF_LOGGER_TRACE(logger, ...) \
