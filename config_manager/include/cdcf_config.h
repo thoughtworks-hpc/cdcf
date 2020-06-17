@@ -6,6 +6,8 @@
 #define CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
 
 #include <algorithm>
+#include <string>
+#include <vector>
 
 #include "caf/all.hpp"
 
@@ -23,6 +25,8 @@ class CDCFConfig : public caf::actor_system_config {
   };
 
   RetValue parse_config(int argc, char** argv,
+                        const char* ini_file_cstr = "cdcf-default.ini");
+  RetValue parse_config(const std::vector<std::string>& args,
                         const char* ini_file_cstr = "cdcf-default.ini");
 };
 

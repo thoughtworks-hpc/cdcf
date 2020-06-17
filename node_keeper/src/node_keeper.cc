@@ -17,15 +17,16 @@
 #include "src/node_status_grpc_impl.h"
 
 namespace node_keeper {
-NodeKeeper::NodeKeeper(const std::string& name, const gossip::Address& address,
-                       const std::vector<gossip::Address>& seeds,
-                       const Config& other_config)
-    : membership_() {
+NodeKeeper::NodeKeeper(const Config& config) : membership_() {
+  std::string name = config.name_;
+  gossip::Address address{config.host_, config.port_};
+  auto seeds = config.GetSeeds();
+
   // Todo(Yujia.Li): it seems should not init logger here
-  std::string log_file{other_config.log_file_};
-  std::string log_level{other_config.log_level_};
-  uint16_t log_file_size = other_config.log_file_size_in_bytes_;
-  uint16_t log_file_num = other_config.log_file_number_;
+  std::string log_file{config.log_file_};
+  std::string log_level{config.log_level_};
+  uint16_t log_file_size = config.log_file_size_in_bytes_;
+  uint16_t log_file_num = config.log_file_number_;
 
   logger_ = std::make_shared<cdcf::Logger>(logger_name_, log_file,
                                            log_file_size, log_file_num);

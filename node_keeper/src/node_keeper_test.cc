@@ -8,24 +8,32 @@
 using testing::Eq;
 
 TEST(NodeKeeper, should_create_new_cluster_without_seed) {
-  const node_keeper::NodeKeeper keeper("node0", {"127.0.0.1", 5000});
+  node_keeper::Config config;
+  config.parse_config({"--name=node0", "--host=127.0.0.1", "--port=5000"});
+  const node_keeper::NodeKeeper keeper(config);
 
   EXPECT_THAT(keeper.GetMembers().size(), Eq(1));
 }
 
 TEST(NodeKeeper, should_create_new_cluster_if_node_is_primary_seed) {
-  const std::vector<gossip::Address> seeds{{"127.0.0.1", 5000}};
-  const node_keeper::NodeKeeper keeper("node0", {"127.0.0.1", 5000}, seeds);
+  node_keeper::Config config;
+  config.parse_config({"--name=node0", "--host=127.0.0.1", "--port=5000",
+                       "--seeds=127.0.0.1:5000"});
+  const node_keeper::NodeKeeper keeper(config);
 
   EXPECT_THAT(keeper.GetMembers().size(), Eq(1));
 }
 
 TEST(DISABLED_NodeKeeper, should_join_cluster_if_seed_node_is_secondary_seed) {
-  const std::vector<gossip::Address> seeds{{"127.0.0.1", 5000},
-                                           {"127.0.0.2", 5001}};
-  const node_keeper::NodeKeeper primary("node0", seeds[0], seeds);
+  node_keeper::Config config_primary;
+  node_keeper::Config config_secondary;
+  config_primary.parse_config({"--name=node0", "--host=127.0.0.1",
+                               "--port=5000", "--seeds=127.0.0.1:5000"});
+  config_secondary.parse_config({"--name=node0", "--host=127.0.0.1",
+                                 "--port=5001", "--seeds=127.0.0.1:5001"});
+  const node_keeper::NodeKeeper primary(config_primary);
 
-  const node_keeper::NodeKeeper secondary("node0", seeds[1], seeds);
+  const node_keeper::NodeKeeper secondary(config_secondary);
 
   EXPECT_THAT(secondary.GetMembers().size(), Eq(2));
 }
