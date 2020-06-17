@@ -15,6 +15,9 @@ class MockProcessManager : public ProcessManager {
                std::shared_ptr<void>),
               (override));
   MOCK_METHOD(void, WaitProcessExit, (std::shared_ptr<void>), (override));
+  MOCK_METHOD(void, InstallSignalHandlersForQuit,
+              (std::shared_ptr<void>, bool *), (override));
+  MOCK_METHOD(void, Exit, (int), (override));
 };
 
 TEST(Daemon, should_guard_process_until_stop_guard) {
@@ -23,41 +26,42 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
   const char *path = "/bin/ls";
 
   Daemon d(mock_process_manager, logger, path, {"-l"},
-           std::chrono::milliseconds(50));
+           std::chrono::milliseconds(10));
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
+  EXPECT_CALL(mock_process_manager,
+              InstallSignalHandlersForQuit(testing::_, testing::_));
   EXPECT_CALL(mock_process_manager,
               CreateProcess(testing::_, testing::_, testing::_))
       .Times(2);
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
       .WillOnce(testing::InvokeWithoutArgs([]() {
         using std::literals::operator""ms;
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(40ms);
       }))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
+  EXPECT_CALL(mock_process_manager, Exit(0));
 
   d.Start();
 }
 
 TEST(Daemon, should_exit_when_process_not_stable) {
-  class FakeProcessManager : public ProcessManager {
-   public:
-    explicit FakeProcessManager(cdcf::Logger &logger)
-        : ProcessManager(logger) {}
-    std::shared_ptr<void> NewProcessInfo() override {
-      return std::shared_ptr<void>();
-    }
-    void CreateProcess(const std::string &path,
-                       const std::vector<std::string> &args,
-                       std::shared_ptr<void> child_process_info) override {}
-    void WaitProcessExit(std::shared_ptr<void> process_info) override {
-      using std::literals::operator""ms;
-      std::this_thread::sleep_for(50ms);
-    }
-  };
   cdcf::StdoutLogger logger("console");
-  FakeProcessManager process_manager(logger);
+  MockProcessManager mock_process_manager(logger);
   const char *path = "/bin/ls";
-  Daemon d(process_manager, logger, path, {"-l"});
+  Daemon d(mock_process_manager, logger, path, {"-l"});
+  EXPECT_CALL(mock_process_manager, NewProcessInfo());
+  EXPECT_CALL(mock_process_manager,
+              InstallSignalHandlersForQuit(testing::_, testing::_));
+  EXPECT_CALL(mock_process_manager,
+              CreateProcess(testing::_, testing::_, testing::_));
+  EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
+      .WillOnce(testing::InvokeWithoutArgs([]() {
+        using std::literals::operator""ms;
+        std::this_thread::sleep_for(10ms);
+      }));
+  EXPECT_CALL(mock_process_manager, Exit(1))
+      .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
+  EXPECT_CALL(mock_process_manager, Exit(0));
 
-  EXPECT_EXIT(d.Run(), testing::ExitedWithCode(1), "");
+  d.Start();
 }
