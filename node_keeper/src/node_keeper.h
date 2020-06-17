@@ -19,9 +19,7 @@ class NodeKeeper {
   const std::string logger_name_ = "node_keeper";
 
  public:
-  NodeKeeper(const std::string& name, const gossip::Address& address,
-             const std::vector<gossip::Address>& seeds = {},
-             const Config& other_config = {});
+  explicit NodeKeeper(const Config& config);
 
   std::vector<membership::Member> GetMembers() const {
     return membership_.GetMembers();

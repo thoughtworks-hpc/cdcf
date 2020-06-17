@@ -23,8 +23,7 @@ int main(int argc, char* argv[]) {
       std::cout << "\t" << seeds[i].host << ":" << seeds[i].port << std::endl;
     }
   }
-  node_keeper::NodeKeeper keeper(config.name_, {config.host_, config.port_},
-                                 seeds, config);
+  node_keeper::NodeKeeper keeper(config);
   auto logger = std::make_shared<cdcf::Logger>("node_keeper");
   PosixProcessManager process_manager(*logger);
   auto args = ConstructAppArgs(config);
