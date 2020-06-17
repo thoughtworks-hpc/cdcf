@@ -20,6 +20,7 @@ void Daemon::Run() {
   app_process_info_ = process_manager_.NewProcessInfo();
   system_clock::time_point start;
   logger_.Info("start guard actor system");
+  process_manager_.InstallSignalHandlersForQuit(app_process_info_, &guard);
   while (guard) {
     process_manager_.CreateProcess(path_, args_, app_process_info_);
     if (restart_ == 0) {
@@ -35,6 +36,8 @@ void Daemon::Run() {
     }
     restart_++;
   }
+  logger_.Info("stop guard, node keeper exit");
+  process_manager_.Exit(0);
 }
 
 Daemon::~Daemon() {
@@ -55,6 +58,6 @@ void Daemon::ExitIfProcessNotStable(
   if (diff < stable_time_) {
     logger_.Error("actor system not stable, node_keeper will exit.");
     std::cout << "actor system not stable, node_keeper will exit." << std::endl;
-    exit(1);
+    process_manager_.Exit(1);
   }
 }
