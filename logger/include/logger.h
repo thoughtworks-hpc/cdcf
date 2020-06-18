@@ -144,7 +144,7 @@ class Logger {
  protected:
   Logger() = default;
   std::shared_ptr<spdlog::logger> logger_;
-  static std::once_flag once_flag_;
+  static std::mutex mutex_;
 };
 
 class StdoutLogger : public Logger {
