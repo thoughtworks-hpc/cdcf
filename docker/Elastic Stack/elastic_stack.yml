@@ -1,0 +1,57 @@
+version: '2.2'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.7.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.7.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - elastic
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.7.1
+    container_name: logstash
+    volumes:
+      - ./config/logstash.yml:/usr/share/logstash/pipeline/logstash.yml:ro
+    networks:
+      - elastic
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.7.1
+    container_name: filebeat
+    user: root
+    volumes:
+      - /tmp/log:/tmp/log:ro
+      - ./config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+    networks:
+      - elastic
+
+volumes:
+  data01:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
