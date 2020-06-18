@@ -10,30 +10,28 @@
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-std::once_flag cdcf::Logger::once_flag_;
+std::mutex cdcf::Logger::mutex_;
 
 cdcf::Logger::Logger(const std::string& module_name,
                      const std::string& file_name, int file_size_in_bytes,
                      int file_number) {
-  auto logger = spdlog::get(module_name);
-  if (logger == nullptr) {
-    try {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    auto logger = spdlog::get(module_name);
+    if (logger == nullptr) {
       if (file_size_in_bytes == 0) {
         logger_ = spdlog::basic_logger_mt(module_name, file_name);
       } else {
         logger_ = spdlog::rotating_logger_mt(module_name, file_name,
                                              file_size_in_bytes, file_number);
       }
-    } catch (std::exception& e) {
-      logger_ = spdlog::get(module_name);
-    }
 
-    std::call_once(once_flag_,
-                   []() { spdlog::flush_every(std::chrono::seconds(5)); });
-  } else {
-    logger_ = logger;
+      spdlog::flush_every(std::chrono::seconds(5));
+    } else {
+      logger_ = logger;
+    }
+    assert(logger_ != nullptr);
   }
-  assert(logger_ != nullptr);
 }
 
 void cdcf::Logger::SetLevel(const std::string& level) {
