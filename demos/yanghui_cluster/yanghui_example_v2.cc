@@ -41,24 +41,24 @@ const uint16_t k_yanghui_work_port3 = 55003;
 
 class CountCluster : public actor_system::cluster::Observer {
  public:
-  CountCluster(std::string host, caf::actor_system& system, uint16_t port,
-               uint16_t worker_port)
-      : host_(std::move(host)),
-        system_(system),
-        port_(port),
-        worker_port_(worker_port),
-        counter_(system, caf::actor_pool::round_robin()) {
+  virtual void AddWorkerNode(const std::string& host) = 0;
+  virtual int AddNumber(int a, int b, int& result) = 0;
+  virtual int Compare(std::vector<int> numbers, int& min) = 0;
+  std::string host_;
+
+  explicit CountCluster(std::string host) : host_(std::move(host)) {
     auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-    InitWorkerNodes(members, host_, port_);
+    InitWorkerNodes(members, host_);
     actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
   }
-  ~CountCluster() {
+
+  virtual ~CountCluster() {
     actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
   }
 
   void InitWorkerNodes(
       const std::vector<actor_system::cluster::Member>& members,
-      const std::string& host, uint16_t port) {
+      const std::string& host) {
     std::cout << "self, host: " << host << std::endl;
     std::cout << "members size:" << members.size() << std::endl;
     for (auto& m : members) {
@@ -67,9 +67,7 @@ class CountCluster : public actor_system::cluster::Observer {
         continue;
       }
       std::cout << "add worker, host: " << m.host << std::endl;
-      AddWorkerNode(m.host, k_yanghui_work_port1);
-      AddWorkerNode(m.host, k_yanghui_work_port2);
-      AddWorkerNode(m.host, k_yanghui_work_port3);
+      AddWorkerNode(m.host);
     }
   }
 
@@ -80,9 +78,7 @@ class CountCluster : public actor_system::cluster::Observer {
     if (event.member.host != host_) {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
-        AddWorkerNode(event.member.host, k_yanghui_work_port1);
-        AddWorkerNode(event.member.host, k_yanghui_work_port2);
-        AddWorkerNode(event.member.host, k_yanghui_work_port3);
+        AddWorkerNode(event.member.host);
       } else {
         // Todo(Yujia.Li): resource leak
         std::cout << "detect worker node down, host:" << event.member.host
@@ -90,29 +86,120 @@ class CountCluster : public actor_system::cluster::Observer {
       }
     }
   }
+};
 
-  void AddWorkerNode(const std::string& host, uint16_t port) {
-    //    auto node = system_.middleman().connect(host, port);
-    //    if (!node) {
-    //      std::cerr << "***new node connect failed, error: "
-    //                << system_.render(node.error()) << " host:" << host
-    //                << ", port:" << port << std::endl;
-    //      return;
-    //    }
-    //
-    //    auto type = "calculator";              // type of the actor we wish to
-    //    spawn auto args = caf::make_message();       // arguments to construct
-    //    the actor auto tout = std::chrono::seconds(30);  // wait no longer
-    //    than 30s bool active = true;
-    //
-    //    auto worker_actor = StartWorker(system_, *node, type, args, tout,
-    //    active); if (!active) {
-    //      std::cout << "start work actor failed."
-    //                << " host:" << host << ", port:" << port << std::endl;
-    //
-    //      return;
-    //    }
-    // auto worker1_exp = system_.middleman().remote_actor("localhost", 51563);
+class BalanceCountCluster : public CountCluster {
+ public:
+  caf::actor_system& system_;
+  caf::scoped_execution_unit context_;
+  std::string host_;
+  caf::actor counter_;
+  caf::scoped_actor sender_actor_;
+
+  BalanceCountCluster(const std::string& host, caf::actor_system& system)
+      : CountCluster(host),
+        system_(system),
+        context_(&system_),
+        host_(host),
+        sender_actor_(system_) {
+    auto policy = cdcf::load_balancer::policy::MinLoad(1);
+    counter_ = cdcf::load_balancer::Router::Make(&context_, std::move(policy));
+  }
+
+  virtual ~BalanceCountCluster() {}
+
+  void AddWorkerNodeWithPort(const std::string& host, uint16_t port) {
+    auto worker_actor = system_.middleman().remote_actor(host, port);
+    if (!worker_actor) {
+      std::cout << "connect remote actor failed. host:" << host
+                << ", port:" << port << std::endl;
+    }
+
+    caf::anon_send(counter_, caf::sys_atom::value, caf::put_atom::value,
+                   *worker_actor);
+
+    std::cout << "=======add pool member host:" << host << ", port:" << port
+              << std::endl;
+  }
+
+  void AddWorkerNode(const std::string& host) override {
+    AddWorkerNodeWithPort(host, k_yanghui_work_port1);
+    AddWorkerNodeWithPort(host, k_yanghui_work_port2);
+    AddWorkerNodeWithPort(host, k_yanghui_work_port3);
+  }
+
+  int AddNumber(int a, int b, int& result) override {
+    int error = 0;
+    std::promise<int> promise;
+
+    std::cout << "start add task input:" << a << ", " << b << std::endl;
+
+    sender_actor_->request(counter_, std::chrono::seconds(5), a, b)
+        .receive([&](int ret) { promise.set_value(ret); },
+                 [&](const caf::error& err) {
+                   std::cout
+                       << "send add request get err: " << caf::to_string(err)
+                       << "input data: a=" << a << ", b=" << b << std::endl;
+                   error = 1;
+                 });
+
+    result = promise.get_future().get();
+
+    std::cout << "get result:" << result << std::endl;
+    return error;
+  }
+
+  int Compare(std::vector<int> numbers, int& min) override {
+    int error = 0;
+    std::promise<int> promise;
+    std::cout << "start compare task. input data:" << std::endl;
+
+    for (int p : numbers) {
+      std::cout << p << " ";
+    }
+
+    std::cout << std::endl;
+
+    NumberCompareData send_data;
+    send_data.numbers = numbers;
+
+    sender_actor_->request(counter_, std::chrono::seconds(5), send_data)
+        .receive(
+            [&](int ret) {
+              min = ret;
+              promise.set_value(ret);
+            },
+            [&](const caf::error& err) {
+              std::cout << "send add request get err: " << caf::to_string(err)
+                        << "input data:";
+              for (auto num : numbers) {
+                std::cout << num << ", ";
+              }
+              std::cout << std::endl;
+              error = 1;
+            });
+
+    min = promise.get_future().get();
+    std::cout << "get min:" << min << std::endl;
+
+    return error;
+  }
+};
+
+class ActorUnionCountCluster : public CountCluster {
+ public:
+  explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
+                                  uint16_t port, uint16_t worker_port)
+      : CountCluster(host),
+        host_(std::move(host)),
+        system_(system),
+        port_(port),
+        worker_port_(worker_port),
+        counter_(system, caf::actor_pool::round_robin()) {}
+
+  virtual ~ActorUnionCountCluster() {}
+
+  void AddWorkerNodeWithPort(const std::string& host, uint16_t port) {
     auto worker_actor = system_.middleman().remote_actor(host, port);
     if (!worker_actor) {
       std::cout << "connect remote actor failed. host:" << host
@@ -125,7 +212,13 @@ class CountCluster : public actor_system::cluster::Observer {
               << std::endl;
   }
 
-  int AddNumber(int a, int b, int& result) {
+  void AddWorkerNode(const std::string& host) override {
+    AddWorkerNodeWithPort(host, k_yanghui_work_port1);
+    AddWorkerNodeWithPort(host, k_yanghui_work_port2);
+    AddWorkerNodeWithPort(host, k_yanghui_work_port3);
+  }
+
+  int AddNumber(int a, int b, int& result) override {
     int error = 0;
     std::promise<int> promise;
 
@@ -140,7 +233,7 @@ class CountCluster : public actor_system::cluster::Observer {
     return error;
   }
 
-  int Compare(std::vector<int> numbers, int& min) {
+  int Compare(std::vector<int> numbers, int& min) override {
     int error = 0;
     std::promise<int> promise;
     std::cout << "start compare task. input data:" << std::endl;
@@ -180,12 +273,12 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
                              k_yanghui_work_port1);
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
-  auto actor2 = system.spawn<typed_calculator>();
+  auto actor2 = system.spawn<typed_slow_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
                              k_yanghui_work_port2);
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
-  auto actor3 = system.spawn<typed_calculator>();
+  auto actor3 = system.spawn<typed_slow_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
                              k_yanghui_work_port3);
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
@@ -300,7 +393,24 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
 }
 
 std::vector<std::vector<int>> kYanghuiData2 = {
-    {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
+    {5},
+    {7, 8},
+    {2, 1, 4},
+    {4, 2, 6, 1},
+    {2, 7, 3, 4, 5},
+    {2, 3, 7, 6, 8, 3},
+    {2, 3, 4, 4, 2, 7, 7},
+    {8, 4, 4, 3, 4, 5, 6, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6}};
 
 void printRet(int return_value) {
   printf("call actor return value: %d\n", return_value);
@@ -324,18 +434,33 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  CountCluster counter(cfg.root_host, system, cfg.node_keeper_port,
-                       cfg.worker_port);
+  //  ActorUnionCountCluster counter(cfg.root_host, system,
+  //  cfg.node_keeper_port,
+  //                                 cfg.worker_port);
+
+  //  BalanceCountCluster balance_count_cluster(cfg.root_host, system);
+
+  CountCluster* count_cluster;
+
+  if (cfg.balance_mode) {
+    count_cluster = new BalanceCountCluster(cfg.root_host, system);
+  } else {
+    count_cluster = new ActorUnionCountCluster(
+        cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+  }
 
   // local test
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port1);
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port2);
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
+  // counter.AddWorkerNode("localhost");
+  count_cluster->AddWorkerNode("localhost");
+
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
-  auto yanghui_actor = system.spawn(yanghui, &counter);
+  auto yanghui_actor = system.spawn(yanghui, count_cluster);
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
@@ -349,7 +474,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       yanghui_actor,
       [&](std::atomic<bool>& active) {
         active = true;
-        auto new_yanghui = system.spawn(yanghui, &counter);
+        auto new_yanghui = system.spawn(yanghui, count_cluster);
         actor_status_monitor.RegisterActor(
             yanghui_actor, "Yanghui", "a actor can count yanghui triangle.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
@@ -371,7 +496,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
     if (dummy == "n") {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
-      actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+      for (int i = 0; i < 10; i++) {
+        actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+      }
 
       continue;
     }
