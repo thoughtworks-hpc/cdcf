@@ -14,11 +14,9 @@ struct AllActorData {
 };
 
 template <class Inspector>
-typename Inspector::result_type inspect(Inspector& f,
-                                        const AllActorData& x) {
+typename Inspector::result_type inspect(Inspector& f, const AllActorData& x) {
   return f(caf::meta::type_name("AllActorData"), x.actors);
 }
-
 
 struct NumberCompareData {
   std::vector<int> numbers;
@@ -33,8 +31,7 @@ typename Inspector::result_type inspect(Inspector& f,
 
 using calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<int>,
-                     caf::replies_to<NumberCompareData>::with<int>
-                     >;
+                     caf::replies_to<NumberCompareData>::with<int> >;
 
 calculator::behavior_type calculator_fun(calculator::pointer self) {
   return {[=](int a, int b) -> int {
@@ -66,8 +63,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
             caf::aout(self) << "return: " << result << std::endl;
 
             return result;
-          }
-  };
+          }};
 }
 
 class typed_calculator : public calculator::base {
