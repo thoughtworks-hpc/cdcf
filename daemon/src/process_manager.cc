@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <csignal>
 #include <cstring>
 #include <iostream>
 
@@ -23,10 +24,17 @@ void PosixProcessManager::CreateProcess(
   auto pid = fork();
   if (pid < 0) {
     PrintErrno("fork");
-    exit(1);
+    Exit(1);
   }
   if (pid == 0) {
     // child
+
+    struct sigaction act;
+    act.sa_handler = SIG_IGN;
+
+    sigaction(SIGINT, &act, nullptr);
+    sigaction(SIGQUIT, &act, nullptr);
+
     std::cout << "[exec] app = " << path << std::endl;
     execv(path.c_str(), &argv.front());
     PrintErrno("exec");
@@ -68,4 +76,29 @@ void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
 PosixProcessManager::PosixProcessManager(cdcf::Logger& logger)
     : ProcessManager(logger) {}
 
+static std::shared_ptr<void> g_pid;
+static bool* g_guard;
+static void handler(int) {
+  auto pid = *reinterpret_cast<pid_t*>(g_pid.get());
+  if (pid) {
+    *g_guard = false;
+    std::cout << "[Signal] get quit signal. Exiting..." << std::endl;
+    kill(*reinterpret_cast<pid_t*>(g_pid.get()), SIGTERM);
+  }
+}
+
+void PosixProcessManager::InstallSignalHandlersForQuit(
+    std::shared_ptr<void> child_process_info, bool* guard) {
+  struct sigaction act;
+  g_pid = child_process_info;
+  g_guard = guard;
+  act.sa_handler = handler;
+
+  sigaction(SIGINT, &act, nullptr);
+  sigaction(SIGTERM, &act, nullptr);
+  sigaction(SIGQUIT, &act, nullptr);
+}
+
 ProcessManager::ProcessManager(cdcf::Logger& logger) : logger_(logger) {}
+
+void ProcessManager::Exit(int exit_code) { exit(exit_code); }

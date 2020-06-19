@@ -18,10 +18,13 @@ class ProcessManager {
  public:
   explicit ProcessManager(cdcf::Logger& logger);
   virtual std::shared_ptr<void> NewProcessInfo() = 0;
+  virtual void InstallSignalHandlersForQuit(
+      std::shared_ptr<void> child_process_info, bool* guard) = 0;
   virtual void CreateProcess(const std::string& path,
                              const std::vector<std::string>& args,
                              std::shared_ptr<void> child_process_info) = 0;
   virtual void WaitProcessExit(std::shared_ptr<void> process_info) = 0;
+  virtual void Exit(int exit_code);
 };
 
 class PosixProcessManager : public ProcessManager {
@@ -31,6 +34,8 @@ class PosixProcessManager : public ProcessManager {
  public:
   explicit PosixProcessManager(cdcf::Logger& logger);
   std::shared_ptr<void> NewProcessInfo() override;
+  void InstallSignalHandlersForQuit(std::shared_ptr<void> child_process_info,
+                                    bool* guard) override;
   void CreateProcess(const std::string& path,
                      const std::vector<std::string>& args,
                      std::shared_ptr<void> child_process_info) override;
