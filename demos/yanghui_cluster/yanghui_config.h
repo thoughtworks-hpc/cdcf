@@ -9,6 +9,15 @@
 #include <string>
 #include <vector>
 
+struct AllActorData {
+  std::vector<caf::actor> actors;
+};
+
+template <class Inspector>
+typename Inspector::result_type inspect(Inspector& f, const AllActorData& x) {
+  return f(caf::meta::type_name("AllActorData"), x.actors);
+}
+
 struct NumberCompareData {
   std::vector<int> numbers;
   int index;
@@ -22,7 +31,7 @@ typename Inspector::result_type inspect(Inspector& f,
 
 using calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<int>,
-                     caf::replies_to<NumberCompareData>::with<int>>;
+                     caf::replies_to<NumberCompareData>::with<int> >;
 
 calculator::behavior_type calculator_fun(calculator::pointer self) {
   return {[=](int a, int b) -> int {
@@ -73,6 +82,7 @@ class config : public actor_system::Config {
   bool root = false;
 
   config() {
+    add_message_type<AllActorData>("AllActorData");
     add_actor_type("calculator", calculator_fun);
     opt_group{custom_options_, "global"}
         .add(root_port, "root_port", "set root port")
