@@ -74,4 +74,6 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
     }
   }
 }
+GRPCImpl::GRPCImpl(membership::Membership& cluster_membership): cluster_membership_(cluster_membership) {}
+
 }  // namespace node_keeper

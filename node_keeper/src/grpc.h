@@ -21,6 +21,7 @@
 namespace node_keeper {
 class GRPCImpl final : public ::NodeKeeper::Service {
  public:
+  GRPCImpl(membership::Membership& cluster_membership);
   virtual ~GRPCImpl() { Close(); }
   virtual ::grpc::Status GetMembers(::grpc::ServerContext* context,
                                     const ::google::protobuf::Empty* request,
@@ -64,6 +65,7 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   std::mutex mutex_;
   channels_type channels_;
   std::set<membership::Member> members_;
+  membership::Membership& cluster_membership_;
 };
 
 class GRPCServer {

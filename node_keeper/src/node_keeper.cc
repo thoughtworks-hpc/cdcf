@@ -77,7 +77,7 @@ class Subscriber : public membership::Subscriber {
 
 void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
-  GRPCImpl service;
+  GRPCImpl service(membership_);
   NodeStatusGRPCImpl node_status_service(membership_);
   GRPCServer server(server_address, {&service, &node_status_service});
   std::cout << "gRPC Server listening on " << server_address << std::endl;
