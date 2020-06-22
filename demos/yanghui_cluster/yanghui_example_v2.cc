@@ -46,14 +46,15 @@ class CountCluster : public actor_system::cluster::Observer {
         port_(port),
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()) {
-    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-
+    auto members = GetInstance()->GetMembers();
     InitWorkerNodes(members, host_, port_);
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    GetInstance()->AddObserver(this);
     PrintClusterMembers();
   }
-  ~CountCluster() {
-    actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
+  ~CountCluster() { GetInstance()->RemoveObserver(this); }
+
+  actor_system::cluster::Cluster* GetInstance() {
+    return actor_system::cluster::Cluster::GetInstance();
   }
 
   void InitWorkerNodes(
@@ -373,7 +374,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port2);
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
-  ActorStatusMonitor actor_status_monitor(system);
+  ActorStatusMonitor actor_status_monitor(system, counter.GetInstance());
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto yanghui_actor = system.spawn(yanghui, &counter);

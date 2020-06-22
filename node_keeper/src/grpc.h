@@ -29,6 +29,10 @@ class GRPCImpl final : public ::NodeKeeper::Service {
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer);
 
+  virtual ::grpc::Status PushActorsUpInfo(::grpc::ServerContext* context,
+                                          const ::ActorsUpInfo* request,
+                                          ::google::protobuf::Empty* response);
+
  public:
   void Notify(const std::vector<MemberEvent>& events);
   void Close() {

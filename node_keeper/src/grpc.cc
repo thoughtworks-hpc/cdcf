@@ -23,6 +23,17 @@ namespace node_keeper {
   return ::grpc::Status::OK;
 }
 
+::grpc::Status GRPCImpl::PushActorsUpInfo(::grpc::ServerContext* context,
+                                          const ::ActorsUpInfo* request,
+                                          ::google::protobuf::Empty* response) {
+  std::cout << ">>> GRPCImpl::PushActorsUpInfo" << std::endl;
+
+  for (auto address : request->addresses()) {
+    std::cout << "address: " << address << std::endl;
+  }
+  return ::grpc::Status::OK;
+}
+
 ::grpc::Status GRPCImpl::Subscribe(::grpc::ServerContext* context,
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer) {

@@ -41,6 +41,17 @@ class ClusterImpl {
     return members_;
   }
 
+  void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
+    grpc::ClientContext context;
+    ActorsUpInfo request;
+
+    for (int i = 0; i < up_actors.size(); i++) {
+      request.add_addresses(caf::to_string(up_actors[i].address()));
+    }
+
+    stub_->PushActorsUpInfo(&context, request, {});
+  }
+
  private:
   void Routine() {
     Fetch();
@@ -80,10 +91,14 @@ class ClusterImpl {
     auto port = static_cast<uint16_t>(detail.port());
     Member member{detail.name(), detail.hostname(), detail.host(), port};
     if (member_event.status() == ::MemberEvent::UP) {
+      //      std::cout << "ClusterImpl Update, event up, " << member.host <<
+      //      std::endl;
       member.status = Member::Status::Up;
       std::lock_guard lock(mutex_);
       members_.push_back(member);
     } else if (member_event.status() == ::MemberEvent::DOWN) {
+      //      std::cout << "ClusterImpl Update, event down, " << member.host
+      //                << std::endl;
       member.status = Member::Status::Down;
       std::lock_guard lock(mutex_);
       auto it = std::remove(members_.begin(), members_.end(), member);
@@ -94,6 +109,7 @@ class ClusterImpl {
 
   std::mutex mutex_;
   std::vector<Member> members_;
+  // Todo(Yujia.Li) 在这里添加ActorMonitor
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};
@@ -119,6 +135,10 @@ std::vector<Member> Cluster::GetMembers() { return impl_->GetMembers(); }
 Cluster::Cluster() : impl_(std::make_unique<ClusterImpl>()) {}
 
 Cluster::~Cluster() {}
+
+void Cluster::PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
+  impl_->PushActorsUpToNodeKeeper(up_actors);
+}
 
 }  // namespace cluster
 };  // namespace actor_system

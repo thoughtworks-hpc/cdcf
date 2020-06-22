@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <caf/all.hpp>
+
 namespace actor_system {
 namespace cluster {
 struct Member {
@@ -83,6 +85,8 @@ class Cluster : public Subject {
   ~Cluster();
 
   std::vector<Member> GetMembers();
+
+  void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors);
 
  private:
   Cluster();
