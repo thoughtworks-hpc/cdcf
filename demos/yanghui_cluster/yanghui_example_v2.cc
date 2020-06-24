@@ -36,8 +36,6 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 const uint16_t k_yanghui_work_port1 = 55001;
-// const uint16_t k_yanghui_work_port2 = 55002;
-// const uint16_t k_yanghui_work_port3 = 55003;
 
 class CountCluster : public actor_system::cluster::Observer {
  public:
@@ -68,8 +66,6 @@ class CountCluster : public actor_system::cluster::Observer {
       }
       std::cout << "add worker, host: " << m.host << std::endl;
       AddWorkerNode(m.host, k_yanghui_work_port1);
-      //      AddWorkerNode(m.host, k_yanghui_work_port2);
-      //      AddWorkerNode(m.host, k_yanghui_work_port3);
     }
   }
 
@@ -81,8 +77,6 @@ class CountCluster : public actor_system::cluster::Observer {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
-        //        AddWorkerNode(event.member.host, k_yanghui_work_port2);
-        //        AddWorkerNode(event.member.host, k_yanghui_work_port3);
       } else {
         // Todo(Yujia.Li): resource leak
         std::cout << "detect worker node down, host:" << event.member.host
@@ -100,16 +94,22 @@ class CountCluster : public actor_system::cluster::Observer {
 
     caf::scoped_actor self{system_};
     AllActorData actors;
-    self->request(*get_actor, std::chrono::seconds(1), 0)
-        .receive([&](AllActorData ret) { actors = ret; },
-                 [=](caf::error err) {});
+    self->request(*get_actor, std::chrono::seconds(1), all_atom::value)
+        .receive(
+            [&](AllActorData ret) {
+              actors = ret;
+              std::cout << "=======add pool member host:" << host
+                        << ", port:" << port
+                        << "actor count : " << actors.actors.size()
+                        << std::endl;
+            },
+            [=](caf::error err) {
+              std::cout << "====== add work node Error. host : " << host
+                        << ", port:" << port << std::endl;
+            });
     for (auto work_actor : actors.actors) {
       counter_.AddActor(work_actor);
     }
-    // counter_.AddActor(*worker_actor);
-
-    std::cout << "=======add pool member host:" << host << ", port:" << port
-              << std::endl;
   }
 
   int AddNumber(int a, int b, int& result) {
@@ -161,31 +161,33 @@ class CountCluster : public actor_system::cluster::Observer {
   ActorUnion counter_;
 };
 
-caf::behavior getAllActors(caf::event_based_actor* self, AllActorData* actors) {
-  return {[=](int a) -> AllActorData {
+caf::behavior getAllActors(caf::event_based_actor* self, AllActorData* actors,
+                           std::mutex* mutex_) {
+  return {[=](all_atom) -> AllActorData {
     std::cout << "get all actors" << std::endl;
+    std::lock_guard<std::mutex> mutx(*mutex_);
     return *actors;
   }};
 }
 
-void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
+bool spawnAllActors(caf::actor_system& system,
+                    ActorStatusMonitor& actor_status_monitor,
+                    AllActorData& actors, std::mutex* mutex_) {
   auto actor1 = system.spawn<typed_calculator>();
-  //  system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
-  //                             k_yanghui_work_port1);
-  //  std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
-
+  if (!actor1) {
+    std::cout << "spawn actor1 failed." << std::endl;
+    return false;
+  }
   auto actor2 = system.spawn<typed_calculator>();
-  //  system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
-  //                             k_yanghui_work_port2);
-  //  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
-
+  if (!actor2) {
+    std::cout << "spawn actor2 failed." << std::endl;
+    return false;
+  }
   auto actor3 = system.spawn<typed_calculator>();
-  //  system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
-  //                             k_yanghui_work_port3);
-  //  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
-
-  ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+  if (!actor3) {
+    std::cout << "spawn actor3 failed." << std::endl;
+    return false;
+  }
 
   auto form_actor1 = caf::actor_cast<caf::actor>(actor1);
   auto form_actor2 = caf::actor_cast<caf::actor>(actor2);
@@ -198,12 +200,30 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   actor_status_monitor.RegisterActor(form_actor3, "calculator3",
                                      "a actor can calculate for yanghui.");
 
-  AllActorData actors;
+  std::lock_guard<std::mutex> mutx(*mutex_);
   actors.actors.push_back(form_actor1);
   actors.actors.push_back(form_actor2);
   actors.actors.push_back(form_actor3);
+  return true;
+}
 
-  auto public_actor = system.spawn(getAllActors, &actors);
+void shutdownAllActors(caf::scoped_actor& self, AllActorData& actors,
+                       std::mutex* mutex_) {
+  std::lock_guard<std::mutex> mutx(*mutex_);
+  for (auto actor : actors.actors) {
+    self->send_exit(actor, caf::exit_reason::user_shutdown);
+  }
+  actors.actors.clear();
+}
+
+void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
+  ActorStatusMonitor actor_status_monitor(system);
+  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+
+  AllActorData actors;
+  std::mutex mutex;
+  spawnAllActors(system, actor_status_monitor, actors, &mutex);
+  auto public_actor = system.spawn(getAllActors, &actors, &mutex);
   system.middleman().publish(caf::actor_cast<caf::actor>(public_actor),
                              k_yanghui_work_port1);
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
@@ -219,15 +239,12 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
       std::cout << "stop work" << std::endl;
       break;
     }
-
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
   caf::scoped_actor self{system};
-
-  self->send_exit(actor1, caf::exit_reason::user_shutdown);
-  self->send_exit(actor2, caf::exit_reason::user_shutdown);
-  self->send_exit(actor3, caf::exit_reason::user_shutdown);
+  system.middleman().unpublish(public_actor, k_yanghui_work_port1);
+  shutdownAllActors(self, actors, &mutex);
 }
 
 caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {

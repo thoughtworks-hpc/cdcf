@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+using all_atom = caf::atom_constant<caf::atom("all")>;
+
 struct AllActorData {
   std::vector<caf::actor> actors;
 };
