@@ -100,6 +100,14 @@ TEST(Membership, ConfigWithDuplicateSeedMember) {
   EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
 }
 
+TEST(Membership, ShouldGetIpWithHostNameWhenSetHostMemberWithHostName){
+  membership::Config config;
+  config.SetHostMember("node1", "broadcasthost", 27777);
+  auto member = config.GetHostMember();
+  EXPECT_EQ(member.GetHostName(), "broadcasthost");
+  EXPECT_EQ(member.GetIpAddress(), "255.255.255.255");
+}
+
 // Message
 TEST(Message, CreateUpMessage) {
   membership::UpdateMessage message1;

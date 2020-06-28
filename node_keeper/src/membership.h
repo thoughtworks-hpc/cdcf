@@ -30,8 +30,9 @@ enum ErrorCode {
 class Member {
  public:
   Member() : port_(0) {}
-  Member(std::string node_name, std::string ip_address, uint16_t port)
+  Member(std::string node_name, std::string ip_address, uint16_t port, std::string host_name = "")
       : node_name_(std::move(node_name)),
+        host_name_(std::move(host_name)),
         ip_address_(std::move(ip_address)),
         port_(port) {}
 
@@ -40,6 +41,7 @@ class Member {
   friend bool operator<(const Member& lhs, const Member& rhs);
 
   std::string GetNodeName() const { return node_name_; }
+  std::string GetHostName() const { return host_name_; }
   std::string GetIpAddress() const { return ip_address_; }
   uint16_t GetPort() const { return port_; }
 
@@ -47,6 +49,7 @@ class Member {
 
  private:
   std::string node_name_;
+  std::string host_name_;
   std::string ip_address_;
   uint16_t port_;
 };

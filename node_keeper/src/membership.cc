@@ -703,7 +703,14 @@ bool membership::Member::IsEmptyMember() {
 int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
                                       uint16_t port) {
-  Member host(node_name, ip_address, port);
+  asio::io_context io_context;
+  using asio::ip::tcp;
+  tcp::resolver resolver(io_context);
+  tcp::resolver::results_type endpoints = resolver.resolve(ip_address, "");
+  auto entry = *endpoints.begin();
+  auto endpoint = entry.endpoint();
+
+  Member host(node_name, endpoint.address().to_string(), port, entry.host_name());
   host_ = host;
 
   return MEMBERSHIP_SUCCESS;
