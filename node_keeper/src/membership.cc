@@ -297,6 +297,13 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       return;
     }
     RecoverySuspect(member);
+  } else if (message.IsActorsUpMessage()) {
+    auto actors = member.GetActors();
+    std::cout << "[Gossip] receive actors up, size: " << actors.size()
+              << std::endl;
+    for (auto& actor : actors) {
+      std::cout << "[Gossip] actor address: " << actor.address << std::endl;
+    }
   }
 }
 
@@ -689,6 +696,9 @@ void membership::Membership::SendGossip(const gossip::Payload& payload) {
   gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                       GetRetransmitLimit());
 }
+membership::Member membership::Membership::GetSelf() const { return self_; }
+
+int membership::Membership::IncreaseIncarnation() { return ++incarnation_; }
 
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {

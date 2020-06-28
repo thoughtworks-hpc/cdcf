@@ -29,11 +29,14 @@ class UpdateMessage : public Message {
   void InitAsDownMessage(const Member& member, unsigned int incarnation);
   void InitAsSuspectMessage(const Member& member, unsigned int incarnation);
   void InitAsRecoveryMessage(const Member& member, unsigned int incarnation);
+  void InitAsActorsUpMessage(const Member& member, unsigned int incarnation);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
   bool IsSuspectMessage() const;
   bool IsRecoveryMessage() const;
+  bool IsActorsUpMessage() const;
   Member GetMember() const;
+
   unsigned int GetIncarnation() const { return update_.incarnation(); }
 
   google::protobuf::Message& BaseMessage() override { return update_; }

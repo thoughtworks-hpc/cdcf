@@ -30,11 +30,21 @@ namespace node_keeper {
                                           ::google::protobuf::Empty* response) {
   std::cout << ">>> GRPCImpl::PushActorsUpInfo" << std::endl;
 
+  std::vector<node_keeper::Actor> up_actors;
+
   for (auto address : request->addresses()) {
     std::cout << "address: " << address << std::endl;
+    up_actors.push_back({address});
   }
 
+  // Todo(Yujia.Li): 把新起来的actor加入到self_里。
+  auto self_member = cluster_membership_.GetSelf();
+  membership::Member member(self_member.GetNodeName(),
+                            self_member.GetIpAddress(), self_member.GetPort(),
+                            up_actors);
   membership::UpdateMessage message;
+  message.InitAsActorsUpMessage(member,
+                                cluster_membership_.IncreaseIncarnation());
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   cluster_membership_.SendGossip(payload);

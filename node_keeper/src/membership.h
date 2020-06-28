@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "../../logger/include/logger.h"
+#include "src/actor.h"
 #include "src/gossip.h"
 #include "src/queue.h"
 
@@ -139,6 +140,8 @@ class Membership {
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
   void SendGossip(const gossip::Payload& payload);
+  Member GetSelf() const;
+  int IncreaseIncarnation();
 
  private:
   int AddMember(const Member& member);

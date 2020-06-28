@@ -79,6 +79,13 @@ bool membership::UpdateMessage::IsRecoveryMessage() const {
            update_.status() != MemberUpdate::RECOVERY);
 }
 
+bool membership::UpdateMessage::IsActorsUpMessage() const {
+  if (!update_.IsInitialized()) {
+    return false;
+  }
+  return update_.status() == MemberUpdate::ACTORS_UP;
+}
+
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
   for (const auto& member : members) {
@@ -90,6 +97,18 @@ void membership::FullStateMessage::InitAsFullStateMessage(
     new_state->set_port(member.GetPort());
     new_state->set_status(MemberUpdate::UP);
     new_state->set_incarnation(1);
+  }
+}
+
+void membership::UpdateMessage::InitAsActorsUpMessage(
+    const membership::Member& member, unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_status(MemberUpdate::ACTORS_UP);
+  update_.set_incarnation(incarnation);
+  for (auto& actor : member.GetActors()) {
+    update_.add_actor_addresses(actor.address);
   }
 }
 
