@@ -3,6 +3,8 @@
  */
 #include "src/grpc.h"
 
+#include "membership_message.h"
+
 namespace {
 ::Member& UpdateMember(::Member* to, const membership::Member& from) {
   to->set_name(from.GetNodeName());
@@ -31,6 +33,12 @@ namespace node_keeper {
   for (auto address : request->addresses()) {
     std::cout << "address: " << address << std::endl;
   }
+
+  membership::UpdateMessage message;
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+  cluster_membership_.SendGossip(payload);
+
   return ::grpc::Status::OK;
 }
 
@@ -74,6 +82,7 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
     }
   }
 }
-GRPCImpl::GRPCImpl(membership::Membership& cluster_membership): cluster_membership_(cluster_membership) {}
+GRPCImpl::GRPCImpl(membership::Membership& cluster_membership)
+    : cluster_membership_(cluster_membership) {}
 
 }  // namespace node_keeper

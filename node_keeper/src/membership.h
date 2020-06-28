@@ -138,6 +138,7 @@ class Membership {
   std::vector<Member> GetMembers() const;
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
+  void SendGossip(const gossip::Payload& payload);
 
  private:
   int AddMember(const Member& member);

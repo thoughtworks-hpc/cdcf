@@ -685,6 +685,10 @@ void membership::Membership::RecoverySuspect(const membership::Member& member) {
 
   Notify();
 }
+void membership::Membership::SendGossip(const gossip::Payload& payload) {
+  gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
+                      GetRetransmitLimit());
+}
 
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
