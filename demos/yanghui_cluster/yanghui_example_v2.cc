@@ -90,6 +90,7 @@ class CountCluster : public actor_system::cluster::Observer {
     if (!get_actor) {
       std::cout << "connect remote actor failed. host:" << host
                 << ", port:" << port << std::endl;
+      return;
     }
 
     caf::scoped_actor self{system_};
