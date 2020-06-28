@@ -238,7 +238,8 @@ void shutdownAllActors(caf::scoped_actor& self, AllActorData& actors,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  ActorStatusMonitor actor_status_monitor(system);
+  auto cluster = actor_system::cluster::Cluster::GetInstance();
+  ActorStatusMonitor actor_status_monitor(system, cluster);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   AllActorData actors;

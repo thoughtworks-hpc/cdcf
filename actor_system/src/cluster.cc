@@ -42,14 +42,26 @@ class ClusterImpl {
   }
 
   void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
-    grpc::ClientContext context;
     ActorsUpInfo request;
 
     for (int i = 0; i < up_actors.size(); i++) {
-      request.add_addresses(caf::to_string(up_actors[i].address()));
+      auto address = caf::to_string(up_actors[i].address());
+      request.add_addresses(address);
     }
 
-    stub_->PushActorsUpInfo(&context, request, {});
+    grpc::ClientContext context;
+    ::GetMembersReply reply;
+    ::google::protobuf::Empty empty;
+
+    auto status = stub_->PushActorsUpInfo(&context, request, &empty);
+    if (status.ok()) {
+      std::cout << "[PushActorsUpToNodeKeeper] rpc ok" << std::endl;
+    } else {
+      // Todo(Yujia.Li): 记日志
+      std::cout << "[PushActorsUpToNodeKeeper] error code:  "
+                << status.error_code() << ",msg: " << status.error_message()
+                << ", detail: " << status.error_details() << std::endl;
+    }
   }
 
  private:
