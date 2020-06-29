@@ -24,6 +24,16 @@ TEST(NodeKeeper, should_create_new_cluster_if_node_is_primary_seed) {
   EXPECT_THAT(keeper.GetMembers().size(), Eq(1));
 }
 
+TEST(NodeKeeper, should_get_host_name_when_providing_config_with_host_name) {
+  node_keeper::Config config;
+  config.parse_config({"--name=node0", "--host=localhost", "--port=5000"});
+  const node_keeper::NodeKeeper keeper(config);
+
+  EXPECT_THAT(keeper.GetMembers().size(), Eq(1));
+  EXPECT_THAT(keeper.GetMembers()[0].GetHostName(), Eq("localhost"));
+  EXPECT_THAT(keeper.GetMembers()[0].GetIpAddress(), Eq("127.0.0.1"));
+}
+
 TEST(DISABLED_NodeKeeper, should_join_cluster_if_seed_node_is_secondary_seed) {
   node_keeper::Config config_primary;
   node_keeper::Config config_secondary;

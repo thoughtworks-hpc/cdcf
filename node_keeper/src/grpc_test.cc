@@ -122,3 +122,14 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
   EXPECT_THAT(event.member().host(), Eq(node_a_.GetIpAddress()));
   EXPECT_THAT(event.member().port(), Eq(node_a_.GetPort()));
 }
+
+TEST_F(GRPCTest, ShouldGetHostNameWhenConfigWithHostName) {
+  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+
+  ::GetMembersReply reply;
+  grpc::ClientContext context;
+  auto status = stub_->GetMembers(&context, {}, &reply);
+
+  EXPECT_TRUE(status.ok());
+  EXPECT_THAT(reply.members().size(), Eq(1));
+}
