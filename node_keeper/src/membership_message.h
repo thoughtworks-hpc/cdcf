@@ -29,7 +29,8 @@ class UpdateMessage : public Message {
   void InitAsDownMessage(const Member& member, unsigned int incarnation);
   void InitAsSuspectMessage(const Member& member, unsigned int incarnation);
   void InitAsRecoveryMessage(const Member& member, unsigned int incarnation);
-  void InitAsActorsUpMessage(const Member& member, unsigned int incarnation);
+  void InitAsActorsUpMessage(const Member& member, unsigned int incarnation,
+                             const std::vector<node_keeper::Actor>& actors);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
   bool IsSuspectMessage() const;
@@ -38,6 +39,8 @@ class UpdateMessage : public Message {
   Member GetMember() const;
 
   unsigned int GetIncarnation() const { return update_.incarnation(); }
+
+  std::vector<node_keeper::Actor> GetActors() const;
 
   google::protobuf::Message& BaseMessage() override { return update_; }
 

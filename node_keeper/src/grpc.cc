@@ -38,13 +38,10 @@ namespace node_keeper {
   }
 
   // Todo(Yujia.Li): 把新起来的actor加入到self_里。
-  auto self_member = cluster_membership_.GetSelf();
-  membership::Member member(self_member.GetNodeName(),
-                            self_member.GetIpAddress(), self_member.GetPort(),
-                            up_actors);
   membership::UpdateMessage message;
-  message.InitAsActorsUpMessage(member,
-                                cluster_membership_.IncreaseIncarnation());
+  message.InitAsActorsUpMessage(cluster_membership_.GetSelf(),
+                                cluster_membership_.IncreaseIncarnation(),
+                                up_actors);
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   cluster_membership_.SendGossip(payload);

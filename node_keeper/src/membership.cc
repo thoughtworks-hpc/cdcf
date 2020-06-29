@@ -298,12 +298,24 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
     RecoverySuspect(member);
   } else if (message.IsActorsUpMessage()) {
-    auto actors = member.GetActors();
-    std::cout << "[Gossip] receive actors up, size: " << actors.size()
-              << std::endl;
-    for (auto& actor : actors) {
-      std::cout << "[Gossip] actor address: " << actor.address << std::endl;
+    if (!IfBelongsToMembers(member)) {
+      return;
     }
+    if (GetMemberLocalIncarnation(member) >= message.GetIncarnation()) {
+      return;
+    }
+
+    auto actors = message.GetActors();
+
+    std::cout << "receive actors up gossip, size: " << actors.size()
+              << std::endl;
+
+    for (auto& actor : actors) {
+      std::cout << "address" << actor.address << std::endl;
+    }
+
+    // 1. 更新incanation
+    // 2. 合并收到的actors
   }
 }
 
