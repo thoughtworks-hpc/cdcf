@@ -151,6 +151,8 @@ class Membership {
   unsigned int GetMemberLocalIncarnation(const membership::Member& member);
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
+  void MergeActorsUp(const Member& member, unsigned int incarnation,
+                     const std::vector<node_keeper::Actor>& up_actors);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void MergeMembers(const std::map<membership::Member, int>& members);
   void Notify();
@@ -183,6 +185,8 @@ class Membership {
   // Todo(davidzwb): consider using a read write lock instead
   mutable std::mutex mutex_members_;
   mutable std::mutex mutex_suspects_;
+  std::map<Member, std::set<node_keeper::Actor>> member_actors_;
+  mutable std::mutex mutex_member_actors_;
   Member self_;
   std::vector<Member> seed_members_;
   std::shared_ptr<gossip::Transportable> transport_;

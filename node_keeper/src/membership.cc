@@ -305,17 +305,16 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       return;
     }
 
-    auto actors = message.GetActors();
+    auto up_actors = message.GetActors();
 
-    std::cout << "receive actors up gossip, size: " << actors.size()
+    std::cout << "receive actors up gossip, size: " << up_actors.size()
               << std::endl;
 
-    for (auto& actor : actors) {
+    for (auto& actor : up_actors) {
       std::cout << "address" << actor.address << std::endl;
     }
-
-    // 1. 更新incanation
-    // 2. 合并收到的actors
+    SendGossip(payload);
+    MergeActorsUp(member, message.GetIncarnation(), up_actors);
   }
 }
 
@@ -711,6 +710,30 @@ void membership::Membership::SendGossip(const gossip::Payload& payload) {
 membership::Member membership::Membership::GetSelf() const { return self_; }
 
 int membership::Membership::IncreaseIncarnation() { return ++incarnation_; }
+
+void membership::Membership::MergeActorsUp(
+    const membership::Member& member, unsigned int incarnation,
+    const std::vector<node_keeper::Actor>& actors) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+
+    if ((members_.find(member) != members_.end() &&
+         members_[member] >= incarnation)) {
+      return;
+    }
+    members_[member] = incarnation;
+  }
+
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
+    for (auto& actor : actors) {
+      std::cout << "[member_actors_] insert" << actor.address << std::endl;
+      member_actors_[member].insert(actor);
+    }
+  }
+
+  Notify();
+}
 
 bool membership::operator==(const membership::Member& lhs,
                             const membership::Member& rhs) {
