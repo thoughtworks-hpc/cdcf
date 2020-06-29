@@ -10,6 +10,8 @@
 namespace node_keeper {
 struct Actor {
   std::string address;
+
+  bool operator<(const Actor& rhs) const;
 };
 }  // namespace node_keeper
 

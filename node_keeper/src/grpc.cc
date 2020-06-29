@@ -58,8 +58,14 @@ namespace node_keeper {
     UpdateMember(member_event.mutable_member(), item.second.member);
     if (item.second.type == MemberEvent::kMemberUp) {
       member_event.set_status(::MemberEvent::UP);
-    } else {
+    } else if (item.second.type == MemberEvent::kMemberDown) {
       member_event.set_status(::MemberEvent::DOWN);
+    } else if (item.second.type == MemberEvent::kActorsUp) {
+      member_event.set_status(::MemberEvent::ACTORS_UP);
+      auto actors = member_event.mutable_actors();
+      for (auto& actor : item.second.actors) {
+        actors->add_addresses(actor.address);
+      }
     }
     ::Event event;
     event.set_type(Event_Type_MEMBER_CHANGED);
@@ -78,6 +84,9 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
         break;
       case MemberEvent::kMemberDown:
         members_.erase(event.member);
+        break;
+      case MemberEvent::kActorsUp:
+        // Todo:(存储actors)
         break;
     }
   }

@@ -137,6 +137,7 @@ class Membership {
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers() const;
+  std::map<Member, std::set<node_keeper::Actor>> GetMemberActors() const;
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
   void SendGossip(const gossip::Payload& payload);

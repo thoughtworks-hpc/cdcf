@@ -41,6 +41,12 @@ std::vector<membership::Member> membership::Membership::GetMembers() const {
   return return_members;
 }
 
+std::map<membership::Member, std::set<node_keeper::Actor>>
+membership::Membership::GetMemberActors() const {
+  const std::lock_guard<std::mutex> lock(mutex_member_actors_);
+  return member_actors_;
+}
+
 std::vector<membership::Member> membership::Membership::GetSuspects() const {
   std::vector<Member> return_members;
   const std::lock_guard<std::mutex> lock(mutex_suspects_);

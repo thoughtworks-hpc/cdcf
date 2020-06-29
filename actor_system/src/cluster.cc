@@ -103,18 +103,22 @@ class ClusterImpl {
     auto port = static_cast<uint16_t>(detail.port());
     Member member{detail.name(), detail.hostname(), detail.host(), port};
     if (member_event.status() == ::MemberEvent::UP) {
-      //      std::cout << "ClusterImpl Update, event up, " << member.host <<
-      //      std::endl;
       member.status = Member::Status::Up;
       std::lock_guard lock(mutex_);
       members_.push_back(member);
     } else if (member_event.status() == ::MemberEvent::DOWN) {
-      //      std::cout << "ClusterImpl Update, event down, " << member.host
-      //                << std::endl;
       member.status = Member::Status::Down;
       std::lock_guard lock(mutex_);
       auto it = std::remove(members_.begin(), members_.end(), member);
       members_.erase(it, members_.end());
+    } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
+      auto actors = member_event.actors().addresses();
+
+      std::cout << "[actor system] receive actors up, size: " << actors.size()
+                << std::endl;
+      for (auto& actor_address : actors) {
+        std::cout << "[actor system] " << actor_address << " up." << std::endl;
+      }
     }
     Cluster::GetInstance()->Notify({member});
   }

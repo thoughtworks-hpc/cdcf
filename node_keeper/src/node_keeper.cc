@@ -87,7 +87,8 @@ void NodeKeeper::Run() {
   MemberEventGenerator generator;
   for (;;) {
     /* FIXME: Is GetMembers thread safe? */
-    auto events = generator.Update(membership_.GetMembers());
+    auto events = generator.Update(membership_.GetMembers(),
+                                   membership_.GetMemberActors());
     for (auto& event : events) {
       std::cout << "node [" << event.member.GetNodeName() << "@"
                 << event.member.GetHostName() << ": "
@@ -101,6 +102,14 @@ void NodeKeeper::Run() {
           std::cout << "] is down." << std::endl;
           service.Notify(
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
+          break;
+        case MemberEvent::kActorsUp:
+          //          std::cout << "] actors up: " << std::endl;
+          //          for (auto& actor : event.actors) {
+          //            std::cout << "address: " << actor.address << std::endl;
+          //          }
+          service.Notify({{node_keeper::MemberEvent::kActorsUp, event.member,
+                           event.actors}});
           break;
       }
     }

@@ -10,15 +10,51 @@
 
 namespace node_keeper {
 struct MemberEvent {
-  enum Type { kMemberDown = 1, kMemberUp = 2 };
+  enum Type { kMemberDown = 1, kMemberUp = 2, kActorsUp = 3 };
   Type type;
   membership::Member member;
+  std::set<Actor> actors;
 };
 
 class MemberEventGenerator {
  public:
   using Members = std::vector<membership::Member>;
-  std::vector<MemberEvent> Update(const Members& members) {
+  using MemberActors = std::map<membership::Member, std::set<Actor>>;
+  std::vector<MemberEvent> Update(const Members& members,
+                                  const MemberActors& member_actors) {
+    std::vector<MemberEvent> result;
+    auto member_events = generateEventForMember(members);
+    result.insert(result.end(), member_events.begin(), member_events.end());
+
+    auto actor_events = generateEventForActors(members, member_actors);
+    result.insert(result.end(), actor_events.begin(), actor_events.end());
+
+    members_ = members;
+    member_actors_ = member_actors;
+    return result;
+  }
+
+  std::vector<MemberEvent> generateEventForActors(
+      const Members& members, const MemberActors& member_actors) {
+    std::vector<MemberEvent> result;
+    for (auto& member : members) {
+      std::vector<Actor> up;
+      auto it = member_actors.find(member);
+      if (it == member_actors.end()) {
+        continue;
+      }
+      auto actors = it->second;
+      std::set_difference(actors.begin(), actors.end(),
+                          member_actors_[member].begin(),
+                          member_actors_[member].end(), std::back_inserter(up));
+
+      result.push_back(MemberEvent{MemberEvent::kActorsUp, member, actors});
+    }
+    return result;
+  }
+
+  std::vector<MemberEvent> generateEventForMember(
+      const Members& members) const {
     std::vector<MemberEvent> result;
     auto comparator = [](const membership::Member& lhs,
                          const membership::Member& rhs) {
@@ -39,12 +75,12 @@ class MemberEventGenerator {
                    [](const auto& member) {
                      return MemberEvent{MemberEvent::kMemberDown, member};
                    });
-    members_ = members;
     return result;
   }
 
  private:
   Members members_;
+  MemberActors member_actors_;
 };
 }  // namespace node_keeper
 #endif  // NODE_KEEPER_SRC_EVENT_H_
