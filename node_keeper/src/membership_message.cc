@@ -113,6 +113,7 @@ void membership::PullRequestMessage::InitAsPingType() {
   pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
 }
 
+// Todo(davidzwb): consider using md5 to optimize message size
 void membership::PullRequestMessage::InitAsPingType(
     const std::map<Member, int>& members) {
   pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
