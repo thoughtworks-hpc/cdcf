@@ -8,12 +8,14 @@
 
 Daemon::Daemon(ProcessManager& process_manager, cdcf::Logger& logger,
                std::string path, std::vector<std::string> args,
+               std::function<void()> app_down_handle,
                std::chrono::milliseconds stable_time)
     : process_manager_(process_manager),
       logger_(logger),
       path_(std::move(path)),
       args_(std::move(args)),
-      stable_time_(stable_time) {}
+      stable_time_(stable_time),
+      app_down_handle_(std::move(app_down_handle)) {}
 
 void Daemon::Run() {
   using std::chrono::system_clock;
@@ -29,6 +31,9 @@ void Daemon::Run() {
     //        std::cout << "pid: " << *((pid_t *)app_process_info_.get()) <<
     //        std::endl;
     process_manager_.WaitProcessExit(app_process_info_);
+    if (app_down_handle_) {
+      app_down_handle_();
+    }
     logger_.Warn("actor system exit");
     if (restart_ == 0) {
       auto end = system_clock::now();
