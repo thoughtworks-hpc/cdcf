@@ -127,6 +127,7 @@ class CountCluster : public actor_system::cluster::Observer {
       AllActorData actors = promise.get_future().get();
       for (auto work_actor : actors.actors) {
         counter_.AddActor(work_actor);
+        SetMonitor(supervisor_, work_actor, "remote worker actor");
       }
     } catch (std::exception& e) {
       std::cout << "[exception caught: " << e.what() << "]" << std::endl;
@@ -367,6 +368,7 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   CountCluster counter(cfg.root_host, system, cfg.node_keeper_port,
                        cfg.worker_port);
 
@@ -384,8 +386,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
-
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
   ActorGuard actor_guard(

@@ -64,6 +64,11 @@ class ClusterImpl {
     }
   }
 
+  void AddActorMonitor(caf::actor monitor) {
+    std::lock_guard lock(mutex_monitors_);
+    monitors_.push_back(caf::actor_cast<caf::actor>(monitor));
+  }
+
  private:
   void Routine() {
     Fetch();
@@ -89,6 +94,25 @@ class ClusterImpl {
       {
         std::lock_guard lock(mutex_members_);
         std::swap(members_, members);
+      }
+    }
+  }
+
+  void NotifyMonitors(MemberEvent event, Member member) {
+    if (event.status() == ::MemberEvent::DOWN) {
+      std::vector<std::string> down_actors_address;
+      {
+        std::lock_guard lock(mutex_member_actors_);
+        auto down_actors = member_actors_[member];
+        std::transform(down_actors.begin(), down_actors.end(),
+                       std::back_inserter(down_actors_address),
+                       [](const auto& actor) { return actor.address; });
+      }
+      {
+        std::lock_guard lock(mutex_monitors_);
+        for (auto& monitor : monitors_) {
+          caf::anon_send(monitor, down_actors_address);
+        }
       }
     }
   }
@@ -119,19 +143,21 @@ class ClusterImpl {
       for (auto& actor_address : actors) {
         std::cout << "[actor system] " << actor_address << " up." << std::endl;
       }
-      std::lock_guard lock(mutex_member_actors);
+      std::lock_guard lock(mutex_member_actors_);
       for (auto& actor_address : actors) {
         member_actors_[member].insert({actor_address});
       }
     }
+    NotifyMonitors(member_event, member);
     Cluster::GetInstance()->Notify({member});
   }
 
   std::mutex mutex_members_;
   std::vector<Member> members_;
-  std::mutex mutex_member_actors;
+  std::mutex mutex_member_actors_;
   std::map<Member, std::set<Actor>> member_actors_;
-  // Todo(Yujia.Li) 在这里添加ActorMonitor
+  std::mutex mutex_monitors_;
+  std::vector<caf::actor> monitors_;
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};
@@ -162,5 +188,8 @@ void Cluster::PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
   impl_->PushActorsUpToNodeKeeper(up_actors);
 }
 
+void Cluster::AddActorMonitor(caf::actor monitor) {
+  impl_->AddActorMonitor(monitor);
+}
 }  // namespace cluster
 };  // namespace actor_system

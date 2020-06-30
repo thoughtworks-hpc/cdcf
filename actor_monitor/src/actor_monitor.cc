@@ -4,6 +4,8 @@
 
 #include "../include/actor_monitor.h"
 
+#include "../../actor_system/include/actor_system/cluster.h"
+
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(
     caf::actor_config& cfg,
@@ -33,10 +35,21 @@ caf::behavior ActorMonitor::make_behavior() {
           std::lock_guard<std::mutex> locker(mapLock);
           actor_map_[caf::to_string(actor_addr)] = description;
         }
+        actor_addr_map_[caf::to_string(actor_addr)] = actor_addr;
 
         aout(this) << "monitor new actor, actor addr:"
                    << caf::to_string(actor_addr)
                    << "actor description:" << description << std::endl;
+      },
+      [=](const std::vector<std::string>& down_actor_address) {
+        for (auto& address : down_actor_address) {
+          if (auto it = actor_addr_map_.find(address);
+              it != actor_addr_map_.end()) {
+            caf::down_msg msg;
+            msg.source = it->second;
+            this->send(this, msg);
+          }
+        }
       }};
 }
 

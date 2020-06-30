@@ -34,10 +34,18 @@ struct Member {
   bool operator==(const struct Member& other) const {
     return host == other.host && port == other.port;
   }
+
+  bool operator<(const Member& rhs) const {
+    if (host < rhs.host) return true;
+    if (rhs.host < host) return false;
+    return port < rhs.port;
+  }
 };
 
 struct Actor {
   std::string address;
+
+  bool operator<(const Actor& rhs) const { return address < rhs.address; }
 };
 
 struct Event {
@@ -91,6 +99,8 @@ class Cluster : public Subject {
   std::vector<Member> GetMembers();
 
   void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors);
+
+  void AddActorMonitor(caf::actor monitor);
 
  private:
   Cluster();
