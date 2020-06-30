@@ -87,7 +87,7 @@ void NodeKeeper::Run() {
     /* FIXME: Is GetMembers thread safe? */
     auto events = generator.Update(membership_.GetMembers());
     for (auto& event : events) {
-      std::cout << "node [" << event.member.GetNodeName() << ": "
+      std::cout << "node [" << event.member.GetHostName() << ": "
                 << event.member.GetIpAddress() << ":" << event.member.GetPort();
       switch (event.type) {
         case MemberEvent::kMemberUp:

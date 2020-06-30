@@ -47,16 +47,10 @@ class CountCluster : public actor_system::cluster::Observer {
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()) {
     auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-    std::cout << "Get Cluster Members:" << std::endl;
-    for (int i = 0; i < members.size(); ++i) {
-      auto& member = members[i];
-      std::cout << "Member " << i << std::endl;
-      std::cout << "name: " << member.name << ", hostname: " << member.hostname
-                << ", host: " << member.host << ", port:" << member.port
-                << std::endl;
-    }
+
     InitWorkerNodes(members, host_, port_);
     actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    PrintClusterMembers();
   }
   ~CountCluster() {
     actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
@@ -85,11 +79,24 @@ class CountCluster : public actor_system::cluster::Observer {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
+        PrintClusterMembers();
       } else {
         // Todo(Yujia.Li): resource leak
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
       }
+    }
+  }
+
+  void PrintClusterMembers() {
+    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+    std::cout << "Current Cluster Members:" << std::endl;
+    for (int i = 0; i < members.size(); ++i) {
+      auto& member = members[i];
+      std::cout << "Member " << i + 1 << ": ";
+      std::cout << "name: " << member.name << ", hostname: " << member.hostname
+                << ", host: " << member.host << ", port:" << member.port
+                << std::endl;
     }
   }
 
