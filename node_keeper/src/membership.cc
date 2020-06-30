@@ -353,7 +353,8 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     std::vector<Member> members;
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
-                           member.first.GetIpAddress(), member.first.GetPort());
+                           member.first.GetIpAddress(), member.first.GetPort(),
+                           member.first.GetHostName());
     }
     response.InitAsFullStateMessage(members);
 
