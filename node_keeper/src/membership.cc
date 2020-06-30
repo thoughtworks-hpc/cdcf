@@ -315,6 +315,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
     SendGossip(payload);
     MergeActorsUp(member, message.GetIncarnation(), up_actors);
+  } else if (message.IsActorSystemDownMessage()) {
+    std::cout << "this guy's actor system down: " << member.GetNodeName()
+              << std::endl;
   }
 }
 
@@ -732,6 +735,14 @@ void membership::Membership::MergeActorsUp(
   }
 
   Notify();
+}
+
+void membership::Membership::NotifyActorSystemDown() {
+  membership::UpdateMessage message;
+  message.InitAsActorSystemDownMessage(self_, IncreaseIncarnation());
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+  SendGossip(payload);
 }
 
 bool membership::operator==(const membership::Member& lhs,

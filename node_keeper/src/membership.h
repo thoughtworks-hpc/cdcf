@@ -141,6 +141,7 @@ class Membership {
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
   void SendGossip(const gossip::Payload& payload);
+  void NotifyActorSystemDown();
   Member GetSelf() const;
   int IncreaseIncarnation();
 

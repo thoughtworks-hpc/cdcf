@@ -13,6 +13,8 @@ message MemberUpdate {
         DOWN = 1;
         SUSPECT = 2;
         RECOVERY = 3;
+        ACTORS_UP = 4;
+        ACTOR_SYSTEM_DOWN = 5;
     }
 
     required MemberStatus status = 5;

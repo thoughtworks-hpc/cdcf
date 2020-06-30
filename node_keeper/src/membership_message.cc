@@ -86,6 +86,13 @@ bool membership::UpdateMessage::IsActorsUpMessage() const {
   return update_.status() == MemberUpdate::ACTORS_UP;
 }
 
+bool membership::UpdateMessage::IsActorSystemDownMessage() const {
+  if (!update_.IsInitialized()) {
+    return false;
+  }
+  return update_.status() == MemberUpdate::ACTOR_SYSTEM_DOWN;
+}
+
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
   for (const auto& member : members) {
@@ -110,6 +117,25 @@ void membership::UpdateMessage::InitAsActorsUpMessage(
   for (auto& actor : member.GetActors()) {
     update_.add_actor_addresses(actor.address);
   }
+}
+
+void membership::UpdateMessage::InitAsActorSystemDownMessage(
+    const membership::Member& member, unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_status(MemberUpdate::ACTOR_SYSTEM_DOWN);
+  update_.set_incarnation(incarnation);
+}
+
+std::vector<node_keeper::Actor> membership::UpdateMessage::GetActors() const {
+  std::vector<node_keeper::Actor> actors;
+
+  for (auto& actor_address : update_.actor_addresses()) {
+    actors.push_back({actor_address});
+  }
+
+  return actors;
 }
 
 void membership::FullStateMessage::InitAsReentryRejected() {

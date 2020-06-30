@@ -25,6 +25,8 @@ class NodeKeeper {
     return membership_.GetMembers();
   }
 
+  void NotifyActorSystemDown() { membership_.NotifyActorSystemDown(); }
+
   void Run();
 };
 }  // namespace node_keeper
