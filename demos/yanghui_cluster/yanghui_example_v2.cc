@@ -98,25 +98,30 @@ class CountCluster : public actor_system::cluster::Observer {
     if (!get_actor) {
       std::cout << "connect remote actor failed. host:" << host
                 << ", port:" << port << std::endl;
+      return;
     }
 
     caf::scoped_actor self{system_};
-    AllActorData actors;
+    std::promise<AllActorData> promise;
     self->request(*get_actor, std::chrono::seconds(1), all_atom::value)
         .receive(
             [&](AllActorData ret) {
-              actors = ret;
+              promise.set_value(ret);
               std::cout << "=======add pool member host:" << host
-                        << ", port:" << port
-                        << "actor count : " << actors.actors.size()
-                        << std::endl;
+                        << ", port:" << port << std::endl;
             },
-            [=](caf::error err) {
+            [&](caf::error err) {
               std::cout << "====== add work node Error. host : " << host
                         << ", port:" << port << std::endl;
+              promise.set_exception(std::current_exception());
             });
-    for (auto work_actor : actors.actors) {
-      counter_.AddActor(work_actor);
+    try {
+      AllActorData actors = promise.get_future().get();
+      for (auto work_actor : actors.actors) {
+        counter_.AddActor(work_actor);
+      }
+    } catch (std::exception& e) {
+      std::cout << "[exception caught: " << e.what() << "]" << std::endl;
     }
   }
 
