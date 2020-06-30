@@ -138,12 +138,6 @@ class ClusterImpl {
     } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
       member.status = Member::Status::ActorsUp;
       auto actors = member_event.actors().addresses();
-
-      std::cout << "[actor system] receive actors up, size: " << actors.size()
-                << std::endl;
-      for (auto& actor_address : actors) {
-        std::cout << "[actor system] " << actor_address << " up." << std::endl;
-      }
       std::lock_guard lock(mutex_member_actors_);
       for (auto& actor_address : actors) {
         member_actors_[member].insert({actor_address});

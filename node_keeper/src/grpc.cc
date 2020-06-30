@@ -28,8 +28,6 @@ namespace node_keeper {
 ::grpc::Status GRPCImpl::PushActorsUpInfo(::grpc::ServerContext* context,
                                           const ::ActorsUpInfo* request,
                                           ::google::protobuf::Empty* response) {
-  std::cout << ">>> GRPCImpl::PushActorsUpInfo" << std::endl;
-
   std::vector<node_keeper::Actor> up_actors;
 
   for (auto address : request->addresses()) {

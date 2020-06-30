@@ -81,7 +81,7 @@ class CountCluster : public actor_system::cluster::Observer {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
         PrintClusterMembers();
-      } else {
+      } else if (event.member.status == event.member.Down) {
         // Todo(Yujia.Li): resource leak
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
@@ -177,6 +177,7 @@ class CountCluster : public actor_system::cluster::Observer {
   }
 
   caf::actor_system& system_;
+  caf::actor& supervisor_;
   std::string host_;
   uint16_t port_;
   uint16_t worker_port_;

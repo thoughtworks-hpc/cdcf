@@ -313,12 +313,6 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
     auto up_actors = message.GetActors();
 
-    std::cout << "receive actors up gossip, size: " << up_actors.size()
-              << std::endl;
-
-    for (auto& actor : up_actors) {
-      std::cout << "address" << actor.address << std::endl;
-    }
     SendGossip(payload);
     MergeActorsUp(member, message.GetIncarnation(), up_actors);
   }
@@ -733,7 +727,6 @@ void membership::Membership::MergeActorsUp(
   {
     const std::lock_guard<std::mutex> lock(mutex_member_actors_);
     for (auto& actor : actors) {
-      std::cout << "[member_actors_] insert" << actor.address << std::endl;
       member_actors_[member].insert(actor);
     }
   }
