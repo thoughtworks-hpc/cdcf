@@ -36,6 +36,10 @@ struct Member {
   }
 };
 
+struct Actor {
+  std::string address;
+};
+
 struct Event {
   Member member;
 };

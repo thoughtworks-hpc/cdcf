@@ -37,7 +37,7 @@ class ClusterImpl {
   }
 
   std::vector<Member> GetMembers() {
-    std::lock_guard lock(mutex_);
+    std::lock_guard lock(mutex_members_);
     return members_;
   }
 
@@ -87,7 +87,7 @@ class ClusterImpl {
                              port, Member::Status::Up);
       }
       {
-        std::lock_guard lock(mutex_);
+        std::lock_guard lock(mutex_members_);
         std::swap(members_, members);
       }
     }
@@ -104,11 +104,11 @@ class ClusterImpl {
     Member member{detail.name(), detail.hostname(), detail.host(), port};
     if (member_event.status() == ::MemberEvent::UP) {
       member.status = Member::Status::Up;
-      std::lock_guard lock(mutex_);
+      std::lock_guard lock(mutex_members_);
       members_.push_back(member);
     } else if (member_event.status() == ::MemberEvent::DOWN) {
       member.status = Member::Status::Down;
-      std::lock_guard lock(mutex_);
+      std::lock_guard lock(mutex_members_);
       auto it = std::remove(members_.begin(), members_.end(), member);
       members_.erase(it, members_.end());
     } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
@@ -119,12 +119,18 @@ class ClusterImpl {
       for (auto& actor_address : actors) {
         std::cout << "[actor system] " << actor_address << " up." << std::endl;
       }
+      std::lock_guard lock(mutex_member_actors);
+      for (auto& actor_address : actors) {
+        member_actors_[member].insert({actor_address});
+      }
     }
     Cluster::GetInstance()->Notify({member});
   }
 
-  std::mutex mutex_;
+  std::mutex mutex_members_;
   std::vector<Member> members_;
+  std::mutex mutex_member_actors;
+  std::map<Member, std::set<Actor>> member_actors_;
   // Todo(Yujia.Li) 在这里添加ActorMonitor
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
