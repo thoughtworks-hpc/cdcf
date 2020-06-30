@@ -386,7 +386,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
-  SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
   ActorGuard actor_guard(
       yanghui_actor,
