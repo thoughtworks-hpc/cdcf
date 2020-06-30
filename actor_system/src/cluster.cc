@@ -136,6 +136,7 @@ class ClusterImpl {
       auto it = std::remove(members_.begin(), members_.end(), member);
       members_.erase(it, members_.end());
     } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
+      member.status = Member::Status::ActorsUp;
       auto actors = member_event.actors().addresses();
 
       std::cout << "[actor system] receive actors up, size: " << actors.size()

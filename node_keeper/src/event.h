@@ -13,7 +13,7 @@ struct MemberEvent {
   enum Type { kMemberDown = 1, kMemberUp = 2, kActorsUp = 3 };
   Type type;
   membership::Member member;
-  std::set<Actor> actors;
+  std::vector<Actor> actors;
 };
 
 class MemberEventGenerator {
@@ -44,11 +44,11 @@ class MemberEventGenerator {
         continue;
       }
       auto actors = it->second;
-      std::set_difference(actors.begin(), actors.end(),
-                          member_actors_[member].begin(),
-                          member_actors_[member].end(), std::back_inserter(up));
+      auto& old_actors = member_actors_[member];
+      std::set_difference(actors.begin(), actors.end(), old_actors.begin(),
+                          old_actors.end(), std::back_inserter(up));
 
-      result.push_back(MemberEvent{MemberEvent::kActorsUp, member, actors});
+      result.push_back(MemberEvent{MemberEvent::kActorsUp, member, up});
     }
     return result;
   }
