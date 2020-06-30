@@ -232,6 +232,19 @@ void SimulateReceivingPingMessage(
                              serialized_msg.size());
 }
 
+void SimulateReceivingFullStateMessage(
+    const std::vector<membership::Member>& members,
+    std::shared_ptr<MockTransport> transport) {
+  membership::FullStateMessage message;
+  message.InitAsFullStateMessage(members);
+
+  gossip::Address address;
+  std::string serialized_msg = message.SerializeToString();
+
+  transport->CallPullHandler(address, serialized_msg.data(),
+                             serialized_msg.size());
+}
+
 TEST(Membership, NewUpMessageReceived) {
   membership::Membership my_membership;
   auto transport = std::make_shared<MockTransport>();
@@ -578,3 +591,57 @@ TEST(Membership,
   EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
   EXPECT_EQ(member.GetHostName(), "127.0.0.1");
 }
+
+TEST(Membership, ShouldGetMembersWithIpAddressWhenReceivingUpUpdateMessage) {
+  membership::Member node1{"node1", "127.0.0.1", 27777};
+  membership::Member node2{"node2", "127.0.0.1", 28888, "localhost"};
+
+  membership::Membership node;
+  membership::Config config;
+  config.SetHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  node.Init(transport, config);
+
+  SimulateReceivingUpMessage(node2, transport);
+  EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2}));
+  auto members = node.GetMembers();
+  for (const auto& member : members) {
+    if (member == node1) {
+      continue;
+    }
+    EXPECT_EQ(member.GetNodeName(), "node2");
+    EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+    EXPECT_EQ(member.GetHostName(), "localhost");
+  }
+}
+
+// TEST(Membership, ShouldGetMembersWithIpAddressWhenReceivingFullStateMessage)
+// {
+//  membership::Member node1{"node1", "127.0.0.1", 27777};
+//  membership::Member node2{"node2", "127.0.0.1", 28888, "localhost"};
+//  std::vector<membership::Member> full_state_members{
+//      {"node1", "127.0.0.1", 27777},
+//      {"node2", "127.0.0.1", 28888, "localhost"}};
+//
+//  membership::Membership node;
+//  membership::Config config;
+//  config.SetHostMember("node1", "127.0.0.1", 27777);
+//  auto transport = std::make_shared<MockTransport>();
+//
+//  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+//  node.Init(transport, config);
+//
+//  SimulateReceivingFullStateMessage(full_state_members, transport);
+//  EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2}));
+//  auto members = node.GetMembers();
+//  for (const auto& member : members) {
+//    if (member == node1) {
+//      continue;
+//    }
+//    EXPECT_EQ(member.GetNodeName(), "node2");
+//    EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+//    EXPECT_EQ(member.GetHostName(), "localhost");
+//  }
+//}

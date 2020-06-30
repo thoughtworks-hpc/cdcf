@@ -60,8 +60,8 @@ class ClusterImpl {
       members.reserve(reply.members().size());
       for (auto member : reply.members()) {
         auto port = static_cast<uint16_t>(member.port());
-        members.emplace_back(member.name(), member.host(), port,
-                             Member::Status::Up);
+        members.emplace_back(member.name(), member.hostname(), member.host(),
+                             port, Member::Status::Up);
       }
       {
         std::lock_guard lock(mutex_);
@@ -78,7 +78,7 @@ class ClusterImpl {
     event.data().UnpackTo(&member_event);
     const auto& detail = member_event.member();
     auto port = static_cast<uint16_t>(detail.port());
-    Member member{detail.name(), detail.host(), port};
+    Member member{detail.name(), detail.hostname(), detail.host(), port};
     if (member_event.status() == ::MemberEvent::UP) {
       member.status = Member::Status::Up;
       std::lock_guard lock(mutex_);

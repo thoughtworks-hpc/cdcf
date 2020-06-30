@@ -19,6 +19,7 @@ void membership::Message::DeserializeFromArray(const void* data, int size) {
 void membership::UpdateMessage::InitAsUpMessage(const Member& member,
                                                 unsigned int incarnation) {
   update_.set_name(member.GetNodeName());
+  update_.set_hostname(member.GetHostName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
   update_.set_status(MemberUpdate::UP);
@@ -28,6 +29,7 @@ void membership::UpdateMessage::InitAsUpMessage(const Member& member,
 void membership::UpdateMessage::InitAsDownMessage(const Member& member,
                                                   unsigned int incarnation) {
   update_.set_name(member.GetNodeName());
+  update_.set_hostname(member.GetHostName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
   update_.set_status(MemberUpdate::DOWN);
@@ -37,6 +39,7 @@ void membership::UpdateMessage::InitAsDownMessage(const Member& member,
 void membership::UpdateMessage::InitAsSuspectMessage(const Member& member,
                                                      unsigned int incarnation) {
   update_.set_name(member.GetNodeName());
+  update_.set_hostname(member.GetHostName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
   update_.set_status(MemberUpdate::SUSPECT);
@@ -46,6 +49,7 @@ void membership::UpdateMessage::InitAsSuspectMessage(const Member& member,
 void membership::UpdateMessage::InitAsRecoveryMessage(
     const Member& member, unsigned int incarnation) {
   update_.set_name(member.GetNodeName());
+  update_.set_hostname(member.GetHostName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
   update_.set_status(MemberUpdate::RECOVERY);
@@ -54,7 +58,7 @@ void membership::UpdateMessage::InitAsRecoveryMessage(
 
 membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
-                static_cast<uint16_t>(update_.port())};
+                static_cast<uint16_t>(update_.port()), update_.hostname()};
 }
 
 bool membership::UpdateMessage::IsUpMessage() const {
@@ -77,10 +81,11 @@ bool membership::UpdateMessage::IsRecoveryMessage() const {
 
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
-  for (auto member : members) {
+  for (const auto& member : members) {
     state_.set_error(MemberFullState::SUCCESS);
     auto new_state = state_.add_states();
     new_state->set_name(member.GetNodeName());
+    new_state->set_hostname(member.GetHostName());
     new_state->set_ip(member.GetIpAddress());
     new_state->set_port(member.GetPort());
     new_state->set_status(MemberUpdate::UP);
@@ -95,7 +100,8 @@ void membership::FullStateMessage::InitAsReentryRejected() {
 std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
   std::vector<Member> members;
   for (const auto& state : state_.states()) {
-    members.emplace_back(state.name(), state.ip(), state.port());
+    members.emplace_back(state.name(), state.ip(), state.port(),
+                         state.hostname());
   }
   return members;
 }
@@ -123,6 +129,7 @@ void membership::PullRequestMessage::InitAsPingType(
     auto incarnation = member_pair.second;
     auto new_state = pull_request_.add_states();
     new_state->set_name(member.GetNodeName());
+    new_state->set_hostname(member.GetHostName());
     new_state->set_ip(member.GetIpAddress());
     new_state->set_port(member.GetPort());
     new_state->set_status(MemberUpdate::UP);
@@ -201,7 +208,8 @@ membership::PullRequestMessage::GetMembersWithIncarnation() {
     auto update = pull_request_.states(i);
     if (update.status() == MemberUpdate::UP) {
       membership::Member member{update.name(), update.ip(),
-                                static_cast<uint16_t>(update.port())};
+                                static_cast<uint16_t>(update.port()),
+                                update.hostname()};
       members[member] = update.incarnation();
     }
   }

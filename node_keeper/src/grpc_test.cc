@@ -124,7 +124,8 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
 }
 
 TEST_F(GRPCTest, ShouldGetHostNameWhenConfigWithHostName) {
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  membership::Member node_c_ = {"node_c", "127.0.0.1", 8836, "localhost"};
+  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_c_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;
@@ -132,4 +133,6 @@ TEST_F(GRPCTest, ShouldGetHostNameWhenConfigWithHostName) {
 
   EXPECT_TRUE(status.ok());
   EXPECT_THAT(reply.members().size(), Eq(1));
+  EXPECT_THAT(reply.members(0).hostname(), "localhost");
+  EXPECT_THAT(reply.members(0).host(), "127.0.0.1");
 }
