@@ -10,7 +10,12 @@
 
 namespace node_keeper {
 struct MemberEvent {
-  enum Type { kMemberDown = 1, kMemberUp = 2, kActorsUp = 3 };
+  enum Type {
+    kMemberDown = 1,
+    kMemberUp = 2,
+    kActorsUp = 3,
+    kActorSystemDown = 4
+  };
   Type type;
   membership::Member member;
   std::vector<Actor> actors;
@@ -48,7 +53,13 @@ class MemberEventGenerator {
       std::set_difference(actors.begin(), actors.end(), old_actors.begin(),
                           old_actors.end(), std::back_inserter(up));
 
-      result.push_back(MemberEvent{MemberEvent::kActorsUp, member, up});
+      if (up.size() > 0) {
+        result.push_back(MemberEvent{MemberEvent::kActorsUp, member, up});
+      }
+
+      if (old_actors.size() > 0 && actors.size() == 0) {
+        result.push_back(MemberEvent{MemberEvent::kActorSystemDown, member});
+      }
     }
     return result;
   }

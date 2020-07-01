@@ -316,8 +316,14 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     SendGossip(payload);
     MergeActorsUp(member, message.GetIncarnation(), up_actors);
   } else if (message.IsActorSystemDownMessage()) {
-    std::cout << "this guy's actor system down: " << member.GetNodeName()
-              << std::endl;
+    if (!IfBelongsToMembers(member)) {
+      return;
+    }
+    if (GetMemberLocalIncarnation(member) >= message.GetIncarnation()) {
+      return;
+    }
+    SendGossip(payload);
+    MergeActorSystemDown(member, message.GetIncarnation());
   }
 }
 
@@ -732,6 +738,26 @@ void membership::Membership::MergeActorsUp(
     for (auto& actor : actors) {
       member_actors_[member].insert(actor);
     }
+  }
+
+  Notify();
+}
+
+void membership::Membership::MergeActorSystemDown(
+    const membership::Member& member, unsigned int incarnation) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+
+    if ((members_.find(member) != members_.end() &&
+         members_[member] >= incarnation)) {
+      return;
+    }
+    members_[member] = incarnation;
+  }
+
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
+    member_actors_[member].clear();
   }
 
   Notify();

@@ -98,21 +98,23 @@ class ClusterImpl {
     }
   }
 
-  void NotifyMonitors(MemberEvent event, Member member) {
-    if (event.status() == ::MemberEvent::DOWN) {
-      std::vector<std::string> down_actors_address;
-      {
-        std::lock_guard lock(mutex_member_actors_);
-        auto down_actors = member_actors_[member];
-        std::transform(down_actors.begin(), down_actors.end(),
-                       std::back_inserter(down_actors_address),
-                       [](const auto& actor) { return actor.address; });
-      }
-      {
-        std::lock_guard lock(mutex_monitors_);
-        for (auto& monitor : monitors_) {
-          caf::anon_send(monitor, down_actors_address);
-        }
+  void NotifyMonitors(const MemberEvent& event, const Member& member,
+                      const std::vector<Actor>& down_actors) {
+    if (down_actors.size() == 0) {
+      return;
+    }
+    if (event.status() != ::MemberEvent::DOWN &&
+        event.status() != ::MemberEvent::ACTOR_SYSTEM_DOWN) {
+      return;
+    }
+    std::vector<std::string> down_actors_address;
+    std::transform(down_actors.begin(), down_actors.end(),
+                   std::back_inserter(down_actors_address),
+                   [](const auto& actor) { return actor.address; });
+    {
+      std::lock_guard lock(mutex_monitors_);
+      for (auto& monitor : monitors_) {
+        caf::anon_send(monitor, down_actors_address);
       }
     }
   }
@@ -132,9 +134,17 @@ class ClusterImpl {
       members_.push_back(member);
     } else if (member_event.status() == ::MemberEvent::DOWN) {
       member.status = Member::Status::Down;
-      std::lock_guard lock(mutex_members_);
-      auto it = std::remove(members_.begin(), members_.end(), member);
-      members_.erase(it, members_.end());
+      {
+        std::lock_guard lock(mutex_members_);
+        auto it = std::remove(members_.begin(), members_.end(), member);
+        members_.erase(it, members_.end());
+      }
+      {
+        std::lock_guard lock(mutex_member_actors_);
+        down_actors.insert(down_actors.end(), member_actors_[member].begin(),
+                           member_actors_[member].end());
+        member_actors_[member].clear();
+      }
     } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
       member.status = Member::Status::ActorsUp;
       auto actors = member_event.actors().addresses();
@@ -142,8 +152,14 @@ class ClusterImpl {
       for (auto& actor_address : actors) {
         member_actors_[member].insert({actor_address});
       }
+    } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_DOWN) {
+      member.status = Member::Status::ActorSystemDown;
+      std::lock_guard lock(mutex_member_actors_);
+      down_actors.insert(down_actors.end(), member_actors_[member].begin(),
+                         member_actors_[member].end());
+      member_actors_[member].clear();
     }
-    NotifyMonitors(member_event, member);
+    NotifyMonitors(member_event, member, down_actors);
     Cluster::GetInstance()->Notify({member});
   }
 

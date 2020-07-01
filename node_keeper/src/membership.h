@@ -155,6 +155,7 @@ class Membership {
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
   void MergeActorsUp(const Member& member, unsigned int incarnation,
                      const std::vector<node_keeper::Actor>& up_actors);
+  void MergeActorSystemDown(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void MergeMembers(const std::map<membership::Member, int>& members);
   void Notify();

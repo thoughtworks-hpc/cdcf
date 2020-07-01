@@ -111,6 +111,10 @@ void NodeKeeper::Run() {
           service.Notify({{node_keeper::MemberEvent::kActorsUp, event.member,
                            event.actors}});
           break;
+        case MemberEvent::kActorSystemDown:
+          service.Notify(
+              {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
+          break;
       }
     }
     subscriber->Wait();

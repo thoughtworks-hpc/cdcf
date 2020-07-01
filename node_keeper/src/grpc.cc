@@ -64,6 +64,8 @@ namespace node_keeper {
       for (auto& actor : item.second.actors) {
         actors->add_addresses(actor.address);
       }
+    } else if (item.second.type == MemberEvent::kActorSystemDown) {
+      member_event.set_status(::MemberEvent::ACTOR_SYSTEM_DOWN);
     }
     ::Event event;
     event.set_type(Event_Type_MEMBER_CHANGED);
@@ -85,6 +87,9 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
         break;
       case MemberEvent::kActorsUp:
         // Todo:(存储actors)
+        break;
+      case MemberEvent::kActorSystemDown:
+        // Todo:
         break;
     }
   }
