@@ -73,9 +73,6 @@ class CountCluster : public actor_system::cluster::Observer {
   }
 
   void Update(const actor_system::cluster::Event& event) override {
-    std::cout << "=======get update event, host:" << event.member.host
-              << std::endl;
-
     if (event.member.host != host_) {
       if (event.member.status == event.member.Up) {
         // std::this_thread::sleep_for(std::chrono::seconds(2));
