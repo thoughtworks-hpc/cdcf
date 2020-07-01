@@ -42,14 +42,16 @@ caf::behavior ActorMonitor::make_behavior() {
                    << "actor description:" << description << std::endl;
       },
       [=](const std::vector<std::string>& down_actor_address) {
-        for (auto& address : down_actor_address) {
-          if (auto it = actor_addr_map_.find(address);
-              it != actor_addr_map_.end()) {
-            caf::down_msg msg;
-            msg.source = it->second;
-            this->send(this, msg);
-          }
-        }
+        // TODO: 这里好像保存地址有问题，而且不用cluster通知的话，monitor好像也能感知到
+//        for (auto& address : down_actor_address) {
+//          if (auto it = actor_addr_map_.find(address);
+//              it != actor_addr_map_.end()) {
+//            caf::down_msg msg;
+//            msg.source = it->second;
+//            std::cout << "xxx, address: " << address << ", real address:" << caf::to_string(it->second) << std::endl;
+//            this->send(this, msg);
+//          }
+//        }
       }};
 }
 

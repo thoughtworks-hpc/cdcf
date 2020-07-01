@@ -54,10 +54,7 @@ class ClusterImpl {
     ::google::protobuf::Empty empty;
 
     auto status = stub_->PushActorsUpInfo(&context, request, &empty);
-    if (status.ok()) {
-      std::cout << "[PushActorsUpToNodeKeeper] rpc ok" << std::endl;
-    } else {
-      // Todo(Yujia.Li): 记日志
+    if (!status.ok()) {
       std::cout << "[PushActorsUpToNodeKeeper] error code:  "
                 << status.error_code() << ",msg: " << status.error_message()
                 << ", detail: " << status.error_details() << std::endl;
@@ -111,6 +108,10 @@ class ClusterImpl {
     std::transform(down_actors.begin(), down_actors.end(),
                    std::back_inserter(down_actors_address),
                    [](const auto& actor) { return actor.address; });
+    std::cout << ">>> down_actors_address, size: " << down_actors_address.size() << std::endl;
+    for (int i = 0; i < down_actors_address.size(); ++i) {
+      std::cout << ">>> address: " << down_actors_address[i] << std::endl;
+    }
     {
       std::lock_guard lock(mutex_monitors_);
       for (auto& monitor : monitors_) {
