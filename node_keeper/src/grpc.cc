@@ -100,13 +100,10 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
         members_.erase(event.member);
         break;
       case MemberEvent::kActorsUp:
-        // Todo:(存储actors)
         break;
       case MemberEvent::kActorSystemDown:
-        // Todo:
         break;
       case MemberEvent::kActorSystemUp:
-        // Todo:
         break;
     }
   }

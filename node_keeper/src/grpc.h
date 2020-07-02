@@ -68,7 +68,6 @@ class GRPCImpl final : public ::NodeKeeper::Service {
 
   std::mutex mutex_;
   channels_type channels_;
-  // Todo: 这里应该包含actors的信息
   std::set<membership::Member> members_;
   membership::Membership& cluster_membership_;
 };
