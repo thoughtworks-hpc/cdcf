@@ -31,11 +31,10 @@ namespace node_keeper {
   std::vector<node_keeper::Actor> up_actors;
 
   for (auto address : request->addresses()) {
-    std::cout << "address: " << address << std::endl;
     up_actors.push_back({address});
   }
 
-  // Todo(Yujia.Li): 把新起来的actor加入到self_里。
+  cluster_membership_.MergeSelfActorsUp(up_actors);
   membership::UpdateMessage message;
   message.InitAsActorsUpMessage(cluster_membership_.GetSelf(),
                                 cluster_membership_.IncreaseIncarnation(),
@@ -52,7 +51,7 @@ namespace node_keeper {
                                        ::google::protobuf::Empty* response) {
   membership::UpdateMessage message;
   message.InitAsActorSystemUpMessage(cluster_membership_.GetSelf(),
-                                cluster_membership_.IncreaseIncarnation());
+                                     cluster_membership_.IncreaseIncarnation());
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   cluster_membership_.SendGossip(payload);

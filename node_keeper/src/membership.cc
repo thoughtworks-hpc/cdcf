@@ -752,6 +752,16 @@ void membership::Membership::MergeActorsUp(
   Notify();
 }
 
+void membership::Membership::MergeSelfActorsUp(
+    const std::vector<node_keeper::Actor>& up_actors) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
+    for (auto& actor : up_actors) {
+      member_actors_[self_].insert(actor);
+    }
+  }
+}
+
 void membership::Membership::MergeActorSystemUp(
     const membership::Member& member, unsigned int incarnation) {
   {

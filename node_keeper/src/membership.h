@@ -145,6 +145,7 @@ class Membership {
   Member GetSelf() const;
   int IncreaseIncarnation();
   std::map<Member, bool> GetActorSystems() const;
+  void MergeSelfActorsUp(const std::vector<node_keeper::Actor>& up_actors);
 
  private:
   int AddMember(const Member& member);
