@@ -27,7 +27,7 @@ class NodeKeeper {
 
   void NotifyActorSystemDown() { membership_.NotifyActorSystemDown(); }
 
-  void Run();
+  [[noreturn]] void Run();
 };
 }  // namespace node_keeper
 #endif  // NODE_KEEPER_SRC_NODE_KEEPER_H_

@@ -75,7 +75,7 @@ class Subscriber : public membership::Subscriber {
   std::condition_variable condition_variable_;
 };
 
-void NodeKeeper::Run() {
+[[noreturn]] void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
   GRPCImpl service(membership_);
   NodeStatusGRPCImpl node_status_service(membership_);
@@ -86,7 +86,6 @@ void NodeKeeper::Run() {
   membership_.Subscribe(subscriber);
   MemberEventGenerator generator;
   for (;;) {
-    /* FIXME: Is GetMembers thread safe? */
     auto events = generator.Update(membership_.GetMembers(),
                                    membership_.GetMemberActors(),
                                    membership_.GetActorSystems());
