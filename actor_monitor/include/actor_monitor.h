@@ -19,8 +19,7 @@ class ActorMonitor : public caf::event_based_actor {
   caf::behavior make_behavior() override;
 
  private:
-  // Todo(Yujia.Li): code style
-  std::mutex mapLock;
+  std::mutex actor_map_lock;
   std::function<void(const caf::down_msg& down_msg,
                      const std::string& description)>
       down_msg_fun;

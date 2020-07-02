@@ -17,7 +17,7 @@ caf::behavior ActorMonitor::make_behavior() {
     std::string description;
 
     {
-      std::lock_guard<std::mutex> locker(mapLock);
+      std::lock_guard<std::mutex> locker(actor_map_lock);
       description = actor_map_[caf::to_string(msg.source)];
     }
 
@@ -32,7 +32,7 @@ caf::behavior ActorMonitor::make_behavior() {
       [=](const std::string& msg) { std::cout << msg << std::endl; },
       [=](const caf::actor_addr& actor_addr, const std::string& description) {
         {
-          std::lock_guard<std::mutex> locker(mapLock);
+          std::lock_guard<std::mutex> locker(actor_map_lock);
           actor_map_[caf::to_string(actor_addr)] = description;
         }
         actor_addr_map_[caf::to_string(actor_addr)] = actor_addr;
