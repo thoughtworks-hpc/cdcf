@@ -88,7 +88,8 @@ void NodeKeeper::Run() {
   for (;;) {
     /* FIXME: Is GetMembers thread safe? */
     auto events = generator.Update(membership_.GetMembers(),
-                                   membership_.GetMemberActors());
+                                   membership_.GetMemberActors(),
+                                   membership_.GetActorSystems());
     for (auto& event : events) {
       switch (event.type) {
         case MemberEvent::kMemberUp:
@@ -117,6 +118,10 @@ void NodeKeeper::Run() {
         case MemberEvent::kActorSystemDown:
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
+          break;
+        case MemberEvent::kActorSystemUp:
+          service.Notify(
+              {{node_keeper::MemberEvent::kActorSystemUp, event.member}});
           break;
       }
     }

@@ -33,12 +33,15 @@ class UpdateMessage : public Message {
                              const std::vector<node_keeper::Actor>& actors);
   void InitAsActorSystemDownMessage(const Member& member,
                                     unsigned int incarnation);
+  void InitAsActorSystemUpMessage(const Member& member,
+                                  unsigned int incarnation);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
   bool IsSuspectMessage() const;
   bool IsRecoveryMessage() const;
   bool IsActorsUpMessage() const;
   bool IsActorSystemDownMessage() const;
+  bool IsActorSystemUpMessage() const;
   Member GetMember() const;
 
   unsigned int GetIncarnation() const { return update_.incarnation(); }

@@ -34,6 +34,10 @@ class GRPCImpl final : public ::NodeKeeper::Service {
                                           const ::ActorsUpInfo* request,
                                           ::google::protobuf::Empty* response);
 
+  virtual ::grpc::Status ActorSystemUp(::grpc::ServerContext* context,
+                                       const ::google::protobuf::Empty* request,
+                                       ::google::protobuf::Empty* response);
+
  public:
   void Notify(const std::vector<MemberEvent>& events);
   void Close() {

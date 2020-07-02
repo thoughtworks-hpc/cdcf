@@ -15,6 +15,7 @@ message MemberUpdate {
         RECOVERY = 3;
         ACTORS_UP = 4;
         ACTOR_SYSTEM_DOWN = 5;
+        ACTOR_SYSTEM_UP = 6;
     }
 
     required MemberStatus status = 5;

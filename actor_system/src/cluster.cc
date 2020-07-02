@@ -61,6 +61,17 @@ class ClusterImpl {
     }
   }
 
+  void NotifyReady() {
+    grpc::ClientContext context;
+    ::google::protobuf::Empty empty;
+    auto status = stub_->ActorSystemUp(&context, {}, &empty);
+    if (!status.ok()) {
+      std::cout << "[ActorSystemUp] error code:  " << status.error_code()
+                << ",msg: " << status.error_message()
+                << ", detail: " << status.error_details() << std::endl;
+    }
+  };
+
   void AddActorMonitor(caf::actor monitor) {
     std::lock_guard lock(mutex_monitors_);
     monitors_.push_back(caf::actor_cast<caf::actor>(monitor));
@@ -108,7 +119,8 @@ class ClusterImpl {
     std::transform(down_actors.begin(), down_actors.end(),
                    std::back_inserter(down_actors_address),
                    [](const auto& actor) { return actor.address; });
-    std::cout << ">>> down_actors_address, size: " << down_actors_address.size() << std::endl;
+    std::cout << ">>> down_actors_address, size: " << down_actors_address.size()
+              << std::endl;
     for (int i = 0; i < down_actors_address.size(); ++i) {
       std::cout << ">>> address: " << down_actors_address[i] << std::endl;
     }
@@ -159,6 +171,9 @@ class ClusterImpl {
       down_actors.insert(down_actors.end(), member_actors_[member].begin(),
                          member_actors_[member].end());
       member_actors_[member].clear();
+    } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_UP) {
+      std::cout << "*** cluster receive actor system up" << std::endl;
+      member.status = Member::Status::ActorSystemUp;
     }
     NotifyMonitors(member_event, member, down_actors);
     Cluster::GetInstance()->Notify({member});
@@ -203,5 +218,8 @@ void Cluster::PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
 void Cluster::AddActorMonitor(caf::actor monitor) {
   impl_->AddActorMonitor(monitor);
 }
+
+void Cluster::NotifyReady() { impl_->NotifyReady(); }
+
 }  // namespace cluster
 };  // namespace actor_system

@@ -14,7 +14,8 @@ struct MemberEvent {
     kMemberDown = 1,
     kMemberUp = 2,
     kActorsUp = 3,
-    kActorSystemDown = 4
+    kActorSystemDown = 4,
+    kActorSystemUp = 5
   };
   Type type;
   membership::Member member;
@@ -25,8 +26,11 @@ class MemberEventGenerator {
  public:
   using Members = std::vector<membership::Member>;
   using MemberActors = std::map<membership::Member, std::set<Actor>>;
-  std::vector<MemberEvent> Update(const Members& members,
-                                  const MemberActors& member_actors) {
+  using MemberActorSystems = std::map<membership::Member, bool>;
+
+  std::vector<MemberEvent> Update(
+      const Members& members, const MemberActors& member_actors,
+      const MemberActorSystems& member_actor_systems) {
     std::vector<MemberEvent> result;
     auto member_events = generateEventForMember(members);
     result.insert(result.end(), member_events.begin(), member_events.end());
@@ -34,8 +38,30 @@ class MemberEventGenerator {
     auto actor_events = generateEventForActors(members, member_actors);
     result.insert(result.end(), actor_events.begin(), actor_events.end());
 
+    auto actor_system_events =
+        generateEventForActorSystem(member_actor_systems);
+    result.insert(result.end(), actor_system_events.begin(),
+                  actor_system_events.end());
+
     members_ = members;
     member_actors_ = member_actors;
+    member_actor_systems_ = member_actor_systems;
+    return result;
+  }
+
+  std::vector<MemberEvent> generateEventForActorSystem(
+      const MemberActorSystems& member_actor_systems) {
+    std::vector<MemberEvent> result;
+    for (auto& [member, up] : member_actor_systems) {
+      if (up && !member_actor_systems_[member]) {
+        result.push_back(MemberEvent{MemberEvent::kActorSystemUp, member});
+        continue;
+      }
+      if (!up && member_actor_systems_[member]) {
+        result.push_back(MemberEvent{MemberEvent::kActorSystemDown, member});
+      }
+    }
+
     return result;
   }
 
@@ -55,10 +81,6 @@ class MemberEventGenerator {
 
       if (up.size() > 0) {
         result.push_back(MemberEvent{MemberEvent::kActorsUp, member, up});
-      }
-
-      if (old_actors.size() > 0 && actors.size() == 0) {
-        result.push_back(MemberEvent{MemberEvent::kActorSystemDown, member});
       }
     }
     return result;
@@ -92,6 +114,7 @@ class MemberEventGenerator {
  private:
   Members members_;
   MemberActors member_actors_;
+  MemberActorSystems member_actor_systems_;
 };
 }  // namespace node_keeper
 #endif  // NODE_KEEPER_SRC_EVENT_H_

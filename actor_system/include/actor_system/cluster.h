@@ -20,7 +20,7 @@ struct Member {
   std::string hostname;
   std::string host;
   uint16_t port;
-  enum Status { Up, ActorsUp, Down, ActorSystemDown };
+  enum Status { Up, ActorsUp, Down, ActorSystemDown, ActorSystemUp };
   Status status{Status::Up};
 
   Member(const std::string& name, const std::string& hostname,
@@ -101,6 +101,8 @@ class Cluster : public Subject {
   void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors);
 
   void AddActorMonitor(caf::actor monitor);
+
+  void NotifyReady();
 
  private:
   Cluster();

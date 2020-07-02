@@ -74,8 +74,8 @@ class CountCluster : public actor_system::cluster::Observer {
 
   void Update(const actor_system::cluster::Event& event) override {
     if (event.member.host != host_) {
-      if (event.member.status == event.member.Up) {
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
+      if (event.member.status == event.member.ActorSystemUp) {
+//         std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
         PrintClusterMembers();
       } else if (event.member.status == event.member.Down) {
@@ -251,6 +251,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
+  cluster->NotifyReady();
 
   // start compute
   while (true) {
@@ -398,6 +399,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       system);
 
   actor_status_service.Run();
+  counter.GetInstance()->NotifyReady();
 
   // start compute
   while (true) {

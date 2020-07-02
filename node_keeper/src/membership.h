@@ -144,6 +144,7 @@ class Membership {
   void NotifyActorSystemDown();
   Member GetSelf() const;
   int IncreaseIncarnation();
+  std::map<Member, bool> GetActorSystems() const;
 
  private:
   int AddMember(const Member& member);
@@ -156,6 +157,7 @@ class Membership {
   void MergeActorsUp(const Member& member, unsigned int incarnation,
                      const std::vector<node_keeper::Actor>& up_actors);
   void MergeActorSystemDown(const Member& member, unsigned int incarnation);
+  void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void MergeMembers(const std::map<membership::Member, int>& members);
   void Notify();
@@ -190,6 +192,8 @@ class Membership {
   mutable std::mutex mutex_suspects_;
   std::map<Member, std::set<node_keeper::Actor>> member_actors_;
   mutable std::mutex mutex_member_actors_;
+  std::map<Member, bool> member_actor_system_;
+  mutable std::mutex mutex_member_actor_system_;
   Member self_;
   std::vector<Member> seed_members_;
   std::shared_ptr<gossip::Transportable> transport_;
@@ -198,7 +202,7 @@ class Membership {
   // potential deadlock
   std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
   std::unique_ptr<queue::TimedFunctorQueue> failure_detector_queue_;
-  unsigned int incarnation_;
+  std::atomic_uint incarnation_;
   int retransmit_multiplier_;
   bool if_notify_leave_;
   bool is_relay_ping_enabled_;

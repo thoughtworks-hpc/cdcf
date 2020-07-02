@@ -9,6 +9,8 @@ service NodeKeeper {
     }
     rpc Subscribe (SubscribeRequest) returns (stream Event) {
     }
+    rpc ActorSystemUp(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    }
 }
 
 message Member {
@@ -42,6 +44,7 @@ message MemberEvent {
         UP = 1;
         DOWN = 2;
         ACTOR_SYSTEM_DOWN = 3;
+        ACTOR_SYSTEM_UP = 4;
     }
     Status status = 2;
 }

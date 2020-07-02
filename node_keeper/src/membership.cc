@@ -324,6 +324,15 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
     SendGossip(payload);
     MergeActorSystemDown(member, message.GetIncarnation());
+  } else if (message.IsActorSystemUpMessage()) {
+    if (!IfBelongsToMembers(member)) {
+      return;
+    }
+    if (GetMemberLocalIncarnation(member) >= message.GetIncarnation()) {
+      return;
+    }
+    SendGossip(payload);
+    MergeActorSystemUp(member, message.GetIncarnation());
   }
 }
 
@@ -743,6 +752,26 @@ void membership::Membership::MergeActorsUp(
   Notify();
 }
 
+void membership::Membership::MergeActorSystemUp(
+    const membership::Member& member, unsigned int incarnation) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+
+    if ((members_.find(member) != members_.end() &&
+         members_[member] >= incarnation)) {
+      return;
+    }
+    members_[member] = incarnation;
+  }
+
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+    member_actor_system_[member] = true;
+  }
+
+  Notify();
+}
+
 void membership::Membership::MergeActorSystemDown(
     const membership::Member& member, unsigned int incarnation) {
   {
@@ -760,6 +789,11 @@ void membership::Membership::MergeActorSystemDown(
     member_actors_[member].clear();
   }
 
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+    member_actor_system_[member] = false;
+  }
+
   Notify();
 }
 
@@ -769,6 +803,11 @@ void membership::Membership::NotifyActorSystemDown() {
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   SendGossip(payload);
+}
+std::map<membership::Member, bool> membership::Membership::GetActorSystems()
+    const {
+  const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+  return member_actor_system_;
 }
 
 bool membership::operator==(const membership::Member& lhs,
