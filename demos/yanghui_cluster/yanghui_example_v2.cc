@@ -102,7 +102,7 @@ class CountCluster : public actor_system::cluster::Observer {
     auto get_actor = system_.middleman().remote_actor(host, port);
     if (!get_actor) {
       std::cout << "connect remote actor failed. host:" << host
-                << ", port:" << port << std::endl;
+                << ", port:" << port << ", reason: " << to_string(get_actor.error()) << std::endl;
       return;
     }
 
@@ -245,8 +245,19 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::mutex mutex;
   spawnAllActors(system, actor_status_monitor, actors, &mutex);
   auto public_actor = system.spawn(getAllActors, &actors, &mutex);
-  system.middleman().publish(caf::actor_cast<caf::actor>(public_actor),
-                             k_yanghui_work_port1);
+  while (1) {
+    std::cout << "*** try to publish actor..." << std::endl;
+    auto expected_port = system.middleman().publish(caf::actor_cast<caf::actor>(public_actor),
+                                                    k_yanghui_work_port1, nullptr, true);
+    if (!expected_port) {
+      std::cout << "*** publish failed, error=" << system.render(expected_port.error()) << std::endl;
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      continue;
+    }
+
+    break;
+  }
+
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
