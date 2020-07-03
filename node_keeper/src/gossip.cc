@@ -19,11 +19,14 @@ using asio::ip::tcp, asio::ip::udp;
 Transport::Transport(const Address &udp, const Address &tcp) try
     : upd_socket_(io_context_, udp::endpoint(udp::v4(), udp.port)),
       acceptor_(io_context_, tcp::endpoint(tcp::v4(), tcp.port)) {
+} catch (const std::exception &e) {
+  throw PortOccupied(e);
+}
+
+void Transport::Run() {
   StartReceiveGossip();
   StartAccept();
   io_thread_ = std::thread(&Transport::IORoutine, this);
-} catch (const std::exception &e) {
-  throw PortOccupied(e);
 }
 
 Transport::~Transport() {

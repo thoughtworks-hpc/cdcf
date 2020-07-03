@@ -117,7 +117,10 @@ class Pullable {
   virtual ~Pullable() = default;
 };
 
-class Transportable : public Gossipable, public Pushable, public Pullable {};
+class Transportable : public Gossipable, public Pushable, public Pullable {
+ public:
+  virtual void Run() = 0;
+};
 
 class PortOccupied : public std::runtime_error {
  public:
@@ -135,19 +138,21 @@ class Transport : public Transportable {
   virtual ~Transport();
 
  public:
-  virtual ErrorCode Gossip(const std::vector<Address> &nodes,
-                           const Payload &payload, DidGossipHandler did_gossip);
+  void Run() override;
 
-  virtual void RegisterGossipHandler(GossipHandler handler);
-  virtual ErrorCode Push(const Address &node, const void *data, size_t size,
-                         DidPushHandler did_push);
+  ErrorCode Gossip(const std::vector<Address> &nodes, const Payload &payload,
+                   DidGossipHandler did_gossip) override;
 
-  virtual void RegisterPushHandler(PushHandler handler);
+  void RegisterGossipHandler(GossipHandler handler) override;
+  ErrorCode Push(const Address &node, const void *data, size_t size,
+                 DidPushHandler did_push) override;
 
-  virtual PullResult Pull(const Address &node, const void *data, size_t size,
-                          DidPullHandler did_pull);
+  void RegisterPushHandler(PushHandler handler) override;
 
-  virtual void RegisterPullHandler(PullHandler handler);
+  PullResult Pull(const Address &node, const void *data, size_t size,
+                  DidPullHandler did_pull) override;
+
+  void RegisterPullHandler(PullHandler handler) override;
 
  private:
   void StartReceiveGossip();

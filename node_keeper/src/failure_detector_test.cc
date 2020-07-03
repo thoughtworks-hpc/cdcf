@@ -63,6 +63,7 @@ TEST(FailureDetector,
   node_a_ptr = std::make_unique<membership::Membership>();
   transport_a = gossip::CreateTransport(address_a, address_a);
   node_a_ptr->Init(transport_a, config_a);
+  transport_a->Run();
 
   std::this_thread::sleep_for(std::chrono::seconds(2));
 
@@ -84,6 +85,7 @@ TEST(FailureDetector,
   std::shared_ptr<gossip::Transportable> transport_a =
       gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a_ptr->Init(transport_a, config_a);
+  transport_a->Run();
 
   membership::Membership node_b;
   membership::Config config_b;
@@ -93,6 +95,7 @@ TEST(FailureDetector,
   std::shared_ptr<gossip::Transportable> transport_b =
       gossip::CreateTransport({"127.0.0.1", 50001}, {"127.0.0.1", 50001});
   node_b.Init(transport_b, config_b);
+  transport_b->Run();
 
   membership::Membership node_c;
   membership::Config config_c;
@@ -103,6 +106,7 @@ TEST(FailureDetector,
   std::shared_ptr<gossip::Transportable> transport_c =
       gossip::CreateTransport({"127.0.0.1", 50002}, {"127.0.0.1", 50002});
   node_c.Init(transport_c, config_c);
+  transport_c->Run();
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
 
@@ -183,6 +187,7 @@ TEST(FailureDetector,
   std::shared_ptr<gossip::Transportable> transport_a =
       gossip::CreateTransport({"127.0.0.1", 50000}, {"127.0.0.1", 50000});
   node_a.Init(transport_a, config_a);
+  transport_a->Run();
 
   membership::Membership node_b;
   membership::Config config_b;
@@ -202,6 +207,7 @@ TEST(FailureDetector,
   std::shared_ptr<gossip::Transportable> transport_c =
       gossip::CreateTransport({"127.0.0.1", 50002}, {"127.0.0.1", 50002});
   node_c.Init(transport_c, config_c);
+  transport_c->Run();
 
   std::this_thread::sleep_for(std::chrono::seconds(5));
 

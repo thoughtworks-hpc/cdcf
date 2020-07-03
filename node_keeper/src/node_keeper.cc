@@ -54,6 +54,8 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
   }
 
   membership_.Init(transport, membership_config);
+
+  transport->Run();
 }
 
 class Subscriber : public membership::Subscriber {

@@ -27,6 +27,7 @@ bool operator==(const gossip::Payload &lhs, const gossip::Payload &rhs) {
 
 class MockTransport : public Transportable {
  public:
+  void Run() override {}
   MOCK_METHOD(ErrorCode, Gossip,
               (const std::vector<Address> &nodes, const Payload &data,
                DidGossipHandler didGossip),

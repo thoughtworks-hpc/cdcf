@@ -45,6 +45,8 @@ TEST(Transport, DestructShouldNotBeBlockDuringAsynchronouslyPull) {
     promise.get_future().get();
     return std::vector<uint8_t>{};
   });
+  local->Run();
+  remote->Run();
 
   auto did_pull = [&](auto &result) {};
   auto result = local->Pull(remote_address, "0", 1, did_pull);
@@ -78,6 +80,7 @@ class Gossip : public testing::Test {
             }
             cv.notify_all();
           });
+      peers_[i]->Run();
     }
   }
 
@@ -179,6 +182,8 @@ class Push : public Gossip {
           }
           cv_.notify_all();
         });
+    local_->Run();
+    remote_->Run();
   }
 
  protected:
@@ -271,6 +276,8 @@ class Pull : public Gossip {
     remote_ = CreateTransport(remote_address_, remote_address_);
     remote_->RegisterPullHandler(
         [](const Address &, const void *, size_t) { return Pull::kResponse; });
+    local_->Run();
+    remote_->Run();
   }
 
  protected:
