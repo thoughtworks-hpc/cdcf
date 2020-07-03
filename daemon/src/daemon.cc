@@ -9,13 +9,15 @@
 Daemon::Daemon(ProcessManager& process_manager, cdcf::Logger& logger,
                std::string path, std::vector<std::string> args,
                std::function<void()> app_down_handle,
+               std::function<void()> node_keeper_clean_up,
                std::chrono::milliseconds stable_time)
     : process_manager_(process_manager),
       logger_(logger),
       path_(std::move(path)),
       args_(std::move(args)),
       stable_time_(stable_time),
-      app_down_handle_(std::move(app_down_handle)) {}
+      app_down_handle_(std::move(app_down_handle)),
+      node_keeper_clean_up_(node_keeper_clean_up) {}
 
 void Daemon::Run() {
   using std::chrono::system_clock;
@@ -40,6 +42,9 @@ void Daemon::Run() {
       ExitIfProcessNotStable(start, end);
     }
     restart_++;
+  }
+  if (node_keeper_clean_up_) {
+    node_keeper_clean_up_();
   }
   logger_.Info("stop guard, node keeper exit");
   process_manager_.Exit(0);

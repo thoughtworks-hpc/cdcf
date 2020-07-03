@@ -25,7 +25,7 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
   MockProcessManager mock_process_manager(logger);
   const char *path = "/bin/ls";
 
-  Daemon d(mock_process_manager, logger, path, {"-l"}, nullptr,
+  Daemon d(mock_process_manager, logger, path, {"-l"}, nullptr, nullptr,
            std::chrono::milliseconds(10));
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,

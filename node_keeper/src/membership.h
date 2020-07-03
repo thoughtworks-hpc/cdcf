@@ -146,6 +146,7 @@ class Membership {
   int IncreaseIncarnation();
   std::map<Member, bool> GetActorSystems() const;
   void MergeSelfActorsUp(const std::vector<node_keeper::Actor>& up_actors);
+  void NotifyLeave();
 
  private:
   int AddMember(const Member& member);
@@ -183,8 +184,6 @@ class Membership {
   void Suspect(const Member& member, unsigned int incarnation);
   void RecoverySuspect(const Member& member);
   int GetRetransmitLimit() const;
-
-  void NotifyLeave();
 
   std::map<Member, int> members_;
   std::map<Member, int> suspects_;
