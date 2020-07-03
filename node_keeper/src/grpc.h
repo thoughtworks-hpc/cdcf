@@ -69,6 +69,7 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   std::mutex mutex_;
   channels_type channels_;
   std::set<membership::Member> members_;
+  std::map<membership::Member, std::set<node_keeper::Actor>> member_actors_;
   membership::Membership& cluster_membership_;
 };
 

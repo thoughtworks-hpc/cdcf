@@ -100,8 +100,12 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
         members_.erase(event.member);
         break;
       case MemberEvent::kActorsUp:
+        for (const auto & actor: event.actors) {
+          member_actors_[event.member].insert(actor);
+        }
         break;
       case MemberEvent::kActorSystemDown:
+        member_actors_[event.member].clear();
         break;
       case MemberEvent::kActorSystemUp:
         break;
