@@ -556,6 +556,12 @@ void membership::Membership::Suspect(const Member& member,
       const std::lock_guard<std::mutex> lock(mutex_members_);
       members_.erase(member);
     }
+
+    {
+      const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+      member_actor_system_[member] = false;
+    }
+
     logger_->Info("Start to suspect member {} {}:{}", member.GetNodeName(),
                   member.GetIpAddress(), member.GetPort());
     gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
