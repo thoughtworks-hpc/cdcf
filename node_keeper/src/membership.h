@@ -33,11 +33,12 @@ class Member {
  public:
   Member() : port_(0) {}
   Member(std::string node_name, std::string ip_address, uint16_t port,
-         std::string host_name = "")
+         std::string host_name = "", std::string uid = "")
       : node_name_(std::move(node_name)),
         host_name_(std::move(host_name)),
         ip_address_(std::move(ip_address)),
-        port_(port) {}
+        port_(port),
+        uid_(uid) {}
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
@@ -47,10 +48,12 @@ class Member {
   std::string GetHostName() const { return host_name_; }
   std::string GetIpAddress() const { return ip_address_; }
   uint16_t GetPort() const { return port_; }
+  std::string GetUid() const {return uid_;}
 
   bool IsEmptyMember();
 
  private:
+  std::string uid_;
   std::string node_name_;
   std::string host_name_;
   std::string ip_address_;
@@ -165,6 +168,7 @@ class Membership {
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
+  void EraseExpiredMember(const membership::Member & member);
   gossip::Address GetRandomSeedAddress() const;
   std::pair<bool, membership::Member> GetRandomMember() const;
   std::pair<bool, membership::Member> GetRandomPingTarget() const;

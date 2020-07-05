@@ -249,6 +249,30 @@ std::vector<gossip::Address> membership::Membership::GetAllMemberAddress() {
   return addresses;
 }
 
+void membership::Membership::EraseExpiredMember(
+    const membership::Member& member) {
+  {
+    const std::lock_guard<std::mutex> lock(mutex_members_);
+    if (auto it = members_.find(member); it != members_.end()) {
+      Member saved_member = it->first;
+      if (saved_member.GetUid() != member.GetUid()) {
+        members_.erase(saved_member);
+        return;
+      }
+    }
+  }
+
+  {
+    const std::lock_guard<std::mutex> lock(mutex_suspects_);
+    if (auto it = suspects_.find(member); it != suspects_.end()) {
+      Member saved_member = it->first;
+      if (saved_member.GetUid() != member.GetUid()) {
+        suspects_.erase(saved_member);
+      }
+    }
+  }
+}
+
 void membership::Membership::HandleGossip(const struct gossip::Address& node,
                                           const gossip::Payload& payload) {
   membership::UpdateMessage message;
@@ -259,6 +283,7 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     logger_->Info("Receive gossip up message for {}:{}", member.GetIpAddress(),
                   member.GetPort());
     // TODO(Yujia.Li): member's address here would be `HOST` in config
+    EraseExpiredMember(member);
 
     if (IfBelongsToSuspects(member) &&
         GetSuspectLocalIncarnation(member) >= message.GetIncarnation()) {
@@ -304,7 +329,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
     RecoverySuspect(member);
   } else if (message.IsActorsUpMessage()) {
-    logger_->Debug("Receive gossip actors up message for {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("Receive gossip actors up message for {}:{}",
+                   member.GetNodeName(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -317,7 +343,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     SendGossip(payload);
     MergeActorsUp(member, message.GetIncarnation(), up_actors);
   } else if (message.IsActorSystemDownMessage()) {
-    logger_->Debug("Receive gossip actors system down message for {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("Receive gossip actors system down message for {}:{}",
+                   member.GetNodeName(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -327,7 +354,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     SendGossip(payload);
     MergeActorSystemDown(member, message.GetIncarnation());
   } else if (message.IsActorSystemUpMessage()) {
-    logger_->Debug("Receive gossip actors system up message for {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("Receive gossip actors system up message for {}:{}",
+                   member.GetNodeName(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -670,7 +698,7 @@ void membership::Membership::MergeDownUpdate(const Member& member,
 
   {
     const std::lock_guard<std::mutex> lock(mutex_suspects_);
-    if(suspects_.find(member) != suspects_.end()) {
+    if (suspects_.find(member) != suspects_.end()) {
       suspects_.erase(member);
       logger_->Info("Remove suspect member {}:{} by merging down update",
                     member.GetIpAddress(), member.GetPort());
@@ -770,7 +798,8 @@ void membership::Membership::MergeActorsUp(
     for (auto& actor : actors) {
       member_actors_[member].insert(actor);
     }
-    logger_->Debug("merge actors up success. member: {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("merge actors up success. member: {}:{}",
+                   member.GetNodeName(), member.GetPort());
   }
 
   Notify();
@@ -802,7 +831,8 @@ void membership::Membership::MergeActorSystemUp(
   {
     const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
     member_actor_system_[member] = true;
-    logger_->Debug("merge actor system up success. member: {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("merge actor system up success. member: {}:{}",
+                   member.GetNodeName(), member.GetPort());
   }
 
   Notify();
@@ -828,7 +858,8 @@ void membership::Membership::MergeActorSystemDown(
   {
     const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
     member_actor_system_[member] = false;
-    logger_->Debug("merge actor system down success. member: {}:{}", member.GetNodeName(), member.GetPort());
+    logger_->Debug("merge actor system down success. member: {}:{}",
+                   member.GetNodeName(), member.GetPort());
   }
 
   Notify();

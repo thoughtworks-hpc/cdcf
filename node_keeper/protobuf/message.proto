@@ -20,6 +20,7 @@ message MemberUpdate {
 
     required MemberStatus status = 5;
     required int32 incarnation = 6;
+    optional string member_id = 7;
 }
 
 message MemberFullState {
