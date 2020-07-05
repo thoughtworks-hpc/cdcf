@@ -671,6 +671,12 @@ void membership::Membership::MergeDownUpdate(const Member& member,
     }
   }
 
+  {
+    const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+    member_actor_system_[member] = false;
+    logger_->Info("Set actor system down by merging node down update");
+  }
+
   Notify();
 }
 
