@@ -12,6 +12,7 @@
 
 class ActorMonitor : public caf::event_based_actor {
  public:
+  using demonitor_atom = caf::atom_constant<caf::atom("demonitor")>;
   explicit ActorMonitor(caf::actor_config& cfg);
   ActorMonitor(caf::actor_config& cfg,
                std::function<void(const caf::down_msg&, const std::string&)>&&
@@ -30,5 +31,7 @@ class ActorMonitor : public caf::event_based_actor {
 
 bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
                 const std::string& description);
+
+bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker);
 
 #endif  // ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
