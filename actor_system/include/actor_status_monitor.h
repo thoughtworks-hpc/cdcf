@@ -5,8 +5,6 @@
 #ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
 #define ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
 
-#include <actor_system/cluster.h>
-
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -27,8 +25,7 @@ class ActorStatusMonitor {
   };
 
   explicit ActorStatusMonitor(
-      caf::actor_system& actorSystem,
-      actor_system::cluster::Cluster* cluster = nullptr);
+      caf::actor_system& actorSystem);
   void RegisterActor(caf::actor& actor, const std::string& name,
                      const std::string& description = "");
   std::vector<ActorInfo> GetActorStatus();
@@ -38,7 +35,6 @@ class ActorStatusMonitor {
   std::unordered_map<caf::actor_id, ActorInfo> actor_status_;
   std::mutex actor_status_lock_;
   caf::actor actor_monitor_;
-  actor_system::cluster::Cluster* cluster_;
 };
 
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_

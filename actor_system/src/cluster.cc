@@ -41,26 +41,6 @@ class ClusterImpl {
     return members_;
   }
 
-  void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
-    ActorsUpInfo request;
-
-    for (int i = 0; i < up_actors.size(); i++) {
-      auto address = caf::to_string(up_actors[i].address());
-      request.add_addresses(address);
-    }
-
-    grpc::ClientContext context;
-    ::GetMembersReply reply;
-    ::google::protobuf::Empty empty;
-
-    auto status = stub_->PushActorsUpInfo(&context, request, &empty);
-    if (!status.ok()) {
-      std::cout << "[PushActorsUpToNodeKeeper] error code:  "
-                << status.error_code() << ",msg: " << status.error_message()
-                << ", detail: " << status.error_details() << std::endl;
-    }
-  }
-
   void NotifyReady() {
     grpc::ClientContext context;
     ::google::protobuf::Empty empty;
@@ -176,10 +156,6 @@ std::vector<Member> Cluster::GetMembers() { return impl_->GetMembers(); }
 Cluster::Cluster() : impl_(std::make_unique<ClusterImpl>()) {}
 
 Cluster::~Cluster() {}
-
-void Cluster::PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
-  impl_->PushActorsUpToNodeKeeper(up_actors);
-}
 
 void Cluster::NotifyReady() { impl_->NotifyReady(); }
 

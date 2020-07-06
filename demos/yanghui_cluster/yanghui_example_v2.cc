@@ -238,7 +238,7 @@ void shutdownAllActors(caf::scoped_actor& self, AllActorData& actors,
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto cluster = actor_system::cluster::Cluster::GetInstance();
-  ActorStatusMonitor actor_status_monitor(system, cluster);
+  ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   AllActorData actors;
@@ -387,7 +387,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port2);
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
-  ActorStatusMonitor actor_status_monitor(system, counter.GetInstance());
+  ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto yanghui_actor = system.spawn(yanghui, &counter);

@@ -98,8 +98,6 @@ class Cluster : public Subject {
 
   std::vector<Member> GetMembers();
 
-  void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors);
-
   void NotifyReady();
 
  private:
