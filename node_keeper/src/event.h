@@ -53,12 +53,9 @@ class MemberEventGenerator {
       const MemberActorSystems& member_actor_systems) {
     std::vector<MemberEvent> result;
     for (auto& [member, up] : member_actor_systems) {
-      if (up && !member_actor_systems_[member]) {
-        result.push_back(MemberEvent{MemberEvent::kActorSystemUp, member});
+      if (up != member_actor_systems_[member]) {
+        result.push_back(MemberEvent{up ? MemberEvent::kActorSystemUp : MemberEvent::kActorSystemDown, member});
         continue;
-      }
-      if (!up && member_actor_systems_[member]) {
-        result.push_back(MemberEvent{MemberEvent::kActorSystemDown, member});
       }
     }
 
