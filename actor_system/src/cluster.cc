@@ -72,11 +72,6 @@ class ClusterImpl {
     }
   };
 
-  void AddActorMonitor(caf::actor monitor) {
-    std::lock_guard lock(mutex_monitors_);
-    monitors_.push_back(caf::actor_cast<caf::actor>(monitor));
-  }
-
  private:
   void Routine() {
     Fetch();
@@ -102,32 +97,6 @@ class ClusterImpl {
       {
         std::lock_guard lock(mutex_members_);
         std::swap(members_, members);
-      }
-    }
-  }
-
-  void NotifyMonitors(const MemberEvent& event, const Member& member,
-                      const std::vector<Actor>& down_actors) {
-    if (down_actors.size() == 0) {
-      return;
-    }
-    if (event.status() != ::MemberEvent::DOWN &&
-        event.status() != ::MemberEvent::ACTOR_SYSTEM_DOWN) {
-      return;
-    }
-    std::vector<std::string> down_actors_address;
-    std::transform(down_actors.begin(), down_actors.end(),
-                   std::back_inserter(down_actors_address),
-                   [](const auto& actor) { return actor.address; });
-    std::cout << ">>> down_actors_address, size: " << down_actors_address.size()
-              << std::endl;
-    for (int i = 0; i < down_actors_address.size(); ++i) {
-      std::cout << ">>> address: " << down_actors_address[i] << std::endl;
-    }
-    {
-      std::lock_guard lock(mutex_monitors_);
-      for (auto& monitor : monitors_) {
-        caf::anon_send(monitor, down_actors_address);
       }
     }
   }
@@ -175,7 +144,6 @@ class ClusterImpl {
       std::cout << "*** cluster receive actor system up" << std::endl;
       member.status = Member::Status::ActorSystemUp;
     }
-    NotifyMonitors(member_event, member, down_actors);
     Cluster::GetInstance()->Notify({member});
   }
 
@@ -183,8 +151,6 @@ class ClusterImpl {
   std::vector<Member> members_;
   std::mutex mutex_member_actors_;
   std::map<Member, std::set<Actor>> member_actors_;
-  std::mutex mutex_monitors_;
-  std::vector<caf::actor> monitors_;
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};
@@ -213,10 +179,6 @@ Cluster::~Cluster() {}
 
 void Cluster::PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors) {
   impl_->PushActorsUpToNodeKeeper(up_actors);
-}
-
-void Cluster::AddActorMonitor(caf::actor monitor) {
-  impl_->AddActorMonitor(monitor);
 }
 
 void Cluster::NotifyReady() { impl_->NotifyReady(); }

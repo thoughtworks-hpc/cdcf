@@ -24,7 +24,6 @@ class ActorMonitor : public caf::event_based_actor {
                      const std::string& description)>
       down_msg_fun;
   std::map<std::string, std::string> actor_map_;
-  std::map<std::string, caf::actor_addr> actor_addr_map_;
   void DownMsgHandle(const caf::down_msg& down_msg,
                      const std::string& description);
 };

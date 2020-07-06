@@ -100,8 +100,6 @@ class Cluster : public Subject {
 
   void PushActorsUpToNodeKeeper(std::vector<caf::actor> up_actors);
 
-  void AddActorMonitor(caf::actor monitor);
-
   void NotifyReady();
 
  private:
