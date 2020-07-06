@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "src/membership_message.h"
+#include "src/net_common.h"
 
 membership::Membership::~Membership() {
   if (if_notify_leave_) {
@@ -346,8 +347,13 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   std::string message_serialized = "pull";
   PullRequestMessage request;
   request.DeserializeFromArray(data, size);
+
+  logger_->Debug("Received pull request from {};{}", address.host,
+                 address.port);
   if (request.IsFullStateType()) {
     FullStateMessage response;
+    logger_->Info("Received full state pull request from {}:{}", address.host,
+                  address.port);
 
     // TODO(Yujia.Li): message's IP here would be IPv4
     std::vector<Member> members;
@@ -701,42 +707,18 @@ bool membership::Member::IsEmptyMember() {
   return node_name_.empty() && ip_address_.empty() && port_ == 0;
 }
 
-// Todo:(davidzwb) Need refactoring
 int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
                                       uint16_t port) {
-  asio::io_context io_context;
-  using asio::ip::tcp;
-  tcp::resolver resolver(io_context);
-  asio::error_code ec;
-  tcp::resolver::results_type endpoints = resolver.resolve(ip_address, "", ec);
-  if (ec) {
-    return MEMBERSHIP_CONFIG_IP_ADDRESS_INVALID;
-  }
-
-  bool entry_found = false;
-  decltype(endpoints.begin()) found_entry_iter;
-  for (auto entry_iter = endpoints.begin(); entry_iter != endpoints.end();
-       ++entry_iter) {
-    if (entry_iter->endpoint().address().is_v4()) {
-      entry_found = true;
-      found_entry_iter = entry_iter;
-    }
-  }
-
+  std::string hostname;
   std::string ip_address_converted;
-  std::string host_name;
-  if (entry_found) {
-    ip_address_converted = found_entry_iter->endpoint().address().to_string();
-    host_name = found_entry_iter->host_name();
-  } else {
-    return MEMBERSHIP_CONFIG_IP_ADDRESS_INVALID;
-  }
+  auto ret =
+      membership::ResolveHostName(ip_address, hostname, ip_address_converted);
 
-  Member host(node_name, ip_address_converted, port, host_name);
+  Member host(node_name, ip_address_converted, port, hostname);
   host_ = host;
 
-  return MEMBERSHIP_SUCCESS;
+  return ret;
 }
 
 int membership::Config::AddOneSeedMember(const std::string& node_name,
