@@ -100,6 +100,20 @@ TEST(Membership, ConfigWithDuplicateSeedMember) {
   EXPECT_TRUE(CompareMembers(seed_members, seed_members_compare));
 }
 
+TEST(Membership, ShouldGetIpWithHostNameWhenSetHostMemberWithHostName) {
+  membership::Config config;
+  config.SetHostMember("node1", "localhost", 27777);
+  auto member = config.GetHostMember();
+  EXPECT_EQ(member.GetHostName(), "localhost");
+  EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+}
+
+TEST(Membership, ShouldFailWhenSetHostMemberWithInvaidHostName) {
+  membership::Config config;
+  EXPECT_EQ(config.SetHostMember("node1", "invalidhostname", 27777),
+            membership::MEMBERSHIP_CONFIG_IP_ADDRESS_INVALID);
+}
+
 // Message
 TEST(Message, CreateUpMessage) {
   membership::UpdateMessage message1;
@@ -413,7 +427,7 @@ TEST(Membership, ClusterResponseToPullRequst) {
   config.SetHostMember("node_a", "127.0.0.1", 27777);
 
   membership::FullStateMessage message;
-  message.InitAsFullStateMessage({{"node_a", "127.0.0.1", 27777}});
+  message.InitAsFullStateMessage({{"node_a", "127.0.0.1", 27777, "127.0.0.1"}});
   auto message_serialized = message.SerializeToString();
 
   EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
@@ -530,4 +544,62 @@ TEST(Membership, NodeReceivingPingWithMoreMembers) {
   SimulateReceivingPingMessage(members_in_ping, transport);
 
   EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2, node3, node4}));
+}
+
+TEST(Membership, ShouldGetMembersWithHostNameWhenProvidingConfigWithHostName) {
+  membership::Membership node;
+  membership::Config config;
+  config.SetHostMember("node1", "localhost", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  node.Init(transport, config);
+
+  auto members = node.GetMembers();
+  EXPECT_EQ(members.size(), 1);
+  auto member = members[0];
+  EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+  EXPECT_EQ(member.GetHostName(), "localhost");
+}
+
+TEST(Membership,
+     ShouldGetMembersWithIpAddressWhenProvidingConfigWithRealIpAddress) {
+  membership::Membership node;
+  membership::Config config;
+  config.SetHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  node.Init(transport, config);
+
+  auto members = node.GetMembers();
+  EXPECT_EQ(members.size(), 1);
+  auto member = members[0];
+  EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+  EXPECT_EQ(member.GetHostName(), "127.0.0.1");
+}
+
+TEST(Membership, ShouldGetMembersWithIpAddressWhenReceivingUpUpdateMessage) {
+  membership::Member node1{"node1", "127.0.0.1", 27777};
+  membership::Member node2{"node2", "127.0.0.1", 28888, "localhost"};
+
+  membership::Membership node;
+  membership::Config config;
+  config.SetHostMember("node1", "127.0.0.1", 27777);
+  auto transport = std::make_shared<MockTransport>();
+
+  EXPECT_CALL(*transport, Gossip).Times(AnyNumber());
+  node.Init(transport, config);
+
+  SimulateReceivingUpMessage(node2, transport);
+  EXPECT_TRUE(CompareMembers(node.GetMembers(), {node1, node2}));
+  auto members = node.GetMembers();
+  for (const auto& member : members) {
+    if (member == node1) {
+      continue;
+    }
+    EXPECT_EQ(member.GetNodeName(), "node2");
+    EXPECT_EQ(member.GetIpAddress(), "127.0.0.1");
+    EXPECT_EQ(member.GetHostName(), "localhost");
+  }
 }

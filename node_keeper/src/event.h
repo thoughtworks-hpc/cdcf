@@ -22,7 +22,7 @@ class MemberEventGenerator {
     std::vector<MemberEvent> result;
     auto comparator = [](const membership::Member& lhs,
                          const membership::Member& rhs) {
-      return lhs.GetNodeName() < rhs.GetNodeName();
+      return lhs.GetIpAddress() < rhs.GetIpAddress();
     };
     std::vector<membership::Member> up;
     std::set_difference(members.begin(), members.end(), members_.begin(),

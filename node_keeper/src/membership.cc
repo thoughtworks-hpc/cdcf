@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "src/membership_message.h"
+#include "src/net_common.h"
 
 membership::Membership::~Membership() {
   if (if_notify_leave_) {
@@ -346,14 +347,20 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   std::string message_serialized = "pull";
   PullRequestMessage request;
   request.DeserializeFromArray(data, size);
+
+  logger_->Debug("Received pull request from {};{}", address.host,
+                 address.port);
   if (request.IsFullStateType()) {
     FullStateMessage response;
+    logger_->Info("Received full state pull request from {}:{}", address.host,
+                  address.port);
 
     // TODO(Yujia.Li): message's IP here would be IPv4
     std::vector<Member> members;
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
-                           member.first.GetIpAddress(), member.first.GetPort());
+                           member.first.GetIpAddress(), member.first.GetPort(),
+                           member.first.GetHostName());
     }
     response.InitAsFullStateMessage(members);
 
@@ -703,10 +710,15 @@ bool membership::Member::IsEmptyMember() {
 int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
                                       uint16_t port) {
-  Member host(node_name, ip_address, port);
+  std::string hostname;
+  std::string ip_address_converted;
+  auto ret =
+      membership::ResolveHostName(ip_address, hostname, ip_address_converted);
+
+  Member host(node_name, ip_address_converted, port, hostname);
   host_ = host;
 
-  return MEMBERSHIP_SUCCESS;
+  return ret;
 }
 
 int membership::Config::AddOneSeedMember(const std::string& node_name,

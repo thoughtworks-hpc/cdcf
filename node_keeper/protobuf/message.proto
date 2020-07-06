@@ -4,8 +4,9 @@ package membership;
 
 message MemberUpdate {
     required string name = 1;
-    required string ip = 2;
-    required int32 port = 3;
+    required string hostname = 2;
+    required string ip = 3;
+    required int32 port = 4;
 
     enum MemberStatus {
         UP = 0;
@@ -14,8 +15,8 @@ message MemberUpdate {
         RECOVERY = 3;
     }
 
-    required MemberStatus status = 4;
-    required int32 incarnation = 5;
+    required MemberStatus status = 5;
+    required int32 incarnation = 6;
 }
 
 message MemberFullState {
