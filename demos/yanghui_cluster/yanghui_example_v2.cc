@@ -85,10 +85,10 @@ class CountCluster : public actor_system::cluster::Observer {
     std::cout << "members size:" << members.size() << std::endl;
     for (auto& m : members) {
       std::cout << "member, host: " << m.host << std::endl;
-      if (m.host == host) {
+      if (m.hostname == host) {
         continue;
       }
-      std::cout << "add worker, host: " << m.host << std::endl;
+      std::cout << "add worker, host: " << m.hostname << std::endl;
       AddWorkerNode(m.host, k_yanghui_work_port1);
     }
   }

@@ -114,6 +114,7 @@ void membership::UpdateMessage::InitAsActorSystemDownMessage(
   update_.set_name(member.GetNodeName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
+  update_.set_hostname(member.GetHostName());
   update_.set_status(MemberUpdate::ACTOR_SYSTEM_DOWN);
   update_.set_incarnation(incarnation);
 }
@@ -123,6 +124,7 @@ void membership::UpdateMessage::InitAsActorSystemUpMessage(
   update_.set_name(member.GetNodeName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
+  update_.set_hostname(member.GetHostName());
   update_.set_status(MemberUpdate::ACTOR_SYSTEM_UP);
   update_.set_incarnation(incarnation);
 }

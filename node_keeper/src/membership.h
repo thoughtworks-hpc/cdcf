@@ -38,7 +38,7 @@ class Member {
         host_name_(std::move(host_name)),
         ip_address_(std::move(ip_address)),
         port_(port),
-        uid_(uid) {}
+        uid_(std::move(uid)) {}
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);

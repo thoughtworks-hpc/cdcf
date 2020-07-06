@@ -130,7 +130,7 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
 
 TEST_F(GRPCTest, ShouldGetHostNameWhenConfigWithHostName) {
   membership::Member node_c_ = {"node_c", "127.0.0.1", 8836, "localhost"};
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_c_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_c_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;
