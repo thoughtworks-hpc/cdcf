@@ -87,7 +87,6 @@ class Subscriber : public membership::Subscriber {
   MemberEventGenerator generator;
   for (;;) {
     auto events = generator.Update(membership_.GetMembers(),
-                                   membership_.GetMemberActors(),
                                    membership_.GetActorSystems());
     for (auto& event : events) {
       switch (event.type) {
@@ -105,14 +104,6 @@ class Subscriber : public membership::Subscriber {
                     << event.member.GetPort() << "] is down." << std::endl;
           service.Notify(
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
-          break;
-        case MemberEvent::kActorsUp:
-          //          std::cout << "] actors up: " << std::endl;
-          //          for (auto& actor : event.actors) {
-          //            std::cout << "address: " << actor.address << std::endl;
-          //          }
-          service.Notify({{node_keeper::MemberEvent::kActorsUp, event.member,
-                           event.actors}});
           break;
         case MemberEvent::kActorSystemDown:
           service.Notify(

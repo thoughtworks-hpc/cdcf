@@ -140,7 +140,6 @@ class Membership {
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   std::vector<Member> GetMembers() const;
-  std::map<Member, std::set<node_keeper::Actor>> GetMemberActors() const;
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
   void SendGossip(const gossip::Payload& payload);
@@ -148,7 +147,6 @@ class Membership {
   Member GetSelf() const;
   int IncreaseIncarnation();
   std::map<Member, bool> GetActorSystems() const;
-  void MergeSelfActorsUp(const std::vector<node_keeper::Actor>& up_actors);
   void NotifyLeave();
 
  private:
@@ -159,8 +157,6 @@ class Membership {
   unsigned int GetMemberLocalIncarnation(const membership::Member& member);
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
-  void MergeActorsUp(const Member& member, unsigned int incarnation,
-                     const std::vector<node_keeper::Actor>& up_actors);
   void MergeActorSystemDown(const Member& member, unsigned int incarnation);
   void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
@@ -194,8 +190,6 @@ class Membership {
   // Todo(davidzwb): consider using a read write lock instead
   mutable std::mutex mutex_members_;
   mutable std::mutex mutex_suspects_;
-  std::map<Member, std::set<node_keeper::Actor>> member_actors_;
-  mutable std::mutex mutex_member_actors_;
   std::map<Member, bool> member_actor_system_;
   mutable std::mutex mutex_member_actor_system_;
   Member self_;

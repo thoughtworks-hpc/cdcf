@@ -101,25 +101,8 @@ class ClusterImpl {
         auto it = std::remove(members_.begin(), members_.end(), member);
         members_.erase(it, members_.end());
       }
-      {
-        std::lock_guard lock(mutex_member_actors_);
-        down_actors.insert(down_actors.end(), member_actors_[member].begin(),
-                           member_actors_[member].end());
-        member_actors_[member].clear();
-      }
-    } else if (member_event.status() == ::MemberEvent::ACTORS_UP) {
-      member.status = Member::Status::ActorsUp;
-      auto actors = member_event.actors().addresses();
-      std::lock_guard lock(mutex_member_actors_);
-      for (auto& actor_address : actors) {
-        member_actors_[member].insert({actor_address});
-      }
     } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_DOWN) {
       member.status = Member::Status::ActorSystemDown;
-      std::lock_guard lock(mutex_member_actors_);
-      down_actors.insert(down_actors.end(), member_actors_[member].begin(),
-                         member_actors_[member].end());
-      member_actors_[member].clear();
     } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_UP) {
       std::cout << "*** cluster receive actor system up" << std::endl;
       member.status = Member::Status::ActorSystemUp;
@@ -129,8 +112,6 @@ class ClusterImpl {
 
   std::mutex mutex_members_;
   std::vector<Member> members_;
-  std::mutex mutex_member_actors_;
-  std::map<Member, std::set<Actor>> member_actors_;
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};

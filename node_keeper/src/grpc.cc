@@ -25,27 +25,6 @@ namespace node_keeper {
   return ::grpc::Status::OK;
 }
 
-::grpc::Status GRPCImpl::PushActorsUpInfo(::grpc::ServerContext* context,
-                                          const ::ActorsUpInfo* request,
-                                          ::google::protobuf::Empty* response) {
-  std::vector<node_keeper::Actor> up_actors;
-
-  for (auto address : request->addresses()) {
-    up_actors.push_back({address});
-  }
-
-  cluster_membership_.MergeSelfActorsUp(up_actors);
-  membership::UpdateMessage message;
-  message.InitAsActorsUpMessage(cluster_membership_.GetSelf(),
-                                cluster_membership_.IncreaseIncarnation(),
-                                up_actors);
-  auto serialized = message.SerializeToString();
-  gossip::Payload payload(serialized.data(), serialized.size());
-  cluster_membership_.SendGossip(payload);
-
-  return ::grpc::Status::OK;
-}
-
 ::grpc::Status GRPCImpl::ActorSystemUp(::grpc::ServerContext* context,
                                        const ::google::protobuf::Empty* request,
                                        ::google::protobuf::Empty* response) {
@@ -70,12 +49,6 @@ namespace node_keeper {
       member_event.set_status(::MemberEvent::UP);
     } else if (item.second.type == MemberEvent::kMemberDown) {
       member_event.set_status(::MemberEvent::DOWN);
-    } else if (item.second.type == MemberEvent::kActorsUp) {
-      member_event.set_status(::MemberEvent::ACTORS_UP);
-      auto actors = member_event.mutable_actors();
-      for (auto& actor : item.second.actors) {
-        actors->add_addresses(actor.address);
-      }
     } else if (item.second.type == MemberEvent::kActorSystemDown) {
       member_event.set_status(::MemberEvent::ACTOR_SYSTEM_DOWN);
     } else if (item.second.type == MemberEvent::kActorSystemUp) {
@@ -99,13 +72,7 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
       case MemberEvent::kMemberDown:
         members_.erase(event.member);
         break;
-      case MemberEvent::kActorsUp:
-        for (const auto & actor: event.actors) {
-          member_actors_[event.member].insert(actor);
-        }
-        break;
       case MemberEvent::kActorSystemDown:
-        member_actors_[event.member].clear();
         break;
       case MemberEvent::kActorSystemUp:
         break;

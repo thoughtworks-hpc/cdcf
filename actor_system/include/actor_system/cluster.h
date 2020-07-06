@@ -20,7 +20,7 @@ struct Member {
   std::string hostname;
   std::string host;
   uint16_t port;
-  enum Status { Up, ActorsUp, Down, ActorSystemDown, ActorSystemUp };
+  enum Status { Up, Down, ActorSystemDown, ActorSystemUp };
   Status status{Status::Up};
 
   Member(const std::string& name, const std::string& hostname,

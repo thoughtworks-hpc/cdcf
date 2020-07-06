@@ -41,12 +41,6 @@ std::vector<membership::Member> membership::Membership::GetMembers() const {
   return return_members;
 }
 
-std::map<membership::Member, std::set<node_keeper::Actor>>
-membership::Membership::GetMemberActors() const {
-  const std::lock_guard<std::mutex> lock(mutex_member_actors_);
-  return member_actors_;
-}
-
 std::vector<membership::Member> membership::Membership::GetSuspects() const {
   std::vector<Member> return_members;
   const std::lock_guard<std::mutex> lock(mutex_suspects_);
@@ -328,20 +322,6 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
       return;
     }
     RecoverySuspect(member);
-  } else if (message.IsActorsUpMessage()) {
-    logger_->Debug("Receive gossip actors up message for {}:{}",
-                   member.GetNodeName(), member.GetPort());
-    if (!IfBelongsToMembers(member)) {
-      return;
-    }
-    if (GetMemberLocalIncarnation(member) >= message.GetIncarnation()) {
-      return;
-    }
-
-    auto up_actors = message.GetActors();
-
-    SendGossip(payload);
-    MergeActorsUp(member, message.GetIncarnation(), up_actors);
   } else if (message.IsActorSystemDownMessage()) {
     logger_->Debug("Receive gossip actors system down message for {}:{}",
                    member.GetNodeName(), member.GetPort());
@@ -780,42 +760,6 @@ membership::Member membership::Membership::GetSelf() const { return self_; }
 
 int membership::Membership::IncreaseIncarnation() { return ++incarnation_; }
 
-void membership::Membership::MergeActorsUp(
-    const membership::Member& member, unsigned int incarnation,
-    const std::vector<node_keeper::Actor>& actors) {
-  {
-    const std::lock_guard<std::mutex> lock(mutex_members_);
-
-    if ((members_.find(member) != members_.end() &&
-         members_[member] >= incarnation)) {
-      return;
-    }
-    members_[member] = incarnation;
-  }
-
-  {
-    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
-    for (auto& actor : actors) {
-      member_actors_[member].insert(actor);
-    }
-    logger_->Debug("merge actors up success. member: {}:{}",
-                   member.GetNodeName(), member.GetPort());
-  }
-
-  Notify();
-}
-
-void membership::Membership::MergeSelfActorsUp(
-    const std::vector<node_keeper::Actor>& up_actors) {
-  {
-    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
-    for (auto& actor : up_actors) {
-      member_actors_[self_].insert(actor);
-    }
-    logger_->Debug("merge self actors up success.");
-  }
-}
-
 void membership::Membership::MergeActorSystemUp(
     const membership::Member& member, unsigned int incarnation) {
   {
@@ -848,11 +792,6 @@ void membership::Membership::MergeActorSystemDown(
       return;
     }
     members_[member] = incarnation;
-  }
-
-  {
-    const std::lock_guard<std::mutex> lock(mutex_member_actors_);
-    member_actors_[member].clear();
   }
 
   {

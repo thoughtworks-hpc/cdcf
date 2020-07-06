@@ -30,10 +30,6 @@ class GRPCImpl final : public ::NodeKeeper::Service {
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer);
 
-  virtual ::grpc::Status PushActorsUpInfo(::grpc::ServerContext* context,
-                                          const ::ActorsUpInfo* request,
-                                          ::google::protobuf::Empty* response);
-
   virtual ::grpc::Status ActorSystemUp(::grpc::ServerContext* context,
                                        const ::google::protobuf::Empty* request,
                                        ::google::protobuf::Empty* response);
@@ -69,7 +65,6 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   std::mutex mutex_;
   channels_type channels_;
   std::set<membership::Member> members_;
-  std::map<membership::Member, std::set<node_keeper::Actor>> member_actors_;
   membership::Membership& cluster_membership_;
 };
 
