@@ -73,7 +73,7 @@ class CountCluster : public actor_system::cluster::Observer {
     std::cout << std::endl;
     std::cout << std::endl;
 
-//    counter_.RemoveActor(down_msg.source);
+    counter_.RemoveActor(caf::actor_cast<caf::actor>(down_msg.source));
 
     StopMonitor(supervisor_, down_msg.source);
   }
