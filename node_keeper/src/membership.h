@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "../../logger/include/logger.h"
-#include "src/actor.h"
 #include "src/gossip.h"
 #include "src/queue.h"
 
