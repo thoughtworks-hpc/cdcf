@@ -156,7 +156,7 @@ class StdoutLogger : public Logger {
 #define CDCF_LOGGER_TRACE(logger, ...) \
   logger->RawTrace(__FILE__, __LINE__, __VA_ARGS__)
 
-#define CDCF_LOGGER_DEBUG(logger, ...) \
+#define CDCF_LOGGER_DEBUG(log, ...) \
   logger->RawDebug(__FILE__, __LINE__, __VA_ARGS__)
 
 #define CDCF_LOGGER_INFO(logger, ...) \

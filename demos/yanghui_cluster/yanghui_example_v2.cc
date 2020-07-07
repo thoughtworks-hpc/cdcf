@@ -14,7 +14,93 @@
 #include "../../actor_fault_tolerance/include/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"
-#include "./yanghui_config.h"
+#include "./BalanceCountCluster.h"
+#include "./ActorUnionCountCluster.h"
+#include "./yanghui_actor.h"
+
+calculator::behavior_type calculator_fun(calculator::pointer self) {
+  return {[=](int a, int b) -> int {
+    caf::aout(self) << "received add task. input a:" << a << " b:" << b
+                    << std::endl;
+
+    int result = a + b;
+    caf::aout(self) << "return: " << result << std::endl;
+    return result;
+  },
+          [=](NumberCompareData& data) -> int {
+            if (data.numbers.empty()) {
+              caf::aout(self) << "get empty compare" << std::endl;
+              return 999;
+            }
+
+            int result = data.numbers[0];
+
+            caf::aout(self) << "received compare task, input: ";
+
+            for (int number : data.numbers) {
+              caf::aout(self) << number << " ";
+              if (number < result) {
+                result = number;
+              }
+            }
+
+            caf::aout(self) << std::endl;
+            caf::aout(self) << "return: " << result << std::endl;
+
+            return result;
+          }};
+}
+
+calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
+                                               std::atomic_int& deal_msg_count,
+                                               int sleep_micro) {
+  return {
+      [self, &deal_msg_count, sleep_micro](int a, int b) -> int {
+        ++deal_msg_count;
+        caf::aout(self) << "slow calculator received add task. input a:" << a
+                        << " b:" << b
+                        << ", ************* calculator sleep microseconds:"
+                        << sleep_micro << " msg count:" << deal_msg_count
+                        << std::endl;
+        if (sleep_micro) {
+          std::this_thread::sleep_for(std::chrono::microseconds(sleep_micro));
+        }
+
+        int result = a + b;
+        caf::aout(self) << "return: " << result << std::endl;
+        return result;
+      },
+      [self, &deal_msg_count, sleep_micro](NumberCompareData& data) -> int {
+        ++deal_msg_count;
+        if (data.numbers.empty()) {
+          caf::aout(self) << "get empty compare" << std::endl;
+          return 999;
+        }
+
+        int result = data.numbers[0];
+
+        caf::aout(self) << "received compare task, input: ";
+
+        for (int number : data.numbers) {
+          caf::aout(self) << number << " ";
+          if (number < result) {
+            result = number;
+          }
+        }
+
+        caf::aout(self) << "************* calculator sleep microseconds:"
+                        << sleep_micro << " msg count:" << deal_msg_count
+                        << std::endl;
+
+        if (sleep_micro) {
+          std::this_thread::sleep_for(std::chrono::microseconds(sleep_micro));
+        }
+
+        caf::aout(self) << "return: " << result << std::endl;
+
+        return result;
+      }};
+}
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
@@ -35,237 +121,6 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
   return ret_actor;
 }
 
-const uint16_t k_yanghui_work_port1 = 55001;
-const uint16_t k_yanghui_work_port2 = 55002;
-const uint16_t k_yanghui_work_port3 = 55003;
-
-class CountCluster : public actor_system::cluster::Observer {
- public:
-  virtual void AddWorkerNode(const std::string& host) = 0;
-  virtual int AddNumber(int a, int b, int& result) = 0;
-  virtual int Compare(std::vector<int> numbers, int& min) = 0;
-  std::string host_;
-
-  explicit CountCluster(std::string host) : host_(std::move(host)) {
-    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-    InitWorkerNodes(members, host_);
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
-  }
-
-  virtual ~CountCluster() {
-    actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
-  }
-
-  void InitWorkerNodes(
-      const std::vector<actor_system::cluster::Member>& members,
-      const std::string& host) {
-    std::cout << "self, host: " << host << std::endl;
-    std::cout << "members size:" << members.size() << std::endl;
-    for (auto& m : members) {
-      std::cout << "member, host: " << m.host << std::endl;
-      if (m.host == host) {
-        continue;
-      }
-      std::cout << "add worker, host: " << m.host << std::endl;
-      AddWorkerNode(m.host);
-    }
-  }
-
-  void Update(const actor_system::cluster::Event& event) override {
-    std::cout << "=======get update event, host:" << event.member.host
-              << std::endl;
-
-    if (event.member.host != host_) {
-      if (event.member.status == event.member.Up) {
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
-        AddWorkerNode(event.member.host);
-      } else {
-        // Todo(Yujia.Li): resource leak
-        std::cout << "detect worker node down, host:" << event.member.host
-                  << " port:" << event.member.port << std::endl;
-      }
-    }
-  }
-};
-
-class BalanceCountCluster : public CountCluster {
- public:
-  caf::actor_system& system_;
-  caf::scoped_execution_unit context_;
-  std::string host_;
-  caf::actor counter_;
-  caf::scoped_actor sender_actor_;
-
-  BalanceCountCluster(const std::string& host, caf::actor_system& system)
-      : CountCluster(host),
-        system_(system),
-        context_(&system_),
-        host_(host),
-        sender_actor_(system_) {
-    auto policy = cdcf::load_balancer::policy::MinLoad(1);
-    counter_ = cdcf::load_balancer::Router::Make(&context_, std::move(policy));
-  }
-
-  virtual ~BalanceCountCluster() {}
-
-  void AddWorkerNodeWithPort(const std::string& host, uint16_t port) {
-    auto worker_actor = system_.middleman().remote_actor(host, port);
-    if (!worker_actor) {
-      std::cout << "connect remote actor failed. host:" << host
-                << ", port:" << port << std::endl;
-    }
-
-    caf::anon_send(counter_, caf::sys_atom::value, caf::put_atom::value,
-                   *worker_actor);
-
-    std::cout << "=======add pool member host:" << host << ", port:" << port
-              << std::endl;
-  }
-
-  void AddWorkerNode(const std::string& host) override {
-    AddWorkerNodeWithPort(host, k_yanghui_work_port1);
-    AddWorkerNodeWithPort(host, k_yanghui_work_port2);
-    AddWorkerNodeWithPort(host, k_yanghui_work_port3);
-  }
-
-  int AddNumber(int a, int b, int& result) override {
-    int error = 0;
-    std::promise<int> promise;
-
-    std::cout << "start add task input:" << a << ", " << b << std::endl;
-
-    sender_actor_->request(counter_, std::chrono::seconds(5), a, b)
-        .receive([&](int ret) { promise.set_value(ret); },
-                 [&](const caf::error& err) {
-                   std::cout
-                       << "send add request get err: " << caf::to_string(err)
-                       << "input data: a=" << a << ", b=" << b << std::endl;
-                   error = 1;
-                 });
-
-    result = promise.get_future().get();
-
-    std::cout << "get result:" << result << std::endl;
-    return error;
-  }
-
-  int Compare(std::vector<int> numbers, int& min) override {
-    int error = 0;
-    std::promise<int> promise;
-    std::cout << "start compare task. input data:" << std::endl;
-
-    for (int p : numbers) {
-      std::cout << p << " ";
-    }
-
-    std::cout << std::endl;
-
-    NumberCompareData send_data;
-    send_data.numbers = numbers;
-
-    sender_actor_->request(counter_, std::chrono::seconds(5), send_data)
-        .receive(
-            [&](int ret) {
-              min = ret;
-              promise.set_value(ret);
-            },
-            [&](const caf::error& err) {
-              std::cout << "send add request get err: " << caf::to_string(err)
-                        << "input data:";
-              for (auto num : numbers) {
-                std::cout << num << ", ";
-              }
-              std::cout << std::endl;
-              error = 1;
-            });
-
-    min = promise.get_future().get();
-    std::cout << "get min:" << min << std::endl;
-
-    return error;
-  }
-};
-
-class ActorUnionCountCluster : public CountCluster {
- public:
-  explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
-                                  uint16_t port, uint16_t worker_port)
-      : CountCluster(host),
-        host_(std::move(host)),
-        system_(system),
-        port_(port),
-        worker_port_(worker_port),
-        counter_(system, caf::actor_pool::round_robin()) {}
-
-  virtual ~ActorUnionCountCluster() {}
-
-  void AddWorkerNodeWithPort(const std::string& host, uint16_t port) {
-    auto worker_actor = system_.middleman().remote_actor(host, port);
-    if (!worker_actor) {
-      std::cout << "connect remote actor failed. host:" << host
-                << ", port:" << port << std::endl;
-    }
-
-    counter_.AddActor(*worker_actor);
-
-    std::cout << "=======add pool member host:" << host << ", port:" << port
-              << std::endl;
-  }
-
-  void AddWorkerNode(const std::string& host) override {
-    AddWorkerNodeWithPort(host, k_yanghui_work_port1);
-    AddWorkerNodeWithPort(host, k_yanghui_work_port2);
-    AddWorkerNodeWithPort(host, k_yanghui_work_port3);
-  }
-
-  int AddNumber(int a, int b, int& result) override {
-    int error = 0;
-    std::promise<int> promise;
-
-    std::cout << "start add task input:" << a << ", " << b << std::endl;
-
-    counter_.SendAndReceive([&](int ret) { promise.set_value(ret); },
-                            [&](const caf::error& err) { error = 1; }, a, b);
-
-    result = promise.get_future().get();
-
-    std::cout << "get result:" << result << std::endl;
-    return error;
-  }
-
-  int Compare(std::vector<int> numbers, int& min) override {
-    int error = 0;
-    std::promise<int> promise;
-    std::cout << "start compare task. input data:" << std::endl;
-
-    for (int p : numbers) {
-      std::cout << p << " ";
-    }
-
-    std::cout << std::endl;
-
-    NumberCompareData send_data;
-    send_data.numbers = numbers;
-
-    counter_.SendAndReceive(
-        [&](int ret) {
-          min = ret;
-          promise.set_value(ret);
-        },
-        [&](const caf::error& err) { error = 1; }, send_data);
-
-    min = promise.get_future().get();
-    std::cout << "get min:" << min << std::endl;
-
-    return error;
-  }
-
-  caf::actor_system& system_;
-  std::string host_;
-  uint16_t port_;
-  uint16_t worker_port_;
-  ActorUnion counter_;
-};
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor1 = system.spawn<typed_calculator>();
@@ -319,78 +174,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   self->send_exit(actor3, caf::exit_reason::user_shutdown);
 }
 
-caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
-  return {
-      [=](const std::vector<std::vector<int>>& data) {
-        int n = data.size();
-        //        int temp_states[n];
-        //        int states[n];
-        int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-        int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-        int error = 0;
 
-        states[0] = 1;
-        states[0] = data[0][0];
-        int i, j, k, min_sum = INT_MAX;
-        for (i = 1; i < n; i++) {
-          for (j = 0; j < i + 1; j++) {
-            if (j == 0) {
-              // temp_states[0] = states[0] + data[i][j];
-              error = counter->AddNumber(states[0], data[i][j], temp_states[0]);
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
-              }
-            } else if (j == i) {
-              // temp_states[j] = states[j - 1] + data[i][j];
-              error =
-                  counter->AddNumber(states[j - 1], data[i][j], temp_states[j]);
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
-              }
-            } else {
-              // temp_states[j] = std::min(states[j - 1], states[j]) +
-              // data[i][j];
-              error = counter->AddNumber(std::min(states[j - 1], states[j]),
-                                         data[i][j], temp_states[j]);
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
-              }
-            }
-          }
-
-          for (k = 0; k < i + 1; k++) {
-            states[k] = temp_states[k];
-          }
-        }
-
-        //    for (j = 0; j < n; j++) {
-        //      if (states[j] < min_sum) min_sum = states[j];
-        //    }
-
-        std::vector<int> states_vec(states, states + n);
-
-        error = counter->Compare(states_vec, min_sum);
-        if (0 != error) {
-          caf::aout(self) << "cluster down, exit task" << std::endl;
-          return INT_MAX;
-        }
-
-        caf::aout(self) << "yanghui triangle actor task complete, result: "
-                        << min_sum << std::endl;
-        free(temp_states);
-        free(states);
-        return min_sum;
-      },
-      [=](std::string&) {
-        caf::aout(self) << "simulate get a critical error， yanghui actor quit."
-                        << std::endl;
-        self->quit();
-        return 0;
-      }};
-}
 
 std::vector<std::vector<int>> kYanghuiData2 = {
     {5},
