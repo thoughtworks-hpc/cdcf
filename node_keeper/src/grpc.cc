@@ -3,7 +3,7 @@
  */
 #include "src/grpc.h"
 
-#include "membership_message.h"
+#include "src/membership_message.h"
 
 namespace {
 ::Member& UpdateMember(::Member* to, const membership::Member& from) {

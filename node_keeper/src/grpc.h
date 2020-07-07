@@ -21,7 +21,7 @@
 namespace node_keeper {
 class GRPCImpl final : public ::NodeKeeper::Service {
  public:
-  GRPCImpl(membership::Membership& cluster_membership);
+  explicit GRPCImpl(membership::Membership& cluster_membership);
   virtual ~GRPCImpl() { Close(); }
   virtual ::grpc::Status GetMembers(::grpc::ServerContext* context,
                                     const ::google::protobuf::Empty* request,

@@ -4,6 +4,7 @@
 #ifndef NODE_KEEPER_SRC_EVENT_H_
 #define NODE_KEEPER_SRC_EVENT_H_
 #include <algorithm>
+#include <map>
 #include <vector>
 
 #include "src/membership.h"
@@ -18,7 +19,6 @@ struct MemberEvent {
   };
   Type type;
   membership::Member member;
-  std::vector<Actor> actors;
 };
 
 class MemberEventGenerator {

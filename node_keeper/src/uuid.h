@@ -2,11 +2,12 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef NODE_KEEPER_SRC_UUID_H
-#define NODE_KEEPER_SRC_UUID_H
+#ifndef NODE_KEEPER_SRC_UUID_H_
+#define NODE_KEEPER_SRC_UUID_H_
 
 #include <random>
 #include <sstream>
+#include <string>
 
 namespace uuid {
 static std::random_device rd;
@@ -37,9 +38,9 @@ std::string generate_uuid_v4() {
   ss << "-";
   for (i = 0; i < 12; i++) {
     ss << dis(gen);
-  };
+  }
   return ss.str();
 }
 }  // namespace uuid
 
-#endif  // NODE_KEEPER_SRC_UUID_H
+#endif  // NODE_KEEPER_SRC_UUID_H_

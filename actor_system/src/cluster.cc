@@ -50,7 +50,7 @@ class ClusterImpl {
                 << ",msg: " << status.error_message()
                 << ", detail: " << status.error_details() << std::endl;
     }
-  };
+  }
 
  private:
   void Routine() {
