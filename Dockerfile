@@ -33,6 +33,10 @@ COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root_v2 /bin/yan
 COPY --from=builder /cdcf/demos/load_balancer/load_balancer /bin/load_balancer
 COPY --from=builder /cdcf/cluster_monitor/cluster_monitor_client /bin/cluster_monitor_client
 
+RUN apt-get clean \
+        && apt-get update \
+        && apt-get install procps -y
+
 COPY docker/script.sh /bin/script.sh
 ENV APP=/bin/cluster
 #ENTRYPOINT ["/bin/script.sh"]

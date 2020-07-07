@@ -10,6 +10,7 @@
 
 #include "src/membership_message.h"
 #include "src/net_common.h"
+#include "src/uuid.h"
 
 membership::Membership::~Membership() {
   if (if_notify_leave_) {
@@ -287,6 +288,10 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     logger_->Info("Receive gossip up message for {}:{}", member.GetIpAddress(),
                   member.GetPort());
     // TODO(Yujia.Li): member's address here would be `HOST` in config
+    if (member == self_) {
+      return;
+    }
+
     EraseExpiredMember(member);
 
     if (IfBelongsToSuspects(member) &&
@@ -820,6 +825,8 @@ void membership::Membership::NotifyActorSystemDown() {
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   SendGossip(payload);
+  logger_->Debug("send self actor system down gossip, incarnation: ",
+                 message.GetIncarnation());
 }
 std::map<membership::Member, bool> membership::Membership::GetActorSystems()
     const {
@@ -856,7 +863,8 @@ int membership::Config::SetHostMember(const std::string& node_name,
   auto ret =
       membership::ResolveHostName(ip_address, hostname, ip_address_converted);
 
-  Member host(node_name, ip_address_converted, port, hostname);
+  Member host(node_name, ip_address_converted, port, hostname,
+              uuid::generate_uuid_v4());
   host_ = host;
 
   return ret;
