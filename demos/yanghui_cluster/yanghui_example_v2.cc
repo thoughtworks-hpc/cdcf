@@ -96,7 +96,7 @@ class CountCluster : public actor_system::cluster::Observer {
   void Update(const actor_system::cluster::Event& event) override {
     if (event.member.host != host_) {
       if (event.member.status == event.member.ActorSystemUp) {
-//         std::this_thread::sleep_for(std::chrono::seconds(2));
+        //         std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
         PrintClusterMembers();
       } else if (event.member.status == event.member.Down) {

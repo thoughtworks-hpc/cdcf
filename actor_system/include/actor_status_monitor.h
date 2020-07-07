@@ -24,8 +24,7 @@ class ActorStatusMonitor {
     std::string description;
   };
 
-  explicit ActorStatusMonitor(
-      caf::actor_system& actorSystem);
+  explicit ActorStatusMonitor(caf::actor_system& actorSystem);
   void RegisterActor(caf::actor& actor, const std::string& name,
                      const std::string& description = "");
   std::vector<ActorInfo> GetActorStatus();

@@ -27,8 +27,7 @@ class MemberEventGenerator {
   using MemberActorSystems = std::map<membership::Member, bool>;
 
   std::vector<MemberEvent> Update(
-      const Members& members,
-      const MemberActorSystems& member_actor_systems) {
+      const Members& members, const MemberActorSystems& member_actor_systems) {
     std::vector<MemberEvent> result;
     auto member_events = generateEventForMember(members);
     result.insert(result.end(), member_events.begin(), member_events.end());
@@ -48,7 +47,9 @@ class MemberEventGenerator {
     std::vector<MemberEvent> result;
     for (auto& [member, up] : member_actor_systems) {
       if (up != member_actor_systems_[member]) {
-        result.push_back(MemberEvent{up ? MemberEvent::kActorSystemUp : MemberEvent::kActorSystemDown, member});
+        result.push_back(MemberEvent{
+            up ? MemberEvent::kActorSystemUp : MemberEvent::kActorSystemDown,
+            member});
         continue;
       }
     }

@@ -3,6 +3,7 @@
  */
 
 #include "src/membership_message.h"
+
 #include "src/uuid.h"
 
 std::string membership::Message::SerializeToString() {
@@ -60,7 +61,8 @@ void membership::UpdateMessage::InitAsRecoveryMessage(
 
 membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
-                static_cast<uint16_t>(update_.port()), update_.hostname(), update_.member_id()};
+                static_cast<uint16_t>(update_.port()), update_.hostname(),
+                update_.member_id()};
 }
 
 bool membership::UpdateMessage::IsUpMessage() const {

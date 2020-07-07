@@ -48,7 +48,7 @@ class Member {
   std::string GetHostName() const { return host_name_; }
   std::string GetIpAddress() const { return ip_address_; }
   uint16_t GetPort() const { return port_; }
-  std::string GetUid() const {return uid_;}
+  std::string GetUid() const { return uid_; }
 
   bool IsEmptyMember();
 
@@ -164,7 +164,7 @@ class Membership {
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
-  void EraseExpiredMember(const membership::Member & member);
+  void EraseExpiredMember(const membership::Member& member);
   gossip::Address GetRandomSeedAddress() const;
   std::pair<bool, membership::Member> GetRandomMember() const;
   std::pair<bool, membership::Member> GetRandomPingTarget() const;

@@ -27,9 +27,7 @@ class NodeKeeper {
 
   void NotifyActorSystemDown() { membership_.NotifyActorSystemDown(); }
 
-  void NotifyLeave() {
-    membership_.NotifyLeave();
-  }
+  void NotifyLeave() { membership_.NotifyLeave(); }
 
   [[noreturn]] void Run();
 };
