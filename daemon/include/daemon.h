@@ -24,6 +24,8 @@ class Daemon {
   size_t restart_ = 0;
   std::chrono::milliseconds stable_time_;
   cdcf::Logger& logger_;
+  std::function<void()> app_down_handle_;
+  std::function<void()> node_keeper_clean_up_;
 
   void ExitIfProcessNotStable(
       const std::chrono::system_clock::time_point& start,
@@ -33,6 +35,8 @@ class Daemon {
   Daemon(
       ProcessManager& process_manager, cdcf::Logger& logger, std::string path,
       std::vector<std::string> args,
+      std::function<void()> app_down_handle = nullptr,
+      std::function<void()> node_keeper_clean_up = nullptr,
       std::chrono::milliseconds stable_time = std::chrono::milliseconds(3000));
   void Run();
   void StopGuard();

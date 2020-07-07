@@ -27,7 +27,10 @@ int main(int argc, char* argv[]) {
   auto logger = std::make_shared<cdcf::Logger>("node_keeper");
   PosixProcessManager process_manager(*logger);
   auto args = ConstructAppArgs(config);
-  Daemon daemon(process_manager, *logger, config.app_, args);
+  Daemon daemon(
+      process_manager, *logger, config.app_, args,
+      [&keeper]() { keeper.NotifyActorSystemDown(); },
+      [&keeper]() { keeper.NotifyLeave(); });
   daemon.Start();
 
   keeper.Run();

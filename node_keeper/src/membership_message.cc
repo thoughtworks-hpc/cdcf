@@ -4,6 +4,8 @@
 
 #include "src/membership_message.h"
 
+#include "src/uuid.h"
+
 std::string membership::Message::SerializeToString() {
   return BaseMessage().SerializeAsString();
 }
@@ -24,6 +26,7 @@ void membership::UpdateMessage::InitAsUpMessage(const Member& member,
   update_.set_port(member.GetPort());
   update_.set_status(MemberUpdate::UP);
   update_.set_incarnation(incarnation);
+  update_.set_member_id(uuid::generate_uuid_v4());
 }
 
 void membership::UpdateMessage::InitAsDownMessage(const Member& member,
@@ -58,7 +61,8 @@ void membership::UpdateMessage::InitAsRecoveryMessage(
 
 membership::Member membership::UpdateMessage::GetMember() const {
   return Member{update_.name(), update_.ip(),
-                static_cast<uint16_t>(update_.port()), update_.hostname()};
+                static_cast<uint16_t>(update_.port()), update_.hostname(),
+                update_.member_id()};
 }
 
 bool membership::UpdateMessage::IsUpMessage() const {
@@ -79,6 +83,20 @@ bool membership::UpdateMessage::IsRecoveryMessage() const {
            update_.status() != MemberUpdate::RECOVERY);
 }
 
+bool membership::UpdateMessage::IsActorSystemDownMessage() const {
+  if (!update_.IsInitialized()) {
+    return false;
+  }
+  return update_.status() == MemberUpdate::ACTOR_SYSTEM_DOWN;
+}
+
+bool membership::UpdateMessage::IsActorSystemUpMessage() const {
+  if (!update_.IsInitialized()) {
+    return false;
+  }
+  return update_.status() == MemberUpdate::ACTOR_SYSTEM_UP;
+}
+
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
   for (const auto& member : members) {
@@ -91,6 +109,26 @@ void membership::FullStateMessage::InitAsFullStateMessage(
     new_state->set_status(MemberUpdate::UP);
     new_state->set_incarnation(1);
   }
+}
+
+void membership::UpdateMessage::InitAsActorSystemDownMessage(
+    const membership::Member& member, unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_hostname(member.GetHostName());
+  update_.set_status(MemberUpdate::ACTOR_SYSTEM_DOWN);
+  update_.set_incarnation(incarnation);
+}
+
+void membership::UpdateMessage::InitAsActorSystemUpMessage(
+    const Member& member, unsigned int incarnation) {
+  update_.set_name(member.GetNodeName());
+  update_.set_ip(member.GetIpAddress());
+  update_.set_port(member.GetPort());
+  update_.set_hostname(member.GetHostName());
+  update_.set_status(MemberUpdate::ACTOR_SYSTEM_UP);
+  update_.set_incarnation(incarnation);
 }
 
 void membership::FullStateMessage::InitAsReentryRejected() {

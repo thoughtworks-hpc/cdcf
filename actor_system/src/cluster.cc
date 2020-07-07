@@ -37,8 +37,19 @@ class ClusterImpl {
   }
 
   std::vector<Member> GetMembers() {
-    std::lock_guard lock(mutex_);
+    std::lock_guard lock(mutex_members_);
     return members_;
+  }
+
+  void NotifyReady() {
+    grpc::ClientContext context;
+    ::google::protobuf::Empty empty;
+    auto status = stub_->ActorSystemUp(&context, {}, &empty);
+    if (!status.ok()) {
+      std::cout << "[ActorSystemUp] error code:  " << status.error_code()
+                << ",msg: " << status.error_message()
+                << ", detail: " << status.error_details() << std::endl;
+    }
   }
 
  private:
@@ -64,7 +75,7 @@ class ClusterImpl {
                              port, Member::Status::Up);
       }
       {
-        std::lock_guard lock(mutex_);
+        std::lock_guard lock(mutex_members_);
         std::swap(members_, members);
       }
     }
@@ -81,18 +92,25 @@ class ClusterImpl {
     Member member{detail.name(), detail.hostname(), detail.host(), port};
     if (member_event.status() == ::MemberEvent::UP) {
       member.status = Member::Status::Up;
-      std::lock_guard lock(mutex_);
+      std::lock_guard lock(mutex_members_);
       members_.push_back(member);
     } else if (member_event.status() == ::MemberEvent::DOWN) {
       member.status = Member::Status::Down;
-      std::lock_guard lock(mutex_);
-      auto it = std::remove(members_.begin(), members_.end(), member);
-      members_.erase(it, members_.end());
+      {
+        std::lock_guard lock(mutex_members_);
+        auto it = std::remove(members_.begin(), members_.end(), member);
+        members_.erase(it, members_.end());
+      }
+    } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_DOWN) {
+      member.status = Member::Status::ActorSystemDown;
+    } else if (member_event.status() == ::MemberEvent::ACTOR_SYSTEM_UP) {
+      std::cout << "*** cluster receive actor system up" << std::endl;
+      member.status = Member::Status::ActorSystemUp;
     }
     Cluster::GetInstance()->Notify({member});
   }
 
-  std::mutex mutex_;
+  std::mutex mutex_members_;
   std::vector<Member> members_;
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
@@ -119,6 +137,8 @@ std::vector<Member> Cluster::GetMembers() { return impl_->GetMembers(); }
 Cluster::Cluster() : impl_(std::make_unique<ClusterImpl>()) {}
 
 Cluster::~Cluster() {}
+
+void Cluster::NotifyReady() { impl_->NotifyReady(); }
 
 }  // namespace cluster
 };  // namespace actor_system

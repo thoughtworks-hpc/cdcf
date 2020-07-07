@@ -4,6 +4,8 @@
 
 #include "../include/actor_monitor.h"
 
+#include "../../actor_system/include/actor_system/cluster.h"
+
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(
     caf::actor_config& cfg,
@@ -15,7 +17,7 @@ caf::behavior ActorMonitor::make_behavior() {
     std::string description;
 
     {
-      std::lock_guard<std::mutex> locker(mapLock);
+      std::lock_guard<std::mutex> locker(actor_map_lock);
       description = actor_map_[caf::to_string(msg.source)];
     }
 
@@ -30,12 +32,22 @@ caf::behavior ActorMonitor::make_behavior() {
       [=](const std::string& msg) { std::cout << msg << std::endl; },
       [=](const caf::actor_addr& actor_addr, const std::string& description) {
         {
-          std::lock_guard<std::mutex> locker(mapLock);
+          std::lock_guard<std::mutex> locker(actor_map_lock);
           actor_map_[caf::to_string(actor_addr)] = description;
         }
 
         aout(this) << "monitor new actor, actor addr:"
                    << caf::to_string(actor_addr)
+                   << "actor description:" << description << std::endl;
+      },
+      [=](demonitor_atom, const std::string& actor_addr) {
+        std::string description;
+        {
+          std::lock_guard<std::mutex> locker(actor_map_lock);
+          description = actor_map_[actor_addr];
+          actor_map_.erase(actor_addr);
+        }
+        aout(this) << "stop monitor actor, actor addr:" << actor_addr
                    << "actor description:" << description << std::endl;
       }};
 }
@@ -55,5 +67,13 @@ bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
   caf::anon_send(supervisor, worker.address(), description);
   auto pointer = caf::actor_cast<caf::event_based_actor*>(supervisor);
   pointer->monitor(worker);
+  return true;
+}
+
+bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker) {
+  caf::anon_send(supervisor, ActorMonitor::demonitor_atom::value,
+                 caf::to_string(worker));
+  auto pointer = caf::actor_cast<caf::event_based_actor*>(supervisor);
+  pointer->demonitor(worker);
   return true;
 }

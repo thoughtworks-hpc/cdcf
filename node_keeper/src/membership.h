@@ -32,11 +32,12 @@ class Member {
  public:
   Member() : port_(0) {}
   Member(std::string node_name, std::string ip_address, uint16_t port,
-         std::string host_name = "")
+         std::string host_name = "", std::string uid = "")
       : node_name_(std::move(node_name)),
         host_name_(std::move(host_name)),
         ip_address_(std::move(ip_address)),
-        port_(port) {}
+        port_(port),
+        uid_(std::move(uid)) {}
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
@@ -46,10 +47,12 @@ class Member {
   std::string GetHostName() const { return host_name_; }
   std::string GetIpAddress() const { return ip_address_; }
   uint16_t GetPort() const { return port_; }
+  std::string GetUid() const { return uid_; }
 
   bool IsEmptyMember();
 
  private:
+  std::string uid_;
   std::string node_name_;
   std::string host_name_;
   std::string ip_address_;
@@ -138,6 +141,12 @@ class Membership {
   std::vector<Member> GetMembers() const;
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
+  void SendGossip(const gossip::Payload& payload);
+  void NotifyActorSystemDown();
+  Member GetSelf() const;
+  int IncreaseIncarnation();
+  std::map<Member, bool> GetActorSystems() const;
+  void NotifyLeave();
 
  private:
   int AddMember(const Member& member);
@@ -147,11 +156,14 @@ class Membership {
   unsigned int GetMemberLocalIncarnation(const membership::Member& member);
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
+  void MergeActorSystemDown(const Member& member, unsigned int incarnation);
+  void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
   void MergeMembers(const std::map<membership::Member, int>& members);
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
+  void EraseExpiredMember(const membership::Member& member);
   gossip::Address GetRandomSeedAddress() const;
   std::pair<bool, membership::Member> GetRandomMember() const;
   std::pair<bool, membership::Member> GetRandomPingTarget() const;
@@ -172,13 +184,13 @@ class Membership {
   void RecoverySuspect(const Member& member);
   int GetRetransmitLimit() const;
 
-  void NotifyLeave();
-
   std::map<Member, int> members_;
   std::map<Member, int> suspects_;
   // Todo(davidzwb): consider using a read write lock instead
   mutable std::mutex mutex_members_;
   mutable std::mutex mutex_suspects_;
+  std::map<Member, bool> member_actor_system_;
+  mutable std::mutex mutex_member_actor_system_;
   Member self_;
   std::vector<Member> seed_members_;
   std::shared_ptr<gossip::Transportable> transport_;
@@ -187,7 +199,7 @@ class Membership {
   // potential deadlock
   std::unique_ptr<queue::TimedFunctorQueue> gossip_queue_;
   std::unique_ptr<queue::TimedFunctorQueue> failure_detector_queue_;
-  unsigned int incarnation_;
+  std::atomic_uint incarnation_;
   int retransmit_multiplier_;
   bool if_notify_leave_;
   bool is_relay_ping_enabled_;

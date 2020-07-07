@@ -46,14 +46,36 @@ class CountCluster : public actor_system::cluster::Observer {
         port_(port),
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()) {
-    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-
+    supervisor_ = system.spawn<ActorMonitor>(
+        [this](const caf::down_msg& down_msg,
+               const std::string& actor_description) {
+          downMsgHandle(down_msg, actor_description);
+        });
+    auto members = GetInstance()->GetMembers();
     InitWorkerNodes(members, host_, port_);
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    GetInstance()->AddObserver(this);
     PrintClusterMembers();
   }
-  ~CountCluster() {
-    actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
+  ~CountCluster() { GetInstance()->RemoveObserver(this); }
+
+  actor_system::cluster::Cluster* GetInstance() {
+    return actor_system::cluster::Cluster::GetInstance();
+  }
+
+  void downMsgHandle(const caf::down_msg& down_msg,
+                     const std::string& actor_description) {
+    std::cout << std::endl;
+    std::cout << "=============actor monitor call===============" << std::endl;
+    std::cout << "down actor address:" << caf::to_string(down_msg.source)
+              << std::endl;
+    std::cout << "down actor description:" << actor_description << std::endl;
+    std::cout << "down reason:" << caf::to_string(down_msg.reason) << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    counter_.RemoveActor(caf::actor_cast<caf::actor>(down_msg.source));
+
+    StopMonitor(supervisor_, down_msg.source);
   }
 
   void InitWorkerNodes(
@@ -63,25 +85,21 @@ class CountCluster : public actor_system::cluster::Observer {
     std::cout << "members size:" << members.size() << std::endl;
     for (auto& m : members) {
       std::cout << "member, host: " << m.host << std::endl;
-      if (m.host == host) {
+      if (m.hostname == host) {
         continue;
       }
-      std::cout << "add worker, host: " << m.host << std::endl;
+      std::cout << "add worker, host: " << m.hostname << std::endl;
       AddWorkerNode(m.host, k_yanghui_work_port1);
     }
   }
 
   void Update(const actor_system::cluster::Event& event) override {
-    std::cout << "=======get update event, host:" << event.member.host
-              << std::endl;
-
     if (event.member.host != host_) {
-      if (event.member.status == event.member.Up) {
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
+      if (event.member.status == event.member.ActorSystemUp) {
+        //         std::this_thread::sleep_for(std::chrono::seconds(2));
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
         PrintClusterMembers();
-      } else {
-        // Todo(Yujia.Li): resource leak
+      } else if (event.member.status == event.member.Down) {
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
       }
@@ -103,8 +121,9 @@ class CountCluster : public actor_system::cluster::Observer {
   void AddWorkerNode(const std::string& host, uint16_t port) {
     auto get_actor = system_.middleman().remote_actor(host, port);
     if (!get_actor) {
-      std::cout << "connect remote actor failed. host:" << host
-                << ", port:" << port << std::endl;
+      std::cout << "connect remote actor failed. host: " << host
+                << ", port:" << port
+                << ", reason: " << to_string(get_actor.error()) << std::endl;
       return;
     }
 
@@ -126,6 +145,7 @@ class CountCluster : public actor_system::cluster::Observer {
       AllActorData actors = promise.get_future().get();
       for (auto work_actor : actors.actors) {
         counter_.AddActor(work_actor);
+        SetMonitor(supervisor_, work_actor, "remote worker actor");
       }
     } catch (std::exception& e) {
       std::cout << "[exception caught: " << e.what() << "]" << std::endl;
@@ -175,6 +195,7 @@ class CountCluster : public actor_system::cluster::Observer {
   }
 
   caf::actor_system& system_;
+  caf::actor supervisor_;
   std::string host_;
   uint16_t port_;
   uint16_t worker_port_;
@@ -237,6 +258,7 @@ void shutdownAllActors(caf::scoped_actor& self, AllActorData& actors,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
+  auto cluster = actor_system::cluster::Cluster::GetInstance();
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
@@ -244,12 +266,26 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::mutex mutex;
   spawnAllActors(system, actor_status_monitor, actors, &mutex);
   auto public_actor = system.spawn(getAllActors, &actors, &mutex);
-  system.middleman().publish(caf::actor_cast<caf::actor>(public_actor),
-                             k_yanghui_work_port1);
+  while (1) {
+    std::cout << "*** try to publish actor..." << std::endl;
+    auto expected_port =
+        system.middleman().publish(caf::actor_cast<caf::actor>(public_actor),
+                                   k_yanghui_work_port1, nullptr, true);
+    if (!expected_port) {
+      std::cout << "*** publish failed, error="
+                << system.render(expected_port.error()) << std::endl;
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      continue;
+    }
+
+    break;
+  }
+
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
+  cluster->NotifyReady();
 
   // start compute
   while (true) {
@@ -348,18 +384,6 @@ void printRet(int return_value) {
   // std::cout << "call actor return value:" << return_value << std::endl;
 }
 
-void downMsgHandle(const caf::down_msg& downMsg,
-                   const std::string& actor_description) {
-  std::cout << std::endl;
-  std::cout << "=============actor monitor call===============" << std::endl;
-  std::cout << "down actor address:" << caf::to_string(downMsg.source)
-            << std::endl;
-  std::cout << "down actor description:" << actor_description << std::endl;
-  std::cout << "down reason:" << caf::to_string(downMsg.reason) << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
-}
-
 void dealSendErr(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
@@ -383,9 +407,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
 
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
-  SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
-
   ActorGuard actor_guard(
       yanghui_actor,
       [&](std::atomic<bool>& active) {
@@ -399,6 +420,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       system);
 
   actor_status_service.Run();
+  counter.GetInstance()->NotifyReady();
 
   // start compute
   while (true) {

@@ -75,9 +75,9 @@ class Subscriber : public membership::Subscriber {
   std::condition_variable condition_variable_;
 };
 
-void NodeKeeper::Run() {
+[[noreturn]] void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
-  GRPCImpl service;
+  GRPCImpl service(membership_);
   NodeStatusGRPCImpl node_status_service(membership_);
   GRPCServer server(server_address, {&service, &node_status_service});
   std::cout << "gRPC Server listening on " << server_address << std::endl;
@@ -86,21 +86,32 @@ void NodeKeeper::Run() {
   membership_.Subscribe(subscriber);
   MemberEventGenerator generator;
   for (;;) {
-    /* FIXME: Is GetMembers thread safe? */
-    auto events = generator.Update(membership_.GetMembers());
+    auto events = generator.Update(membership_.GetMembers(),
+                                   membership_.GetActorSystems());
     for (auto& event : events) {
-      std::cout << "node [" << event.member.GetNodeName() << "@"
-                << event.member.GetHostName() << ": "
-                << event.member.GetIpAddress() << ":" << event.member.GetPort();
       switch (event.type) {
         case MemberEvent::kMemberUp:
-          std::cout << "] is up." << std::endl;
+          std::cout << "node [" << event.member.GetNodeName() << "@"
+                    << event.member.GetHostName() << ": "
+                    << event.member.GetIpAddress() << ":"
+                    << event.member.GetPort() << "] is up." << std::endl;
           service.Notify({{node_keeper::MemberEvent::kMemberUp, event.member}});
           break;
         case MemberEvent::kMemberDown:
-          std::cout << "] is down." << std::endl;
+          std::cout << "node [" << event.member.GetNodeName() << "@"
+                    << event.member.GetHostName() << ": "
+                    << event.member.GetIpAddress() << ":"
+                    << event.member.GetPort() << "] is down." << std::endl;
           service.Notify(
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
+          break;
+        case MemberEvent::kActorSystemDown:
+          service.Notify(
+              {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
+          break;
+        case MemberEvent::kActorSystemUp:
+          service.Notify(
+              {{node_keeper::MemberEvent::kActorSystemUp, event.member}});
           break;
       }
     }

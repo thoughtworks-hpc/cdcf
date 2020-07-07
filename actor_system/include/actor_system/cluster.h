@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <caf/all.hpp>
+
 namespace actor_system {
 namespace cluster {
 struct Member {
@@ -18,7 +20,7 @@ struct Member {
   std::string hostname;
   std::string host;
   uint16_t port;
-  enum Status { Up, Down };
+  enum Status { Up, Down, ActorSystemDown, ActorSystemUp };
   Status status{Status::Up};
 
   Member(const std::string& name, const std::string& hostname,
@@ -32,6 +34,18 @@ struct Member {
   bool operator==(const struct Member& other) const {
     return host == other.host && port == other.port;
   }
+
+  bool operator<(const Member& rhs) const {
+    if (host < rhs.host) return true;
+    if (rhs.host < host) return false;
+    return port < rhs.port;
+  }
+};
+
+struct Actor {
+  std::string address;
+
+  bool operator<(const Actor& rhs) const { return address < rhs.address; }
 };
 
 struct Event {
@@ -83,6 +97,8 @@ class Cluster : public Subject {
   ~Cluster();
 
   std::vector<Member> GetMembers();
+
+  void NotifyReady();
 
  private:
   Cluster();

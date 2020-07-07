@@ -13,6 +13,9 @@
 #include <memory>
 #include <thread>
 
+#include "src/membership.h"
+
+using membership::Membership;
 using node_keeper::GRPCImpl;
 using node_keeper::GRPCServer;
 using testing::Eq;
@@ -22,13 +25,14 @@ class GRPCTest : public ::testing::Test {
   GRPCTest() {}
 
   void SetUp() override {
-    std::vector<grpc::Service*> services = {&service_};
+    service_ = std::make_unique<GRPCImpl>(membership);
+    std::vector<grpc::Service*> services = {service_.get()};
     server_ = std::make_unique<GRPCServer>(server_address_, services);
     ResetStub();
   }
 
   void TearDown() override {
-    service_.Close();
+    service_->Close();
     server_.reset();
   }
 
@@ -42,7 +46,8 @@ class GRPCTest : public ::testing::Test {
   /* FIXME: It would be better to find a unused port dynamically like
    * `grpc_pick_unused_port_or_die`. */
   const std::string server_address_{"127.0.0.1:30002"};
-  GRPCImpl service_;
+  Membership membership;
+  std::unique_ptr<GRPCImpl> service_;
   std::unique_ptr<GRPCServer> server_;
   membership::Member node_a_ = {"node_a", "localhost", 8834};
   membership::Member node_b_ = {"node_b", "localhost", 8835};
@@ -58,7 +63,7 @@ TEST_F(GRPCTest, ShouldReturnNoneMemberByGetMembers) {
 }
 
 TEST_F(GRPCTest, ShouldReturnOneMemberByGetMembersAfterNodeUp) {
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;
@@ -69,8 +74,8 @@ TEST_F(GRPCTest, ShouldReturnOneMemberByGetMembersAfterNodeUp) {
 }
 
 TEST_F(GRPCTest, ShouldReturnNoneMemberByGetMembersAfterSameNodeUpAndDown) {
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
-  service_.Notify({{node_keeper::MemberEvent::kMemberDown, node_a_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberDown, node_a_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;
@@ -81,8 +86,8 @@ TEST_F(GRPCTest, ShouldReturnNoneMemberByGetMembersAfterSameNodeUpAndDown) {
 }
 
 TEST_F(GRPCTest, ShouldReturnOneMemberByGetMembersAfterDifferentNodeUpAndDown) {
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
-  service_.Notify({{node_keeper::MemberEvent::kMemberDown, node_b_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberDown, node_b_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;
@@ -105,11 +110,11 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
     return events;
   });
 
-  for (size_t i = 0; i < 5 && service_.GetSubscribersCount() != 1;
+  for (size_t i = 0; i < 5 && service_->GetSubscribersCount() != 1;
        std::this_thread::sleep_for(std::chrono::milliseconds(100))) {
   }
-  ASSERT_THAT(service_.GetSubscribersCount(), Eq(1));
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
+  ASSERT_THAT(service_->GetSubscribersCount(), Eq(1));
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_a_}});
   server_done = true;
   auto events = future.get();
 
@@ -125,7 +130,7 @@ TEST_F(GRPCTest, ShouldReturnBySubscribeAfterDifferentNodeUpAndDown) {
 
 TEST_F(GRPCTest, ShouldGetHostNameWhenConfigWithHostName) {
   membership::Member node_c_ = {"node_c", "127.0.0.1", 8836, "localhost"};
-  service_.Notify({{node_keeper::MemberEvent::kMemberUp, node_c_}});
+  service_->Notify({{node_keeper::MemberEvent::kMemberUp, node_c_}});
 
   ::GetMembersReply reply;
   grpc::ClientContext context;

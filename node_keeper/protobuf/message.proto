@@ -13,10 +13,13 @@ message MemberUpdate {
         DOWN = 1;
         SUSPECT = 2;
         RECOVERY = 3;
+        ACTOR_SYSTEM_DOWN = 4;
+        ACTOR_SYSTEM_UP = 5;
     }
 
     required MemberStatus status = 5;
     required int32 incarnation = 6;
+    optional string member_id = 7;
 }
 
 message MemberFullState {

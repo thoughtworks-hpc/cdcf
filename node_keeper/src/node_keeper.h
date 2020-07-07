@@ -25,7 +25,11 @@ class NodeKeeper {
     return membership_.GetMembers();
   }
 
-  void Run();
+  void NotifyActorSystemDown() { membership_.NotifyActorSystemDown(); }
+
+  void NotifyLeave() { membership_.NotifyLeave(); }
+
+  [[noreturn]] void Run();
 };
 }  // namespace node_keeper
 #endif  // NODE_KEEPER_SRC_NODE_KEEPER_H_

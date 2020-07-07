@@ -29,11 +29,18 @@ class UpdateMessage : public Message {
   void InitAsDownMessage(const Member& member, unsigned int incarnation);
   void InitAsSuspectMessage(const Member& member, unsigned int incarnation);
   void InitAsRecoveryMessage(const Member& member, unsigned int incarnation);
+  void InitAsActorSystemDownMessage(const Member& member,
+                                    unsigned int incarnation);
+  void InitAsActorSystemUpMessage(const Member& member,
+                                  unsigned int incarnation);
   bool IsUpMessage() const;
   bool IsDownMessage() const;
   bool IsSuspectMessage() const;
   bool IsRecoveryMessage() const;
+  bool IsActorSystemDownMessage() const;
+  bool IsActorSystemUpMessage() const;
   Member GetMember() const;
+
   unsigned int GetIncarnation() const { return update_.incarnation(); }
 
   google::protobuf::Message& BaseMessage() override { return update_; }

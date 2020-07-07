@@ -21,6 +21,7 @@
 namespace node_keeper {
 class GRPCImpl final : public ::NodeKeeper::Service {
  public:
+  explicit GRPCImpl(membership::Membership& cluster_membership);
   virtual ~GRPCImpl() { Close(); }
   virtual ::grpc::Status GetMembers(::grpc::ServerContext* context,
                                     const ::google::protobuf::Empty* request,
@@ -28,6 +29,10 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   virtual ::grpc::Status Subscribe(::grpc::ServerContext* context,
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer);
+
+  virtual ::grpc::Status ActorSystemUp(::grpc::ServerContext* context,
+                                       const ::google::protobuf::Empty* request,
+                                       ::google::protobuf::Empty* response);
 
  public:
   void Notify(const std::vector<MemberEvent>& events);
@@ -60,6 +65,7 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   std::mutex mutex_;
   channels_type channels_;
   std::set<membership::Member> members_;
+  membership::Membership& cluster_membership_;
 };
 
 class GRPCServer {

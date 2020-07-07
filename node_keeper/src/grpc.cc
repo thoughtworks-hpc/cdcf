@@ -3,6 +3,8 @@
  */
 #include "src/grpc.h"
 
+#include "src/membership_message.h"
+
 namespace {
 ::Member& UpdateMember(::Member* to, const membership::Member& from) {
   to->set_name(from.GetNodeName());
@@ -23,6 +25,19 @@ namespace node_keeper {
   return ::grpc::Status::OK;
 }
 
+::grpc::Status GRPCImpl::ActorSystemUp(::grpc::ServerContext* context,
+                                       const ::google::protobuf::Empty* request,
+                                       ::google::protobuf::Empty* response) {
+  membership::UpdateMessage message;
+  message.InitAsActorSystemUpMessage(cluster_membership_.GetSelf(),
+                                     cluster_membership_.IncreaseIncarnation());
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+  cluster_membership_.SendGossip(payload);
+
+  return ::grpc::Status::OK;
+}
+
 ::grpc::Status GRPCImpl::Subscribe(::grpc::ServerContext* context,
                                    const ::SubscribeRequest* request,
                                    ::grpc::ServerWriter<::Event>* writer) {
@@ -32,8 +47,12 @@ namespace node_keeper {
     UpdateMember(member_event.mutable_member(), item.second.member);
     if (item.second.type == MemberEvent::kMemberUp) {
       member_event.set_status(::MemberEvent::UP);
-    } else {
+    } else if (item.second.type == MemberEvent::kMemberDown) {
       member_event.set_status(::MemberEvent::DOWN);
+    } else if (item.second.type == MemberEvent::kActorSystemDown) {
+      member_event.set_status(::MemberEvent::ACTOR_SYSTEM_DOWN);
+    } else if (item.second.type == MemberEvent::kActorSystemUp) {
+      member_event.set_status(::MemberEvent::ACTOR_SYSTEM_UP);
     }
     ::Event event;
     event.set_type(Event_Type_MEMBER_CHANGED);
@@ -53,6 +72,10 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
       case MemberEvent::kMemberDown:
         members_.erase(event.member);
         break;
+      case MemberEvent::kActorSystemDown:
+        break;
+      case MemberEvent::kActorSystemUp:
+        break;
     }
   }
 
@@ -63,4 +86,7 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
     }
   }
 }
+GRPCImpl::GRPCImpl(membership::Membership& cluster_membership)
+    : cluster_membership_(cluster_membership) {}
+
 }  // namespace node_keeper

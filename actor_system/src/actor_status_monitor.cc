@@ -15,8 +15,10 @@ ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
 void ActorStatusMonitor::RegisterActor(caf::actor& actor,
                                        const std::string& name,
                                        const std::string& description) {
-  std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
-  actor_status_[actor.id()] = {actor.id(), name, description};
+  {
+    std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
+    actor_status_[actor.id()] = {actor.id(), name, description};
+  }
   SetMonitor(actor_monitor_, actor, description);
 }
 
