@@ -245,13 +245,14 @@ std::vector<gossip::Address> membership::Membership::GetAllMemberAddress() {
 
 void membership::Membership::EraseExpiredMember(
     const membership::Member& member) {
+  bool clear_old = false;
   {
     const std::lock_guard<std::mutex> lock(mutex_members_);
     if (auto it = members_.find(member); it != members_.end()) {
       Member saved_member = it->first;
       if (saved_member.GetUid() != member.GetUid()) {
         members_.erase(saved_member);
-        return;
+        clear_old = true;
       }
     }
   }
@@ -262,8 +263,17 @@ void membership::Membership::EraseExpiredMember(
       Member saved_member = it->first;
       if (saved_member.GetUid() != member.GetUid()) {
         suspects_.erase(saved_member);
+        clear_old = true;
       }
     }
+  }
+  if (clear_old) {
+    {
+      const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+      member_actor_system_[member] = false;
+    }
+    logger_->Info("clear old node, mark it's actor system down");
+    Notify();
   }
 }
 
