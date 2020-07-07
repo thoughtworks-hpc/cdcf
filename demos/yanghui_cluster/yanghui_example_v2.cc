@@ -102,6 +102,10 @@ class CountCluster : public actor_system::cluster::Observer {
       } else if (event.member.status == event.member.Down) {
         std::cout << "detect worker node down, host:" << event.member.host
                   << " port:" << event.member.port << std::endl;
+      } else if (event.member.status == event.member.ActorSystemDown) {
+        std::cout << "detect worker actor system down, host:"
+                  << event.member.host << " port:" << event.member.port
+                  << std::endl;
       }
     }
   }
