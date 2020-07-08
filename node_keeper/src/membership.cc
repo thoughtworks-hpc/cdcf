@@ -285,10 +285,12 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
   Member member = message.GetMember();
 
   if (message.IsUpMessage()) {
-    logger_->Info("Receive gossip up message for {}:{}", member.GetIpAddress(),
-                  member.GetPort());
+    logger_->Info("Receive gossip up message for {}:{}, message incarnation={}",
+                  member.GetIpAddress(), member.GetPort(),
+                  message.GetIncarnation());
     // TODO(Yujia.Li): member's address here would be `HOST` in config
     if (member == self_) {
+      logger_->Debug("Ignore self gossip up message");
       return;
     }
 
@@ -300,10 +302,10 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
 
     if (IfBelongsToMembers(member) &&
-        GetMemberLocalIncarnation(member) == message.GetIncarnation()) {
+        GetMemberLocalIncarnation(member) >= message.GetIncarnation()) {
       return;
     }
-
+    logger_->Debug("Disseminate gossip, node up");
     gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                         GetRetransmitLimit());
     MergeUpUpdate(message.GetMember(), message.GetIncarnation());
@@ -375,6 +377,8 @@ void membership::Membership::HandleDidPull(
 
       UpdateMessage update;
       update.InitAsUpMessage(self_, incarnation_);
+      logger_->Debug("Send self gossip up message to others, incarnation={}",
+                     incarnation_);
       auto update_serialized = update.SerializeToString();
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
@@ -720,13 +724,13 @@ void membership::Membership::MergeMembers(
       logger_->Debug("Receive update for ping member {}:{}",
                      member.GetIpAddress(), member.GetPort());
       if (members_.find(member) != members_.end()) {
-        if (incarnation > members_[member]) {
-          members_[member] = incarnation;
-          should_notify = true;
-          logger_->Info(
-              "Update member {}:{}'s incarnation by merging ping member",
-              member.GetIpAddress(), member.GetPort());
-        }
+        //        if (incarnation > members_[member]) {
+        //          members_[member] = incarnation;
+        //          should_notify = true;
+        //          logger_->Info(
+        //              "Update member {}:{}'s incarnation by merging ping
+        //              member", member.GetIpAddress(), member.GetPort());
+        //        }
       } else {
         members_[member] = incarnation;
         should_notify = true;

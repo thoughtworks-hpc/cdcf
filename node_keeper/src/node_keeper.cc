@@ -86,6 +86,7 @@ class Subscriber : public membership::Subscriber {
   membership_.Subscribe(subscriber);
   MemberEventGenerator generator;
   for (;;) {
+    logger_->Debug("generate event");
     auto events = generator.Update(membership_.GetMembers(),
                                    membership_.GetActorSystems());
     for (auto& event : events) {
@@ -106,10 +107,12 @@ class Subscriber : public membership::Subscriber {
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
           break;
         case MemberEvent::kActorSystemDown:
+          logger_->Debug("Send actor system down event to self actor system.");
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
           break;
         case MemberEvent::kActorSystemUp:
+          logger_->Debug("Send actor system up event to self actor system.");
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemUp, event.member}});
           break;
