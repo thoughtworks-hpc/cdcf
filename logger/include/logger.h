@@ -158,6 +158,8 @@ class StdoutLogger : public Logger {
   explicit StdoutLogger(const std::string& module_name);
 };
 
+#define CDCF_LOGGER_FOO(...) SPDLOG_INFO(__VA_ARGS__)
+
 #define CDCF_LOGGER_TRACE(logger, ...) \
   logger->RawTrace(__FILE__, __LINE__, __VA_ARGS__)
 
