@@ -23,6 +23,7 @@ class CDCFConfig : public caf::actor_system_config {
   std::string log_level_ = "info";
   uint16_t log_file_size_in_bytes_ = 0;
   uint16_t log_file_number_ = 0;
+  bool log_display_filename_and_line_number_ = true;
 
   enum class RetValue {
     kSuccess = 0,
