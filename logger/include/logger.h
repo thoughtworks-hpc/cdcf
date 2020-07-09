@@ -158,25 +158,17 @@ class StdoutLogger : public Logger {
   explicit StdoutLogger(const std::string& module_name);
 };
 
-#define CDCF_LOGGER_FOO(...) SPDLOG_INFO(__VA_ARGS__)
+#define CDCF_LOGGER_TRACE(...) SPDLOG_LOGGER_CALL(spdlog::default_logger_raw(), spdlog::level::trace, __VA_ARGS__)
 
-#define CDCF_LOGGER_TRACE(logger, ...) \
-  logger->RawTrace(__FILE__, __LINE__, __VA_ARGS__)
+#define CDCF_LOGGER_DEBUG(...) SPDLOG_LOGGER_CALL(spdlog::default_logger_raw(), spdlog::level::debug, __VA_ARGS__)
 
-#define CDCF_LOGGER_DEBUG(logger, ...) \
-  logger->RawDebug(__FILE__, __LINE__, __VA_ARGS__)
+#define CDCF_LOGGER_INFO(...) SPDLOG_INFO(__VA_ARGS__)
 
-#define CDCF_LOGGER_INFO(logger, ...) \
-  logger->RawInfo(__FILE__, __LINE__, __VA_ARGS__)
+#define CDCF_LOGGER_WARN(...) SPDLOG_WARN(__VA_ARGS__)
 
-#define CDCF_LOGGER_WARN(logger, ...) \
-  logger->RawWarn(__FILE__, __LINE__, __VA_ARGS__)
+#define CDCF_LOGGER_ERROR(...) SPDLOG_ERROR(__VA_ARGS__)
 
-#define CDCF_LOGGER_ERROR(logger, ...) \
-  logger->RawError(__FILE__, __LINE__, __VA_ARGS__)
-
-#define CDCF_LOGGER_CRITICAL(logger, ...) \
-  logger->RawCritical(__FILE__, __LINE__, __VA_ARGS__)
+#define CDCF_LOGGER_CRITICAL(...) SPDLOG_CRITICAL(__VA_ARGS__)
 
 }  // namespace cdcf
 

@@ -32,10 +32,10 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
                                            log_file_size, log_file_num);
   logger_->SetLevel(log_level);
 
-  CDCF_LOGGER_DEBUG(logger_, "Log file name is {}", log_file);
-  CDCF_LOGGER_DEBUG(logger_, "Log file level is {}", log_level);
-  CDCF_LOGGER_DEBUG(logger_, "Log file size is {}", log_file_size);
-  CDCF_LOGGER_DEBUG(logger_, "Log file number is {}", log_file_num);
+  CDCF_LOGGER_DEBUG("Log file name is {}", log_file);
+  CDCF_LOGGER_DEBUG("Log file level is {}", log_level);
+  CDCF_LOGGER_DEBUG("Log file size is {}", log_file_size);
+  CDCF_LOGGER_DEBUG("Log file number is {}", log_file_num);
 
   std::shared_ptr<gossip::Transportable> transport =
       gossip::CreateTransport(address, address);
