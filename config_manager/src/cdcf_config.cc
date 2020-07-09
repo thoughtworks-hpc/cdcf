@@ -4,8 +4,19 @@
 #include "../include/cdcf_config.h"
 
 CDCFConfig::CDCFConfig() {
-  opt_group{custom_options_, "global"}.add(
-      threads_proportion, "threads_proportion", "set threads proportion");
+  opt_group{custom_options_, "global"}
+      .add(threads_proportion, "threads_proportion", "set threads proportion")
+      .add(log_file_, "log-file",
+           "set log file name, default: cdcf.log,"
+           " format in: /user/cdcf/cdcf.log")
+      .add(log_level_, "log-level",
+           "set log level, default: info, format in: info")
+      .add(log_file_size_in_bytes_, "log-file-size",
+           "set maximum rotating log file size in bytes,"
+           " default: unlimited, format in: 1024")
+      .add(log_file_number_, "log-file-num",
+           "set maximum rotating log file number, each file has size"
+           " 'log-file-size', default: 0, format in: 1024");
 }
 
 CDCFConfig::RetValue CDCFConfig::parse_config(int argc, char** argv,
