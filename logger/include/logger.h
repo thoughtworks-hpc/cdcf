@@ -9,6 +9,7 @@
 #include <mutex>
 #include <string>
 
+#include "../../config_manager/include/cdcf_config.h"
 #include "spdlog/spdlog.h"
 
 namespace cdcf {
@@ -135,6 +136,8 @@ class Logger {
   void EnableFileNameAndLineNumber();
   void DisableFileNameAndLineNumber();
 
+  static void Init(const CDCFConfig& config);
+
  private:
   bool is_filename_and_linenumber_enabled_ = true;
   const std::string filename_and_linenumber_format_ = "{file}:{line}: ";
@@ -144,6 +147,7 @@ class Logger {
  protected:
   Logger() = default;
   std::shared_ptr<spdlog::logger> logger_;
+  static std::shared_ptr<spdlog::logger> g_logger_;
   static std::mutex mutex_;
 };
 

@@ -11,6 +11,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 std::mutex cdcf::Logger::mutex_;
+std::shared_ptr<spdlog::logger> cdcf::Logger::g_logger_;
 
 cdcf::Logger::Logger(const std::string& module_name,
                      const std::string& file_name, int file_size_in_bytes,
@@ -45,6 +46,19 @@ void cdcf::Logger::EnableFileNameAndLineNumber() {
 
 void cdcf::Logger::DisableFileNameAndLineNumber() {
   is_filename_and_linenumber_enabled_ = false;
+}
+void cdcf::Logger::Init(const CDCFConfig& config) {
+  // Todo(Yujia.Li): 加一个std::call_once()
+  if (config.log_file_size_in_bytes_ == 0) {
+    g_logger_ = spdlog::basic_logger_mt("basic_logger", config.log_file_);
+  } else {
+    g_logger_ = spdlog::rotating_logger_mt("rotating_logger", config.log_file_,
+                                           config.log_file_size_in_bytes_,
+                                           config.log_file_number_);
+  }
+  g_logger_->set_level(spdlog::level::from_str(config.log_level_));
+  spdlog::set_default_logger(g_logger_);
+  spdlog::flush_every(std::chrono::seconds(5));
 }
 
 std::once_flag cdcf::StdoutLogger::once_flag;
