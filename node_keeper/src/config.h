@@ -20,10 +20,6 @@ class Config : public CDCFConfig {
   uint16_t port_ = 4748;
   std::string host_ = "localhost";
   std::string seeds_ = "";
-  std::string log_file_ = "node_keeper.log";
-  std::string log_level_ = "info";
-  uint16_t log_file_size_in_bytes_ = 0;
-  uint16_t log_file_number_ = 0;
   std::string app_;
   std::string app_args_;
 
@@ -34,17 +30,6 @@ class Config : public CDCFConfig {
         .add(host_, "host,H", "set host")
         .add(seeds_, "seeds,s",
              "seeds of cluster, format in: `host:port,host:port`")
-        .add(log_file_, "log-file",
-             "set log file name, default: node_keeper.log,"
-             " format in: /user/cdcf/node_keeper.log")
-        .add(log_level_, "log-level",
-             "set log level, default: info, format in: info")
-        .add(log_file_size_in_bytes_, "log-file-size",
-             "set maximum rotating log file size in bytes,"
-             " default: unlimited, format in: 1024")
-        .add(log_file_number_, "log-file-num",
-             "set maximum rotating log file number, each file has size"
-             " 'log-file-size', default: 0, format in: 1024")
         .add(app_, "app", "set application path")
         .add(app_args_, "app-args", "set application arguments");
   }

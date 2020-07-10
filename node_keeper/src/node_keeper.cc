@@ -22,21 +22,6 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
   gossip::Address address{config.host_, config.port_};
   auto seeds = config.GetSeeds();
 
-  // Todo(Yujia.Li): it seems should not init logger here
-  std::string log_file{config.log_file_};
-  std::string log_level{config.log_level_};
-  uint16_t log_file_size = config.log_file_size_in_bytes_;
-  uint16_t log_file_num = config.log_file_number_;
-
-  logger_ = std::make_shared<cdcf::Logger>(logger_name_, log_file,
-                                           log_file_size, log_file_num);
-  logger_->SetLevel(log_level);
-
-  CDCF_LOGGER_DEBUG(logger_, "Log file name is {}", log_file);
-  CDCF_LOGGER_DEBUG(logger_, "Log file level is {}", log_level);
-  CDCF_LOGGER_DEBUG(logger_, "Log file size is {}", log_file_size);
-  CDCF_LOGGER_DEBUG(logger_, "Log file number is {}", log_file_num);
-
   std::shared_ptr<gossip::Transportable> transport =
       gossip::CreateTransport(address, address);
 
@@ -86,7 +71,7 @@ class Subscriber : public membership::Subscriber {
   membership_.Subscribe(subscriber);
   MemberEventGenerator generator;
   for (;;) {
-    logger_->Debug("generate event");
+    CDCF_LOGGER_DEBUG("generate event");
     auto events = generator.Update(membership_.GetMembers(),
                                    membership_.GetActorSystems());
     for (auto& event : events) {
@@ -107,12 +92,13 @@ class Subscriber : public membership::Subscriber {
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
           break;
         case MemberEvent::kActorSystemDown:
-          logger_->Debug("Send actor system down event to self actor system.");
+          CDCF_LOGGER_DEBUG(
+              "Send actor system down event to self actor system.");
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
           break;
         case MemberEvent::kActorSystemUp:
-          logger_->Debug("Send actor system up event to self actor system.");
+          CDCF_LOGGER_DEBUG("Send actor system up event to self actor system.");
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemUp, event.member}});
           break;

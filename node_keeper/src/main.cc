@@ -16,6 +16,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  cdcf::Logger::Init(config);
+
   auto seeds = config.GetSeeds();
   if (seeds.size()) {
     std::cout << "seeding with: " << std::endl;
@@ -24,11 +26,10 @@ int main(int argc, char* argv[]) {
     }
   }
   node_keeper::NodeKeeper keeper(config);
-  auto logger = std::make_shared<cdcf::Logger>("node_keeper");
-  PosixProcessManager process_manager(*logger);
+  PosixProcessManager process_manager;
   auto args = ConstructAppArgs(config);
   Daemon daemon(
-      process_manager, *logger, config.app_, args,
+      process_manager, config.app_, args,
       [&keeper]() { keeper.NotifyActorSystemDown(); },
       [&keeper]() { keeper.NotifyLeave(); });
   daemon.Start();

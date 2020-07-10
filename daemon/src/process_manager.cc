@@ -73,9 +73,6 @@ void PosixProcessManager::WaitProcessExit(std::shared_ptr<void> process_info) {
   }
 }
 
-PosixProcessManager::PosixProcessManager(cdcf::Logger& logger)
-    : ProcessManager(logger) {}
-
 static std::shared_ptr<void> g_pid;
 static bool* g_guard;
 static void handler(int) {
@@ -98,7 +95,5 @@ void PosixProcessManager::InstallSignalHandlersForQuit(
   sigaction(SIGTERM, &act, nullptr);
   sigaction(SIGQUIT, &act, nullptr);
 }
-
-ProcessManager::ProcessManager(cdcf::Logger& logger) : logger_(logger) {}
 
 void ProcessManager::Exit(int exit_code) { exit(exit_code); }
