@@ -1,14 +1,12 @@
-//
-// Created by Mingfei Deng on 2020/7/7.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#include "FakeRemoteCounter.h"
+#include "include/fake_remote_counter.h"
 
 #include <future>
 
-#include "yanghui_config.h"
-
-int FakeRemoteCounter::AddNumber(int a, int b, int& result) {
+int fake_remote_counter::AddNumber(int a, int b, int& result) {
   int ret = 0;
   std::promise<int> promise;
 
@@ -25,7 +23,7 @@ int FakeRemoteCounter::AddNumber(int a, int b, int& result) {
   return ret;
 }
 
-int FakeRemoteCounter::Compare(std::vector<int> numbers, int& min) {
+int fake_remote_counter::Compare(std::vector<int> numbers, int& min) {
   int ret = 0;
   std::promise<int> promise;
 

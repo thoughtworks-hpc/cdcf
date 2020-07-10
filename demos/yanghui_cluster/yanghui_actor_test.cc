@@ -1,13 +1,15 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 #define CAF_SUITE yanghui
 
-#include "yanghui_actor.h"
+#include "include/yanghui_actor.h"
 
-#include "CounterInterface.h"
-#include "FakeCounter.h"
+#include <vector>
+
 #include "caf/all.hpp"
 #include "caf/test/unit_test_impl.hpp"
-#include "yanghui_config.h"
-
+#include "include/fake_counter.h"
 namespace {
 struct fixture {
   caf::actor_system_config cfg;
@@ -42,8 +44,8 @@ std::vector<std::vector<int>> kYanghuiTestData = {
 CAF_TEST_FIXTURE_SCOPE(yanghui_tests, fixture)
 
 CAF_TEST(divide) {
-  // new 一个实现接口的 FakeCounter 类，传入 yanghui_actor
-  CounterInterface* counter = new FakeCounter();
+  // new 一个实现接口的 fake_counter 类，传入 yanghui_actor
+  counter_interface* counter = new fake_counter();
   auto yanghui_actor = sys.spawn(yanghui, counter);
   self->request(yanghui_actor, caf::infinite, kYanghuiTestData)
       .receive([=](int r) { CAF_CHECK(r == 42); },

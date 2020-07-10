@@ -1,12 +1,16 @@
-//
-// Created by Mingfei Deng on 2020/7/6.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#include "./yanghui_actor.h"
+#include "include/yanghui_actor.h"
 
-#include "limits.h"
+#include <limits.h>
 
-caf::behavior yanghui(caf::event_based_actor* self, CounterInterface* counter) {
+#include <algorithm>
+#include <string>
+#include <vector>
+caf::behavior yanghui(caf::event_based_actor* self,
+                      counter_interface* counter) {
   return {
       [=](const std::vector<std::vector<int>>& data) {
         int n = data.size();

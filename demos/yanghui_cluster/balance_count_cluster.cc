@@ -1,13 +1,15 @@
-//
-// Created by Mingfei Deng on 2020/7/6.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#include "BalanceCountCluster.h"
+#include "include/balance_count_cluster.h"
 
+#include <string>
 #include <utility>
-BalanceCountCluster::BalanceCountCluster(std::string host,
-                                         caf::actor_system& system)
-    : CountCluster(host),
+#include <vector>
+balance_count_cluster::balance_count_cluster(std::string host,
+                                             caf::actor_system& system)
+    : count_cluster(host),
       system_(system),
       context_(&system_),
       host_(std::move(host)),
@@ -16,8 +18,8 @@ BalanceCountCluster::BalanceCountCluster(std::string host,
   counter_ = cdcf::load_balancer::Router::Make(&context_, std::move(policy));
 }
 
-void BalanceCountCluster::AddWorkerNodeWithPort(const std::string& host,
-                                                uint16_t port) {
+void balance_count_cluster::AddWorkerNodeWithPort(const std::string& host,
+                                                  uint16_t port) {
   auto worker_actor = system_.middleman().remote_actor(host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
@@ -30,13 +32,13 @@ void BalanceCountCluster::AddWorkerNodeWithPort(const std::string& host,
   std::cout << "=======add pool member host:" << host << ", port:" << port
             << std::endl;
 }
-void BalanceCountCluster::AddWorkerNode(const std::string& host) {
+void balance_count_cluster::AddWorkerNode(const std::string& host) {
   AddWorkerNodeWithPort(host, k_yanghui_work_port1);
   AddWorkerNodeWithPort(host, k_yanghui_work_port2);
   AddWorkerNodeWithPort(host, k_yanghui_work_port3);
 }
 
-int BalanceCountCluster::AddNumber(int a, int b, int& result) {
+int balance_count_cluster::AddNumber(int a, int b, int& result) {
   int error = 0;
   std::promise<int> promise;
 
@@ -56,7 +58,7 @@ int BalanceCountCluster::AddNumber(int a, int b, int& result) {
   std::cout << "get result:" << result << std::endl;
   return error;
 }
-int BalanceCountCluster::Compare(std::vector<int> numbers, int& min) {
+int balance_count_cluster::Compare(std::vector<int> numbers, int& min) {
   int error = 0;
   std::promise<int> promise;
   std::cout << "start compare task. input data:" << std::endl;

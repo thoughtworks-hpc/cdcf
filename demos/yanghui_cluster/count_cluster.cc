@@ -1,20 +1,21 @@
-//
-// Created by Mingfei Deng on 2020/7/6.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#include "CountCluster.h"
+#include "include/count_cluster.h"
 
-CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
+#include <utility>
+count_cluster::count_cluster(std::string host) : host_(std::move(host)) {
   auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
   InitWorkerNodes(members, host_);
   actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
 }
 
-CountCluster::~CountCluster() {
+count_cluster::~count_cluster() {
   actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
 }
 
-void CountCluster::InitWorkerNodes(
+void count_cluster::InitWorkerNodes(
     const std::vector<actor_system::cluster::Member>& members,
     const std::string& host) {
   std::cout << "self, host: " << host << std::endl;
@@ -29,7 +30,7 @@ void CountCluster::InitWorkerNodes(
   }
 }
 
-void CountCluster::Update(const actor_system::cluster::Event& event) {
+void count_cluster::Update(const actor_system::cluster::Event& event) {
   std::cout << "=======get update event, host:" << event.member.host
             << std::endl;
 

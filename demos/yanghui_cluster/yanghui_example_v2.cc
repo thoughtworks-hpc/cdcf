@@ -14,10 +14,10 @@
 #include "../../actor_fault_tolerance/include/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"
-#include "./ActorUnionCountCluster.h"
-#include "./BalanceCountCluster.h"
-#include "./Calculator.h"
-#include "./yanghui_actor.h"
+#include "include/actor_union_count_cluster.h"
+#include "include/balance_count_cluster.h"
+#include "include/yanghui_actor.h"
+#include "include/yanghui_demo_calculator.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
@@ -132,18 +132,18 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  //  ActorUnionCountCluster counter(cfg.root_host, system,
+  //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
 
-  //  BalanceCountCluster balance_count_cluster(cfg.root_host, system);
+  //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
 
-  CountCluster* count_cluster;
+  count_cluster* count_cluster;
 
   if (cfg.balance_mode) {
-    count_cluster = new BalanceCountCluster(cfg.root_host, system);
+    count_cluster = new balance_count_cluster(cfg.root_host, system);
   } else {
-    count_cluster = new ActorUnionCountCluster(
+    count_cluster = new actor_union_count_cluster(
         cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
   }
 

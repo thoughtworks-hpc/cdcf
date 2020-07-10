@@ -1,7 +1,7 @@
-//
-// Created by Yuecheng Pei on 2020/7/8.
-//
-#include "Calculator.h"
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+#include "include/yanghui_demo_calculator.h"
 
 calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
                                                std::atomic_int& deal_msg_count,

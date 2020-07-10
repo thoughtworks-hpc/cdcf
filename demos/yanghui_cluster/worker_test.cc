@@ -1,6 +1,6 @@
-//
-// Created by Yuecheng Pei on 2020/7/9.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 // 测试 杨辉三角中的 worker actor
 #define CAF_SUITE actor
@@ -8,9 +8,7 @@
 #include "caf/all.hpp"
 #include "caf/test/unit_test_impl.hpp"
 
-using namespace caf;
-
-//模版代码
+// 模版代码
 namespace {
 struct fixture {
   caf::actor_system_config cfg;

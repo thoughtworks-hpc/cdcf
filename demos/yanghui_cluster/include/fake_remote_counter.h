@@ -1,22 +1,22 @@
-//
-// Created by Mingfei Deng on 2020/7/7.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#ifndef CDCF_FAKEREMOTECOUNTER_H
-#define CDCF_FAKEREMOTECOUNTER_H
+#ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_FAKE_REMOTE_COUNTER_H_
+#define DEMOS_YANGHUI_CLUSTER_INCLUDE_FAKE_REMOTE_COUNTER_H_
 #include <utility>
 #include <vector>
 
-#include "CounterInterface.h"
+#include "../counter_interface.h"
+#include "../yanghui_config.h"
 #include "caf/all.hpp"
-#include "yanghui_config.h"
 
 static caf::actor_system_config* cfg_yanghui;
 static caf::actor_system* sys_yanghui;
 
-class FakeRemoteCounter : public CounterInterface {
+class fake_remote_counter : public counter_interface {
  public:
-  FakeRemoteCounter(
+  fake_remote_counter(
       decltype((*sys_yanghui).spawn<typed_calculator>()) countActor,
       caf::scoped_actor& sendActor)
       : count_actor_(std::move(countActor)), send_actor_(sendActor) {}
@@ -29,4 +29,4 @@ class FakeRemoteCounter : public CounterInterface {
   decltype((*sys_yanghui).spawn<typed_calculator>()) count_actor_;
 };
 
-#endif  // CDCF_FAKEREMOTECOUNTER_H
+#endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_FAKE_REMOTE_COUNTER_H_
