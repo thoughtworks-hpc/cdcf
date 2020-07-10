@@ -16,6 +16,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  cdcf::Logger::Init(config);
+
   auto seeds = config.GetSeeds();
   if (seeds.size()) {
     std::cout << "seeding with: " << std::endl;

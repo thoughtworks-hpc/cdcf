@@ -5,7 +5,7 @@ services:
     environment:
       HOST: yanghui_root_v2
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log-file=/tmp/log/yanghui_root_v2.log --log-level=debug --log-file-size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
       APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
@@ -18,7 +18,7 @@ services:
     environment:
       HOST: yanghui_worker1_v2
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log-file=/tmp/log/yanghui_worker1_v2.log --log-level=debug --log-file-size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:
@@ -30,7 +30,7 @@ services:
     environment:
       HOST: yanghui_worker2_v2
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log-file=/tmp/log/yanghui_worker2_v2.log --log-level=debug --log-file-size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
     networks:

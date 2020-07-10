@@ -20,7 +20,7 @@ class Logger {
   static void Init(const CDCFConfig& config);
 
  private:
-  static std::shared_ptr<spdlog::logger> g_logger_;
+  static std::shared_ptr<spdlog::logger> logger_;
   static std::once_flag once_flag_;
 };
 
