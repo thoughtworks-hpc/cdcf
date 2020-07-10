@@ -7,7 +7,7 @@ services:
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
+      APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --log_file_size=2048
     networks:
       - cdcf
     volumes:
@@ -20,7 +20,7 @@ services:
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
+      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
     networks:
       - cdcf
     volumes:
@@ -32,7 +32,7 @@ services:
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445
+      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
     networks:
       - cdcf
     volumes:
