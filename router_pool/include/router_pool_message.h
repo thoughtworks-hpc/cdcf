@@ -21,7 +21,7 @@ struct RouterPoolMsgData {
 template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f,
                                         const RouterPoolMsgData& x) {
-  return f(caf::meta::type_name("RouterPoolActorData"), x.min_num, x.max_num,
+  return f(caf::meta::type_name("RouterPoolMsgData"), x.min_num, x.max_num,
            x.actors);
 }
 

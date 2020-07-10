@@ -7,59 +7,59 @@
 
 #include <memory>
 #include <queue>
+#include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
-#include "./router_pool_data.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
 namespace cdcf::router_pool {
 
-using Lock = caf::upgrade_lock<caf::detail::shared_spinlock>;
+using pool_atom = caf::atom_constant<caf::atom("pool")>;
+using node_add_atom = caf::atom_constant<caf::atom("add_node")>;
+using node_remove_atom = caf::atom_constant<caf::atom("del_node")>;
+using modify_size_atom = caf::atom_constant<caf::atom("mdf_size")>;
 
-class RouterPoolMaster : public caf::monitorable_actor {
+class RouterPool : public caf::event_based_actor {
  public:
-  static caf::actor Make(caf::execution_unit* eu, std::string name,
-                         std::string description, size_t min_num,
-                         size_t max_num);
-  explicit RouterPoolMaster(caf::actor_config& cfg);
-
-  RouterPoolMaster(caf::actor_config& cfg, caf::execution_unit* eu,
-                   std::string name, std::string description, size_t min_num,
-                   size_t max_num);
-  void on_destroy() override;
-  void AddWork(const std::string& host, uint16_t port);
-  void DeleteWork(const std::string& host, uint16_t port);
+  RouterPool(caf::actor_config& cfg, std::string& name,
+             std::string& description, std::string& factory_name,
+             caf::message& factory_msg, std::set<std::string>& mpi,
+             size_t& size);
 
   void enqueue(caf::mailbox_element_ptr, caf::execution_unit*) override;
 
  private:
-  std::pair<caf::actor, std::shared_ptr<RouterPoolActorData>> AddActor();
+  void Down();
+  void Exit();
+  void AddNode(const std::string& host, uint16_t port);
+  void DeleteNode(const std::string& host, uint16_t port);
+  void ModifySize(size_t size);
   void DeleteActor();
-
-  void PushMessage(caf::mailbox_element_ptr&);
-  void DispatcherMessage();
-  void ResponseMessage(caf::mailbox_element_ptr, caf::execution_unit*);
-  caf::mailbox_element_ptr PopMessage();
-
+  void AddActor();
+  caf::actor GetRemotePool(const std::string& host, uint16_t port,
+                           const std::string& name);
+  void GetPoolInfo(const std::string& host, uint16_t port, caf::actor& actor);
   static std::string BuildWorkerKey(const std::string& host, uint16_t port);
 
   std::string name_;
   std::string description_;
-  caf::execution_unit* eu_;
-  size_t min_num_;
-  size_t max_num_;
-  size_t max_num_per_work_;
-  // message
-  caf::detail::shared_spinlock msg_lock_;
-  std::queue<caf::mailbox_element_ptr> messages_;
-  // worker
-  caf::detail::shared_spinlock actor_lock_;
-  std::unordered_map<std::string, std::shared_ptr<RouterPoolMasterWorker>>
-      workers_;
-  std::unordered_map<caf::actor, std::shared_ptr<RouterPoolActorData>> actors_;
+  size_t size_;
+  std::string factory_name_;
+  caf::message factory_args_;
+  std::set<std::string> mpi_;
+  caf::actor pool_;
+  // mutx
+  std::mutex actor_lock_;
+  // local actors
+  std::unordered_set<caf::actor> local_actors_;
+  // name -- node
+  std::unordered_map<std::string, caf::actor> nodes_;
+  // node -- actor
+  std::unordered_map<caf::actor, std::unordered_set<caf::actor>> remote_actors_;
 };
 
 }  // namespace cdcf::router_pool
