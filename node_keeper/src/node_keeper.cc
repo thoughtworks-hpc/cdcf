@@ -92,7 +92,8 @@ class Subscriber : public membership::Subscriber {
               {{node_keeper::MemberEvent::kMemberDown, event.member}});
           break;
         case MemberEvent::kActorSystemDown:
-          CDCF_LOGGER_DEBUG("Send actor system down event to self actor system.");
+          CDCF_LOGGER_DEBUG(
+              "Send actor system down event to self actor system.");
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
           break;
