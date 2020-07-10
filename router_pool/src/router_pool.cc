@@ -4,194 +4,164 @@
 
 #include "./router_pool.h"
 
-#include <utility>
-
-#include "caf/intrusive/lifo_inbox.hpp"
+#include "caf/all.hpp"
+#include "caf/io/all.hpp"
 
 namespace cdcf::router_pool {
 
-caf::actor RouterPoolMaster::Make(caf::execution_unit* eu, std::string name,
-                                  std::string description, size_t min_num,
-                                  size_t max_num) {
-  auto& sys = eu->system();
-  caf::actor_config cfg{eu};
-  auto res = caf::make_actor<RouterPoolMaster, caf::actor>(
-      sys.next_actor_id(), sys.node(), &sys, cfg);
-  auto ptr = dynamic_cast<RouterPoolMaster*>(
-      caf::actor_cast<caf::abstract_actor*>(res));
-  ptr->eu_ = eu;
-  ptr->name_ = std::move(name);
-  ptr->description_ = std::move(description);
-  ptr->min_num_ = min_num;
-  ptr->max_num_ = max_num;
-  ptr->max_num_per_work_ = 0;
-  return res;
+RouterPool::RouterPool(caf::actor_config& cfg, std::string& pool_name,
+                       std::string& pool_description, std::string& factory_name,
+                       caf::message& factory_msg, std::set<std::string>& mpi,
+                       size_t& size)
+    : event_based_actor(cfg) {
+  caf::actor_system& system_1 = system();
+  caf::scoped_actor self{system_1};
+  caf::scoped_execution_unit context{&system_1};
+  pool_ = caf::actor_pool::make(&context, caf::actor_pool::round_robin());
+  name_ = pool_name;
+  description_ = pool_description;
+  factory_name_ = factory_name;
+  factory_args_ = std::move(factory_msg);
+  size_ = size;
+  mpi_ = std::move(mpi);
 }
 
-RouterPoolMaster::RouterPoolMaster(caf::actor_config& cfg)
-    : monitorable_actor(cfg) {
-  register_at_system();
-  eu_ = nullptr;
-  name_ = "";
-  description_ = "";
-  min_num_ = 0;
-  max_num_ = 0;
-  max_num_per_work_ = 0;
-}
-
-void RouterPoolMaster::on_destroy() {
-  CAF_PUSH_AID_FROM_PTR(this);
-  if (!getf(is_cleaned_up_flag)) {
-    cleanup(caf::exit_reason::unreachable, nullptr);
-    monitorable_actor::on_destroy();
-    unregister_from_system();
-  }
-}
-
-RouterPoolMaster::RouterPoolMaster(caf::actor_config& cfg,
-                                   caf::execution_unit* eu, std::string name,
-                                   std::string description, size_t min_num,
-                                   size_t max_num)
-    : caf::monitorable_actor(cfg) {
-  eu_ = eu;
-  name_ = std::move(name);
-  description_ = std::move(description);
-  min_num_ = min_num;
-  max_num_ = max_num;
-  max_num_per_work_ = 0;
-  register_at_system();
-}
-
-void RouterPoolMaster::enqueue(caf::mailbox_element_ptr what,
-                               caf::execution_unit* eu) {
-  if (what->mid.is_response()) {
-    ResponseMessage(std::move(what), eu);
+void RouterPool::enqueue(caf::mailbox_element_ptr what,
+                         caf::execution_unit* host) {
+  const auto& content = what->content();
+  if (content.match_elements<caf::exit_msg>()) {
+    Exit();
+  } else if (content.match_elements<caf::down_msg>()) {
+    Down();
+  } else if (content.match_elements<pool_atom, node_add_atom, std::string,
+                                    uint16_t>()) {
+    AddNode(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
+  } else if (content.match_elements<pool_atom, node_remove_atom, std::string,
+                                    uint16_t>()) {
+    DeleteNode(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
+  } else if (content.match_elements<pool_atom, modify_size_atom, size_t>()) {
+    ModifySize(content.get_as<size_t>(2));
   } else {
-    PushMessage(what);
-  }
-  DispatcherMessage();
-}
-
-void RouterPoolMaster::DispatcherMessage() {
-  caf::mailbox_element_ptr msg = PopMessage();
-  if (msg == nullptr) {
-    return;
-  }
-  Lock guard{actor_lock_};
-  // find idler actor
-  for (const auto& it : actors_) {
-    if (!it.second->GetState()) {
-      it.second->Proxy(ctrl(), msg, eu_);
-      return;
-    }
-  }
-  guard.unlock();
-  // whether add an actor
-  auto [new_actor, data] = AddActor();
-  if (data != nullptr) {
-    data->Proxy(ctrl(), msg, eu_);
+    pool_->enqueue(std::move(what), host);
   }
 }
 
-void RouterPoolMaster::PushMessage(caf::mailbox_element_ptr& what) {
-  Lock guard{msg_lock_};
-  messages_.push(std::move(what));
-}
-
-caf::mailbox_element_ptr RouterPoolMaster::PopMessage() {
-  Lock guard{msg_lock_};
-  if (messages_.empty()) {
-    return nullptr;
-  }
-  caf::mailbox_element_ptr& front = messages_.front();
-  messages_.pop();
-  return std::move(front);
-}
-
-void RouterPoolMaster::ResponseMessage(caf::mailbox_element_ptr what,
-                                       caf::execution_unit* eu) {
-  auto from = caf::actor_cast<caf::actor>(what->sender);
-  auto it = actors_.find(from);
-  if (it != actors_.end()) {
-    auto node = it->second;
-    node->ResponseMessage(ctrl(), what, eu);
-  }
-  // whether reduce actor
-  DeleteActor();
-}
-
-void RouterPoolMaster::AddWork(const std::string& host, uint16_t port) {
-  auto node = std::shared_ptr<RouterPoolMasterWorker>(
-      new RouterPoolMasterWorker(eu_->system(), host, port));
-  node->Init();
-  std::string key = BuildWorkerKey(host, port);
-  Lock guard(actor_lock_);
-  workers_.insert(std::make_pair(key, node));
-  auto actors_map = node->GetActors();
-  for (const auto& it : actors_map) {
-    std::shared_ptr<RouterPoolActorData> data = nullptr;
-    data = std::shared_ptr<RouterPoolActorData>(
-        new RouterPoolActorData(it.first, node));
-    auto item = std::pair<caf::actor, std::shared_ptr<RouterPoolActorData>>(
-        it.first, data);
-    actors_.insert(item);
-  }
-}
-
-void RouterPoolMaster::DeleteWork(const std::string& host, uint16_t port) {
-  std::string key = BuildWorkerKey(host, port);
-  auto it = workers_.find(key);
-  if (it == workers_.end()) {
-    return;
-  }
-  std::shared_ptr<RouterPoolMasterWorker> worker = it->second;
-  Lock guard(actor_lock_);
-  workers_.erase(it);
-  const std::unordered_map<caf::actor, bool>& remove_actors =
-      worker->GetActors();
-  for (const auto& delete_item : remove_actors) {
-    auto iter = actors_.find(delete_item.first);
-    if (iter != actors_.end()) {
-      actors_.erase(iter);
-      anon_send_exit(delete_item.first, caf::exit_reason::normal);
-    }
-  }
-}
-
-std::string RouterPoolMaster::BuildWorkerKey(const std::string& host,
-                                             uint16_t port) {
+std::string RouterPool::BuildWorkerKey(const std::string& host, uint16_t port) {
   return host + std::to_string(port);
 }
 
-std::pair<caf::actor, std::shared_ptr<RouterPoolActorData>>
-RouterPoolMaster::AddActor() {
-  caf::actor actor = nullptr;
-  std::shared_ptr<RouterPoolActorData> data = nullptr;
-  for (const auto& it : workers_) {
-    actor = it.second->AddActor();
-    if (actor != nullptr) {
-      data = std::shared_ptr<RouterPoolActorData>(
-          new RouterPoolActorData(actor, it.second));
-    }
+void RouterPool::Down() { send(pool_, caf::down_msg()); }
+
+void RouterPool::Exit() { send(pool_, caf::exit_msg()); }
+
+void RouterPool::AddNode(const std::string& host, uint16_t port) {
+  std::string key = BuildWorkerKey(host, port);
+  if (nodes_.find(key) != nodes_.end()) {
+    DeleteNode(host, port);
   }
-  auto item =
-      std::pair<caf::actor, std::shared_ptr<RouterPoolActorData>>(actor, data);
-  Lock guard(actor_lock_);
-  actors_.insert(item);
-  return item;
+  std::lock_guard<std::mutex> mutx(actor_lock_);
+  std::string pool_name = "";  // TODO(fengkai): impl
+  // 判断远端是否已经存在 同名 pool
+  //   如果不存在
+  //   将构建pool的信息发送至远端构建
+  // 获取远端的pool
+  auto remote_pool = GetRemotePool(host, port, pool_name);
+  // 获取远端pool里的actor信息，并将actor信息存储在本节点中
+  GetPoolInfo(host, port, remote_pool);
 }
 
-void RouterPoolMaster::DeleteActor() {
-  Lock guard(actor_lock_);
-  for (const auto& it : actors_) {
-    if (!it.second->GetState()) {
-      auto delete_actor = it.first;
-      if (it.second->GetNode()->DeleteActor(delete_actor)) {
-        actors_.erase(delete_actor);
-        anon_send_exit(delete_actor, caf::exit_reason::normal);
-        return;
+void RouterPool::DeleteNode(const std::string& host, uint16_t port) {
+  std::lock_guard<std::mutex> mutx(actor_lock_);
+  std::string key = BuildWorkerKey(host, port);
+  auto node_it = nodes_.find(key);
+  if (node_it == nodes_.end()) {
+    return;
+  }
+  auto remote_pool = node_it->second;
+  nodes_.erase(node_it);
+  auto pool_it = remote_actors_.find(remote_pool);
+  if (pool_it == remote_actors_.end()) {
+    return;
+  }
+  std::unordered_set<caf::actor> actors = pool_it->second;
+  remote_actors_.erase(pool_it);
+  for (const auto& it : actors) {
+    anon_send(pool_, caf::sys_atom(), caf::delete_atom(), it);
+  }
+}
+
+void RouterPool::ModifySize(size_t size) {
+  caf::scoped_actor self(system());
+  std::promise<int> promise;
+  self->request(pool_, caf::infinite, caf::sys_atom::value,
+                caf::get_atom::value)
+      .receive(
+          [&](std::vector<caf::actor>& ret) { promise.set_value(ret.size()); },
+          [&](caf::error& err) { promise.set_value(-1); });
+  int ret = promise.get_future().get();
+  if (ret > 0 && size != ret) {
+    if (size > ret) {
+      for (int i = 0; i < size - ret; i++) {
+        DeleteActor();
+      }
+    } else {
+      for (int i = 0; i < ret - size; i++) {
+        AddActor();
       }
     }
+  }
+}
+
+void RouterPool::DeleteActor() {
+  std::lock_guard<std::mutex> mutx(actor_lock_);
+  if (local_actors_.size() == 0) {
+    return;
+  }
+  auto del_it = local_actors_.begin();
+  send(pool_, caf::sys_atom(), caf::delete_atom(), *del_it);
+  anon_send(*del_it, caf::exit_reason::user_shutdown);
+  local_actors_.erase(del_it);
+}
+
+void RouterPool::AddActor() {
+  std::lock_guard<std::mutex> mutx(actor_lock_);
+  auto res = system().spawn<caf::actor>(factory_name_, factory_args_, nullptr,
+                                        true, &mpi_);
+  if (res) {
+    local_actors_.insert(*res);
+    send(pool_, caf::sys_atom(), caf::put_atom(), *res);
+  }
+}
+
+caf::actor RouterPool::GetRemotePool(const std::string& host, uint16_t port,
+                                     const std::string& name) {
+  // TODO(fengkai): impl
+  return caf::actor();
+}
+
+void RouterPool::GetPoolInfo(const std::string& host, uint16_t port,
+                             caf::actor& pool) {
+  std::string key = BuildWorkerKey(host, port);
+  caf::scoped_actor self(system());
+  std::promise<std::vector<caf::actor>> promise;
+  self->request(pool, caf::infinite, caf::sys_atom::value, caf::get_atom::value)
+      .receive(
+          [&](std::vector<caf::actor>& ret) {
+            promise.set_value(std::move(ret));
+          },
+          [&](caf::error& err) {
+            promise.set_exception(std::current_exception());
+          });
+  try {
+    std::vector<caf::actor> actors = promise.get_future().get();
+    std::unordered_set<caf::actor> actor_set;
+    for (const auto& actor : actors) {
+      actor_set.insert(std::move(actor));
+    }
+    nodes_.insert(std::make_pair(key, pool));
+    remote_actors_.insert(std::make_pair(pool, std::move(actor_set)));
+  } catch (std::exception& e) {
+    std::cout << "[exception caught: " << e.what() << "]" << std::endl;
   }
 }
 
