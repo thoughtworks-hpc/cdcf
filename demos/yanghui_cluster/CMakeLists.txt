@@ -20,7 +20,7 @@ target_link_libraries(yanghui_actor_test caf::caf config_manager actor_monitor a
 add_executable(worker_test worker_test.cc yanghui_demo_calculator.cc)
 target_link_libraries(worker_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
 
-add_executable(multiple_actor_test simple_counter.cc yanghui_actor_test.cc yanghui_sample_actor.cc yanghui_demo_calculator.cc)
+add_executable(multiple_actor_test simple_counter.cc yanghui_multiple_actor_test.cc yanghui_sample_actor.cc yanghui_demo_calculator.cc)
 target_link_libraries(multiple_actor_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
 
 
