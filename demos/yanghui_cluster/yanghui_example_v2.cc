@@ -39,7 +39,7 @@ const uint16_t k_yanghui_work_port1 = 55001;
 
 class WorkerPool : public actor_system::cluster::Observer {
  public:
-  WorkerPool(std::string host, caf::actor_system& system, uint16_t worker_port)
+  WorkerPool(caf::actor_system& system, std::string host, uint16_t worker_port)
       : system_(system), host_(std::move(host)), worker_port_(worker_port) {}
 
   int Init() {
@@ -47,7 +47,7 @@ class WorkerPool : public actor_system::cluster::Observer {
     actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
 
     for (const auto& member : members) {
-      if (member.host == host_) {
+      if (member.hostname == host_) {
         continue;
       }
       auto ret = AddWorker(member.host);
@@ -484,7 +484,7 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
 }
 
 caf::behavior yanghui_with_priority(caf::event_based_actor* self,
-                                    CountCluster* counter) {
+                                    WorkerPool* worker_pool) {
   return {
       [=](const std::vector<std::vector<int>>& data) {
         int n = data.size();
@@ -501,7 +501,14 @@ caf::behavior yanghui_with_priority(caf::event_based_actor* self,
           for (j = 0; j < i + 1; j++) {
             if (j == 0) {
               // temp_states[0] = states[0] + data[i][j];
-              error = counter->AddNumber(states[0], data[i][j], temp_states[0]);
+              //              error = counter->AddNumber(states[0], data[i][j],
+              //              temp_states[0]);
+
+              auto worker =
+                  caf::actor_cast<calculator>(worker_pool->GetWorker());
+              self->request(worker, std::chrono::seconds(30), states[0],
+                            data[i][j])
+                  .then([=](int result) { temp_states[0] = result; });
               if (0 != error) {
                 caf::aout(self) << "cluster down, exit task" << std::endl;
                 return INT_MAX;
@@ -632,7 +639,17 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   }
 }
 
-void StupidRootStart(caf::actor_system& system, const config& cfg) {}
+void StupidRootStart(caf::actor_system& system, const config& cfg) {
+  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
+
+  auto yanghui_actor = system.spawn(yanghui_with_priority, &worker_pool);
+
+  std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
+            << std::endl;
+
+  caf::scoped_actor self{system};
+  self->send(yanghui_actor, kYanghuiData2);
+}
 
 void StupidWorkerStart(caf::actor_system& system, const config& cfg) {
   system.middleman().open(cfg.worker_port, nullptr, true);
