@@ -6,6 +6,7 @@
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #include <actor_system.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -37,32 +38,30 @@ using calculator =
 
 calculator::behavior_type calculator_fun(calculator::pointer self) {
   return {[=](int a, int b) -> int {
-            caf::aout(self) << "received add task. input a:" << a << " b:" << b
-                            << std::endl;
+            CDCF_LOGGER_DEBUG("received add task. input a:{} b: {}", a, b);
 
             int result = a + b;
-            caf::aout(self) << "return: " << result << std::endl;
+            CDCF_LOGGER_DEBUG("return: {}", result);
             return result;
           },
           [=](NumberCompareData& data) -> int {
             if (data.numbers.empty()) {
-              caf::aout(self) << "get empty compare" << std::endl;
+              CDCF_LOGGER_DEBUG("get empty compare");
               return 999;
             }
 
             int result = data.numbers[0];
-
-            caf::aout(self) << "received compare task, input: ";
+            std::stringstream input_ss;
 
             for (int number : data.numbers) {
-              caf::aout(self) << number << " ";
+              input_ss << number << " ";
               if (number < result) {
                 result = number;
               }
             }
-
-            caf::aout(self) << std::endl;
-            caf::aout(self) << "return: " << result << std::endl;
+            CDCF_LOGGER_DEBUG("received compare task, input: {}",
+                              input_ss.str());
+            CDCF_LOGGER_DEBUG("return: {}", result);
 
             return result;
           }};
