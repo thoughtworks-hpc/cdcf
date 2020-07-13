@@ -156,21 +156,14 @@ class CountCluster : public actor_system::cluster::Observer {
     }
   }
 
-  int AddNumber(int a, int b, int& result, bool high_priority = false) {
+  int AddNumber(int a, int b, int& result) {
     int error = 0;
     std::promise<int> promise;
 
     std::cout << "start add task input:" << a << ", " << b << std::endl;
 
-    if (high_priority) {
-      counter_.SendAndReceive<caf::message_priority::high>(
-          [&](int ret) { promise.set_value(ret); },
-          [&](const caf::error& err) { error = 1; }, a, b);
-    } else {
-      counter_.SendAndReceive<caf::message_priority::normal>(
-          [&](int ret) { promise.set_value(ret); },
-          [&](const caf::error& err) { error = 1; }, a, b);
-    }
+    counter_.SendAndReceive([&](int ret) { promise.set_value(ret); },
+                            [&](const caf::error& err) { error = 1; }, a, b);
 
     result = promise.get_future().get();
 
@@ -178,7 +171,7 @@ class CountCluster : public actor_system::cluster::Observer {
     return error;
   }
 
-  int Compare(std::vector<int> numbers, int& min, bool high_priority = false) {
+  int Compare(std::vector<int> numbers, int& min) {
     int error = 0;
     std::promise<int> promise;
     std::cout << "start compare task. input data:" << std::endl;
@@ -192,21 +185,12 @@ class CountCluster : public actor_system::cluster::Observer {
     NumberCompareData send_data;
     send_data.numbers = numbers;
 
-    if (high_priority) {
-      counter_.SendAndReceive<caf::message_priority::high>(
-          [&](int ret) {
-            min = ret;
-            promise.set_value(ret);
-          },
-          [&](const caf::error& err) { error = 1; }, send_data);
-    } else {
-      counter_.SendAndReceive<caf::message_priority::normal>(
-          [&](int ret) {
-            min = ret;
-            promise.set_value(ret);
-          },
-          [&](const caf::error& err) { error = 1; }, send_data);
-    }
+    counter_.SendAndReceive(
+        [&](int ret) {
+          min = ret;
+          promise.set_value(ret);
+        },
+        [&](const caf::error& err) { error = 1; }, send_data);
 
     min = promise.get_future().get();
     std::cout << "get min:" << min << std::endl;
@@ -323,8 +307,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   shutdownAllActors(self, actors, &mutex);
 }
 
-caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter,
-                      bool high_priority = false) {
+caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
   return {
       [=](const std::vector<std::vector<int>>& data) {
         int n = data.size();
@@ -341,16 +324,15 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter,
           for (j = 0; j < i + 1; j++) {
             if (j == 0) {
               // temp_states[0] = states[0] + data[i][j];
-              error = counter->AddNumber(states[0], data[i][j], temp_states[0],
-                                         high_priority);
+              error = counter->AddNumber(states[0], data[i][j], temp_states[0]);
               if (0 != error) {
                 caf::aout(self) << "cluster down, exit task" << std::endl;
                 return INT_MAX;
               }
             } else if (j == i) {
               // temp_states[j] = states[j - 1] + data[i][j];
-              error = counter->AddNumber(states[j - 1], data[i][j],
-                                         temp_states[j], high_priority);
+              error =
+                  counter->AddNumber(states[j - 1], data[i][j], temp_states[j]);
               if (0 != error) {
                 caf::aout(self) << "cluster down, exit task" << std::endl;
                 return INT_MAX;
@@ -358,9 +340,8 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter,
             } else {
               // temp_states[j] = std::min(states[j - 1], states[j]) +
               // data[i][j];
-              error =
-                  counter->AddNumber(std::min(states[j - 1], states[j]),
-                                     data[i][j], temp_states[j], high_priority);
+              error = counter->AddNumber(std::min(states[j - 1], states[j]),
+                                         data[i][j], temp_states[j]);
               if (0 != error) {
                 caf::aout(self) << "cluster down, exit task" << std::endl;
                 return INT_MAX;
@@ -379,7 +360,7 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter,
 
         std::vector<int> states_vec(states, states + n);
 
-        error = counter->Compare(states_vec, min_sum, high_priority);
+        error = counter->Compare(states_vec, min_sum);
         if (0 != error) {
           caf::aout(self) << "cluster down, exit task" << std::endl;
           return INT_MAX;
@@ -402,13 +383,8 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter,
 std::vector<std::vector<int>> kYanghuiData2 = {
     {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
 
-void printRet(int return_value, bool high_priority = false) {
-  if (high_priority) {
-    printf("call high priority ghactor return value: %d\n", return_value);
-  } else {
-    printf("call normal priority ghactor return value: %d\n", return_value);
-  }
-
+void printRet(int return_value) {
+  printf("call actor return value: %d\n", return_value);
   // std::cout << "call actor return value:" << return_value << std::endl;
 }
 
@@ -428,36 +404,20 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
-  auto yanghui_actor_normal_priority = system.spawn(yanghui, &counter, false);
-  actor_status_monitor.RegisterActor(yanghui_actor_normal_priority, "Yanghui",
+  auto yanghui_actor = system.spawn(yanghui, &counter);
+  actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
 
   ActorGuard actor_guard(
-      yanghui_actor_normal_priority,
+      yanghui_actor,
       [&](std::atomic<bool>& active) {
         active = true;
-        auto new_yanghui = system.spawn(yanghui, &counter, false);
+        auto new_yanghui = system.spawn(yanghui, &counter);
         actor_status_monitor.RegisterActor(
-            yanghui_actor_normal_priority, "Yanghui",
-            "a actor can count yanghui triangle.");
-        // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
-        return new_yanghui;
-      },
-      system);
-
-  auto yanghui_actor_high_priority = system.spawn(yanghui, &counter, true);
-
-  ActorGuard actor_guard_high(
-      yanghui_actor_high_priority,
-      [&](std::atomic<bool>& active) {
-        active = true;
-        auto new_yanghui = system.spawn(yanghui, &counter, true);
-        actor_status_monitor.RegisterActor(
-            yanghui_actor_high_priority, "Yanghui",
-            "a actor can count yanghui triangle.");
+            yanghui_actor, "Yanghui", "a actor can count yanghui triangle.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
         return new_yanghui;
       },
@@ -479,7 +439,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
-      actor_guard_high.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
 
       continue;
     }
@@ -488,7 +447,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, "quit");
-      actor_guard_high.SendAndReceive(printRet, dealSendErr, "quit");
 
       continue;
     }

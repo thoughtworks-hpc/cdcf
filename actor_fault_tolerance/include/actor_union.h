@@ -21,8 +21,7 @@ class ActorUnion {
   void AddActor(const caf::actor& actor);
   void RemoveActor(const caf::actor& actor);
 
-  template <caf::message_priority P = caf::message_priority::normal,
-            class... send_type, class return_function_type>
+  template <class... send_type, class return_function_type>
   void SendAndReceive(return_function_type return_function,
                       std::function<void(caf::error)> err_deal,
                       const send_type&... messages) {
@@ -35,14 +34,13 @@ class ActorUnion {
   caf::scoped_actor sender_actor_;
   uint16_t actor_count_ = 0;
 
-  template <caf::message_priority P = caf::message_priority::normal,
-            class... send_type, class return_function_type>
+  template <class... send_type, class return_function_type>
   void SendAndReceiveWithTryTime(
       return_function_type return_function,
       std::function<void(caf::error)> handle_error_function,
       uint16_t has_try_time, const send_type&... messages) {
     caf::message send_message = caf::make_message(messages...);
-    sender_actor_->request<P>(pool_actor_, std::chrono::seconds(1), messages...)
+    sender_actor_->request(pool_actor_, std::chrono::seconds(1), messages...)
         .receive(return_function, [=](caf::error err) {
           HandleSendFailed(send_message, return_function, handle_error_function,
                            err, has_try_time);
