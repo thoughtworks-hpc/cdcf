@@ -17,7 +17,7 @@ class config : public CDCFConfig {
   }
 };
 
-caf::behavior countAdd(caf::event_based_actor* self) {
+caf::behavior simple_counter(caf::event_based_actor* self) {
   return {[=](int a, int b) {
     aout(self) << "receive:" << a << "+" << b << std::endl;
     int result = a + b;
@@ -31,15 +31,15 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   ActorStatusServiceGprcImpl actor_status_(system, actor_status_monitor,
                                            cfg.port);
 
-  auto add_actor1 = system.spawn(countAdd);
+  auto add_actor1 = system.spawn(simple_counter);
   actor_status_monitor.RegisterActor(add_actor1, "Adder1",
                                      "a actor can count add.");
 
-  auto add_actor2 = system.spawn(countAdd);
+  auto add_actor2 = system.spawn(simple_counter);
   actor_status_monitor.RegisterActor(add_actor2, "Adder2",
                                      "a actor can count add.");
 
-  auto add_actor3 = system.spawn(countAdd);
+  auto add_actor3 = system.spawn(simple_counter);
   actor_status_monitor.RegisterActor(add_actor3, "Adder3",
                                      "a actor can count add.");
 

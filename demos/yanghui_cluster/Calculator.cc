@@ -86,3 +86,7 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
         return result;
       }};
 }
+
+bool operator==(const NumberCompareData& lhs, const NumberCompareData& rhs) {
+  return lhs.numbers == rhs.numbers && lhs.index == rhs.index;
+}

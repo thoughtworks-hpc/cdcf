@@ -12,12 +12,24 @@
 struct NumberCompareData {
   std::vector<int> numbers;
   int index;
+  friend bool operator==(const NumberCompareData& lhs,
+                         const NumberCompareData& rhs);
 };
 
 template <class Inspector>
 typename Inspector::result_type inspect(Inspector& f,
                                         const NumberCompareData& x) {
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
+}
+
+struct YanghuiTriangleData {
+  std::vector<std::vector<int>> data;
+};
+
+template <class Inspector>
+typename Inspector::result_type inspect(Inspector& f,
+                                        const YanghuiTriangleData& x) {
+  return f(caf::meta::type_name("YanghuiTriangleData"), x.data);
 }
 
 using calculator =

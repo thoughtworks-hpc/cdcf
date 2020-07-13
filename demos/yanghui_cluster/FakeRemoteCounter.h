@@ -11,21 +11,20 @@
 #include "caf/all.hpp"
 #include "yanghui_config.h"
 
-
 static caf::actor_system_config* cfg_yanghui;
 static caf::actor_system* sys_yanghui;
 
-class FakeRemoteCounter : public CounterInterface{
+class FakeRemoteCounter : public CounterInterface {
  public:
-  FakeRemoteCounter(decltype((*sys_yanghui).spawn<typed_calculator>()) countActor, caf::scoped_actor& sendActor)
-      : count_actor_(std::move(countActor)), send_actor_(sendActor) {}
+  FakeRemoteCounter(caf::actor& countActor, caf::actor_system& system)
+      : count_actor_(countActor), send_actor_(system, true) {}
 
   int AddNumber(int a, int b, int& result) override;
   int Compare(std::vector<int> numbers, int& min) override;
 
  private:
-  caf::scoped_actor& send_actor_;
-  decltype((*sys_yanghui).spawn<typed_calculator>()) count_actor_;
+  caf::scoped_actor send_actor_;
+  caf::actor& count_actor_;
 };
 
 #endif  // CDCF_FAKEREMOTECOUNTER_H
