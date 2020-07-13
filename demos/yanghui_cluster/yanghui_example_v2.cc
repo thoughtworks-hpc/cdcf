@@ -37,6 +37,109 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 
 const uint16_t k_yanghui_work_port1 = 55001;
 
+class WorkerPool : public actor_system::cluster::Observer {
+ public:
+  WorkerPool(std::string host, caf::actor_system& system, uint16_t worker_port)
+      : system_(system), host_(std::move(host)), worker_port_(worker_port) {}
+
+  int Init() {
+    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+
+    for (const auto& member : members) {
+      if (member.host == host_) {
+        continue;
+      }
+      auto ret = AddWorker(member.host);
+      if (ret != 0) {
+        return ret;
+      }
+    }
+    return 0;
+  }
+
+  caf::actor GetWorker() {
+    if (worker_index_ == workers_.size() - 1) {
+      worker_index_ = 0;
+      return workers_[workers_.size() - 1];
+    }
+    return workers_[worker_index_++];
+  }
+
+  int AddWorker(const std::string& host) {
+    auto node = system_.middleman().connect(host, worker_port_);
+    if (!node) {
+      std::cerr << "*** connect failed: " << to_string(node.error())
+                << std::endl;
+      return 1;
+    }
+    auto type = "calculator";              // type of the actor we wish to spawn
+    auto args = caf::make_message();       // arguments to construct the actor
+    auto tout = std::chrono::seconds(30);  // wait no longer than 30s
+    auto worker1 =
+        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+    if (!worker1) {
+      std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
+                << std::endl;
+      return 1;
+    }
+    auto worker2 =
+        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+    if (!worker2) {
+      std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
+                << std::endl;
+      return 1;
+    }
+    auto worker3 =
+        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+    if (!worker3) {
+      std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
+                << std::endl;
+      return 1;
+    }
+    workers_.push_back(caf::actor_cast<caf::actor>(worker1));
+    workers_.push_back(caf::actor_cast<caf::actor>(worker2));
+    workers_.push_back(caf::actor_cast<caf::actor>(worker3));
+    return 0;
+  }
+
+  void Update(const actor_system::cluster::Event& event) override {
+    if (event.member.hostname != host_) {
+      if (event.member.status == event.member.ActorSystemUp) {
+        //         std::this_thread::sleep_for(std::chrono::seconds(2));
+        AddWorker(event.member.host);
+        PrintClusterMembers();
+      } else if (event.member.status == event.member.Down) {
+        std::cout << "detect worker node down, host:" << event.member.host
+                  << " port:" << event.member.port << std::endl;
+      } else if (event.member.status == event.member.ActorSystemDown) {
+        std::cout << "detect worker actor system down, host:"
+                  << event.member.host << " port:" << event.member.port
+                  << std::endl;
+      }
+    }
+  }
+
+  void PrintClusterMembers() {
+    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+    std::cout << "Current Cluster Members:" << std::endl;
+    for (int i = 0; i < members.size(); ++i) {
+      auto& member = members[i];
+      std::cout << "Member " << i + 1 << ": ";
+      std::cout << "name: " << member.name << ", hostname: " << member.hostname
+                << ", host: " << member.host << ", port:" << member.port
+                << std::endl;
+    }
+  }
+
+ private:
+  std::vector<caf::actor> workers_;
+  int worker_index_ = 0;
+  std::string host_;
+  caf::actor_system& system_;
+  uint16_t worker_port_;
+};
+
 class CountCluster : public actor_system::cluster::Observer {
  public:
   CountCluster(std::string host, caf::actor_system& system, uint16_t port,

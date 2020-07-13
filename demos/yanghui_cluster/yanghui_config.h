@@ -81,6 +81,7 @@ class config : public actor_system::Config {
   std::string root_host = "localhost";
   uint16_t worker_port = 0;
   uint16_t node_keeper_port = 0;
+  std::string worker_host = "localhost";
   bool root = false;
 
   config() {
@@ -90,6 +91,7 @@ class config : public actor_system::Config {
         .add(root_port, "root_port", "set root port")
         .add(root_host, "root_host", "set root node")
         .add(worker_port, "worker_port, w", "set worker port")
+        .add(worker_host, "worker_host", "set worker host")
         .add(root, "root, r", "set current node be root")
         .add(node_keeper_port, "node_port", "set node keeper port");
     add_message_type<NumberCompareData>("NumberCompareData");
