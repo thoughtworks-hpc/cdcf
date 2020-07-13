@@ -5,6 +5,7 @@
 
 #include <climits>
 #include <condition_variable>
+#include <sstream>
 #include <utility>
 
 #include <caf/all.hpp>
@@ -161,27 +162,26 @@ class CountCluster : public actor_system::cluster::Observer {
     int error = 0;
     std::promise<int> promise;
 
-    std::cout << "start add task input:" << a << ", " << b << std::endl;
+    CDCF_LOGGER_DEBUG("start add task input: {}, {}", a, b);
 
     counter_.SendAndReceive([&](int ret) { promise.set_value(ret); },
                             [&](const caf::error& err) { error = 1; }, a, b);
 
     result = promise.get_future().get();
 
-    std::cout << "get result:" << result << std::endl;
+    CDCF_LOGGER_DEBUG("get result: {}", result);
     return error;
   }
 
   int Compare(std::vector<int> numbers, int& min) {
     int error = 0;
     std::promise<int> promise;
-    std::cout << "start compare task. input data:" << std::endl;
-
+    std::stringstream ss;
     for (int p : numbers) {
-      std::cout << p << " ";
+      ss << p << " ";
     }
 
-    std::cout << std::endl;
+    CDCF_LOGGER_DEBUG("start compare task. input data: {}", ss.str());
 
     NumberCompareData send_data;
     send_data.numbers = numbers;
@@ -194,7 +194,7 @@ class CountCluster : public actor_system::cluster::Observer {
         [&](const caf::error& err) { error = 1; }, send_data);
 
     min = promise.get_future().get();
-    std::cout << "get min:" << min << std::endl;
+    CDCF_LOGGER_DEBUG("get min: {}", min);
 
     return error;
   }
