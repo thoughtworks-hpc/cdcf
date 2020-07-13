@@ -138,14 +138,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
 
-  count_cluster* count_cluster;
+  CountCluster* count_cluster;
 
-  if (cfg.balance_mode) {
-    count_cluster = new balance_count_cluster(cfg.root_host, system);
-  } else {
-    count_cluster = new actor_union_count_cluster(
-        cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
-  }
+  count_cluster = new actor_union_count_cluster(
+      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+
+  count_cluster->InitWorkerNodes();
 
   // local test
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port1);
@@ -153,7 +151,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
   // counter.AddWorkerNode("localhost");
-  count_cluster->AddWorkerNode("localhost");
+  // count_cluster->AddWorkerNode("localhost");
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
@@ -194,9 +192,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
     if (dummy == "n") {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
-      for (int i = 0; i < 10; i++) {
-        actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
-      }
+      actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
 
       continue;
     }

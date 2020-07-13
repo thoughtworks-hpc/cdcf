@@ -13,15 +13,15 @@ target_link_libraries(${PROJECT_NAME}_root_v2 caf::caf)
 target_link_libraries(${PROJECT_NAME}_root_v2 config_manager actor_monitor actor_fault_tolerance actor_system)
 
 add_executable(yanghui_actor_test yanghui_actor_test.cc count_cluster.cc balance_count_cluster.cc actor_union_count_cluster.cc yanghui_actor.cc fake_counter.cc
-        fake_remote_counter.cc yanghui_demo_calculator.cc)
+        yanghui_demo_calculator.cc)
 
 target_link_libraries(yanghui_actor_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
 
 add_executable(worker_test worker_test.cc yanghui_demo_calculator.cc)
 target_link_libraries(worker_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
 
-#add_executable(multiple_actor_test multiple_actor_test.cc Calculator.cc)
-#target_link_libraries(multiple_actor_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
+add_executable(multiple_actor_test ./actor_interact_test/simple_counter.cc ./actor_interact_test/yanghui_actor_test.cc ./actor_interact_test/yanghui_sample_actor.cc yanghui_demo_calculator.cc)
+target_link_libraries(multiple_actor_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system)
 
 
 

@@ -45,7 +45,7 @@ CAF_TEST_FIXTURE_SCOPE(yanghui_tests, fixture)
 
 CAF_TEST(divide) {
   // new 一个实现接口的 fake_counter 类，传入 yanghui_actor
-  counter_interface* counter = new fake_counter();
+  counter_interface* counter = new FakeCounter();
   auto yanghui_actor = sys.spawn(yanghui, counter);
   self->request(yanghui_actor, caf::infinite, kYanghuiTestData)
       .receive([=](int r) { CAF_CHECK(r == 42); },

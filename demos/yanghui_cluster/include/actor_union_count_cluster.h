@@ -11,12 +11,12 @@
 
 #include "../../../actor_fault_tolerance/include/actor_union.h"
 #include "./count_cluster.h"
-class actor_union_count_cluster : public count_cluster {
+class actor_union_count_cluster : public CountCluster {
  public:
   explicit actor_union_count_cluster(std::string host,
                                      caf::actor_system& system, uint16_t port,
                                      uint16_t worker_port)
-      : count_cluster(host),
+      : CountCluster(host),
         host_(std::move(host)),
         system_(system),
         port_(port),

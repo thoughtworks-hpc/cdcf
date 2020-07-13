@@ -5,24 +5,24 @@
 #include "include/count_cluster.h"
 
 #include <utility>
-count_cluster::count_cluster(std::string host) : host_(std::move(host)) {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-  InitWorkerNodes(members, host_);
+CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
+  // auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  // InitWorkerNodes(members, host_);
   actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
 }
 
-count_cluster::~count_cluster() {
+CountCluster::~CountCluster() {
   actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
 }
 
-void count_cluster::InitWorkerNodes(
-    const std::vector<actor_system::cluster::Member>& members,
-    const std::string& host) {
-  std::cout << "self, host: " << host << std::endl;
+void CountCluster::InitWorkerNodes() {
+  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+
+  std::cout << "self, host: " << host_ << std::endl;
   std::cout << "members size:" << members.size() << std::endl;
   for (auto& m : members) {
     std::cout << "member, host: " << m.host << std::endl;
-    if (m.host == host) {
+    if (m.hostname == host_ || m.host == host_) {
       continue;
     }
     std::cout << "add worker, host: " << m.host << std::endl;
@@ -30,11 +30,11 @@ void count_cluster::InitWorkerNodes(
   }
 }
 
-void count_cluster::Update(const actor_system::cluster::Event& event) {
+void CountCluster::Update(const actor_system::cluster::Event& event) {
   std::cout << "=======get update event, host:" << event.member.host
             << std::endl;
 
-  if (event.member.host != host_) {
+  if (event.member.hostname != host_) {
     if (event.member.status == event.member.Up) {
       // std::this_thread::sleep_for(std::chrono::seconds(2));
       AddWorkerNode(event.member.host);

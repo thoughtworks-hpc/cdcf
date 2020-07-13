@@ -8,7 +8,7 @@
 
 #include "../counter_interface.h"
 
-class fake_counter : public counter_interface {
+class FakeCounter : public counter_interface {
  public:
   int AddNumber(int a, int b, int& result) override;
   int Compare(std::vector<int> numbers, int& min) override;

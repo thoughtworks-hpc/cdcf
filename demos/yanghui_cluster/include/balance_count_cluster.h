@@ -13,15 +13,15 @@
 
 #include "./count_cluster.h"
 
-class balance_count_cluster : public count_cluster {
+class BalanceCountCluster : public CountCluster {
  public:
   caf::actor_system& system_;
   caf::scoped_execution_unit context_;
   std::string host_;
   caf::actor counter_;
   caf::scoped_actor sender_actor_;
-  balance_count_cluster(std::string host, caf::actor_system& system);
-  ~balance_count_cluster() override = default;
+  BalanceCountCluster(std::string host, caf::actor_system& system);
+  ~BalanceCountCluster() override = default;
 
   void AddWorkerNodeWithPort(const std::string& host, uint16_t port);
   void AddWorkerNode(const std::string& host) override;

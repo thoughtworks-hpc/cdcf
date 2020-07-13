@@ -12,6 +12,8 @@
 struct NumberCompareData {
   std::vector<int> numbers;
   int index;
+  friend bool operator==(const NumberCompareData& lhs,
+                         const NumberCompareData& rhs);
 };
 
 template <class Inspector>
@@ -60,7 +62,6 @@ class config : public actor_system::Config {
   uint16_t worker_port = 0;
   uint16_t node_keeper_port = 0;
   bool root = false;
-  bool balance_mode = false;
 
   config() {
     add_actor_type("calculator", calculator_fun);
@@ -69,9 +70,7 @@ class config : public actor_system::Config {
         .add(root_host, "root_host", "set root node")
         .add(worker_port, "worker_port, w", "set worker port")
         .add(root, "root, r", "set current node be root")
-        .add(node_keeper_port, "node_port", "set node keeper port")
-        .add(balance_mode, "balance_mode, b",
-             "set current cluster mode, only work when root node");
+        .add(node_keeper_port, "node_port", "set node keeper port");
     add_message_type<NumberCompareData>("NumberCompareData");
   }
 
