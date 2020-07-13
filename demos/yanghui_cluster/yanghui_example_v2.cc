@@ -380,6 +380,80 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
       }};
 }
 
+caf::behavior yanghui_with_priority(caf::event_based_actor* self,
+                                    CountCluster* counter) {
+  return {
+      [=](const std::vector<std::vector<int>>& data) {
+        int n = data.size();
+        //        int temp_states[n];
+        //        int states[n];
+        int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+        int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+        int error = 0;
+
+        states[0] = 1;
+        states[0] = data[0][0];
+        int i, j, k, min_sum = INT_MAX;
+        for (i = 1; i < n; i++) {
+          for (j = 0; j < i + 1; j++) {
+            if (j == 0) {
+              // temp_states[0] = states[0] + data[i][j];
+              error = counter->AddNumber(states[0], data[i][j], temp_states[0]);
+              if (0 != error) {
+                caf::aout(self) << "cluster down, exit task" << std::endl;
+                return INT_MAX;
+              }
+            } else if (j == i) {
+              // temp_states[j] = states[j - 1] + data[i][j];
+              error =
+                  counter->AddNumber(states[j - 1], data[i][j], temp_states[j]);
+              if (0 != error) {
+                caf::aout(self) << "cluster down, exit task" << std::endl;
+                return INT_MAX;
+              }
+            } else {
+              // temp_states[j] = std::min(states[j - 1], states[j]) +
+              // data[i][j];
+              error = counter->AddNumber(std::min(states[j - 1], states[j]),
+                                         data[i][j], temp_states[j]);
+              if (0 != error) {
+                caf::aout(self) << "cluster down, exit task" << std::endl;
+                return INT_MAX;
+              }
+            }
+          }
+
+          for (k = 0; k < i + 1; k++) {
+            states[k] = temp_states[k];
+          }
+        }
+
+        //    for (j = 0; j < n; j++) {
+        //      if (states[j] < min_sum) min_sum = states[j];
+        //    }
+
+        std::vector<int> states_vec(states, states + n);
+
+        error = counter->Compare(states_vec, min_sum);
+        if (0 != error) {
+          caf::aout(self) << "cluster down, exit task" << std::endl;
+          return INT_MAX;
+        }
+
+        caf::aout(self) << "yanghui triangle actor task complete, result: "
+                        << min_sum << std::endl;
+        free(temp_states);
+        free(states);
+        return min_sum;
+      },
+      [=](std::string&) {
+        caf::aout(self) << "simulate get a critical error， yanghui actor quit."
+                        << std::endl;
+        self->quit();
+        return 0;
+      }};
+}
+
 std::vector<std::vector<int>> kYanghuiData2 = {
     {5}, {7, 8}, {2, 1, 4}, {4, 2, 6, 1}, {2, 7, 3, 4, 5}, {2, 3, 7, 6, 8, 3}};
 
@@ -453,6 +527,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
+}
+
+void StupidRootStart(caf::actor_system& system, const config& cfg) {}
+
+void StupidWorkerStart(caf::actor_system& system, const config& cfg) {
+  system.middleman().open(cfg.worker_port, nullptr, true);
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
