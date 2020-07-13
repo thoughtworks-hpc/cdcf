@@ -71,7 +71,7 @@ class Config {
         failure_detector_interval_(2000),
         leave_without_notification_(false),
         failure_detector_off_(false),
-        relay_ping_enabled_(false){}
+        relay_ping_enabled_(false) {}
 
   int SetHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port);
