@@ -3,29 +3,27 @@
  */
 #define CAF_SUITE yanghui_triangle
 
+#include "./simple_counter.h"
 #include "./yanghui_simple_actor.h"
 #include "caf/all.hpp"
 #include "caf/test/dsl.hpp"
 #include "caf/test/unit_test_impl.hpp"
-#include "simple_counter.h"
-
-using namespace caf;
 
 namespace {
 
-caf::behavior test_init_actor(caf::event_based_actor* self) { return {}; };
+caf::behavior test_init_actor(caf::event_based_actor* self) { return {}; }
 
 caf::behavior test_end_actor(caf::event_based_actor* self) {
   return {[](int result) {
     std::cout << "test complete, get result:" << result << std::endl;
   }};
-};
+}
 
 struct yanghui_fixture : test_coordinator_fixture<config> {
-  actor counter_;
-  actor yanghui_count_path_;
-  actor yanghui_get_min_;
-  actor test_end_actor_;
+  caf::actor counter_;
+  caf::actor yanghui_count_path_;
+  caf::actor yanghui_get_min_;
+  caf::actor test_end_actor_;
 
   yanghui_fixture() {
     auto worker = sys.spawn(simple_counter);

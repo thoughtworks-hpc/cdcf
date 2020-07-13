@@ -1,6 +1,6 @@
-//
-// Created by Mingfei Deng on 2020/7/9.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
 #include <utility>
 

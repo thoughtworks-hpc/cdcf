@@ -1,7 +1,8 @@
-//
-// Created by Mingfei Deng on 2020/7/11.
-//
-#include "./simple_counter.h"
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+
+#include "./include/simple_counter.h"
 
 caf::behavior simple_counter(caf::event_based_actor* self) {
   return {[=](int a, int b, int id) {

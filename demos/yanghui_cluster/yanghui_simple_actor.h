@@ -1,11 +1,14 @@
-//
-// Created by Mingfei Deng on 2020/7/9.
-//
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
 
-#ifndef CDCF_YANGHUI_SIMPLE_ACTOR_H
-#define CDCF_YANGHUI_SIMPLE_ACTOR_H
+#ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_SIMPLE_ACTOR_H_
+#define DEMOS_YANGHUI_CLUSTER_YANGHUI_SIMPLE_ACTOR_H_
 
 #include <actor_system.h>
+
+#include <map>
+#include <vector>
 
 struct YanghuiState {
   int index = 0;
@@ -26,4 +29,4 @@ caf::behavior yanghui_count_path(caf::stateful_actor<YanghuiState>* self,
                                  const caf::actor& worker,
                                  const caf::actor& out_data);
 
-#endif  // CDCF_YANGHUI_SIMPLE_ACTOR_H
+#endif  // DEMOS_YANGHUI_CLUSTER_YANGHUI_SIMPLE_ACTOR_H_
