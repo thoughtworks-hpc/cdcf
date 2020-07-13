@@ -3,7 +3,7 @@
  */
 #define CAF_SUITE yanghui_triangle
 
-#include "./simple_counter.h"
+#include "./include/simple_counter.h"
 #include "./yanghui_simple_actor.h"
 #include "caf/all.hpp"
 #include "caf/test/dsl.hpp"

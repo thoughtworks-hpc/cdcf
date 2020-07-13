@@ -5,7 +5,7 @@
 #ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_SIMPLE_COUNTER_H_
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_SIMPLE_COUNTER_H_
 
-#include "./yanghui_config.h"
+#include "../yanghui_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
