@@ -29,13 +29,8 @@ namespace node_keeper {
 ::grpc::Status GRPCImpl::ActorSystemUp(::grpc::ServerContext* context,
                                        const ::google::protobuf::Empty* request,
                                        ::google::protobuf::Empty* response) {
-  membership::UpdateMessage message;
-  message.InitAsActorSystemUpMessage(cluster_membership_.GetSelf(),
-                                     cluster_membership_.IncreaseIncarnation());
-  auto serialized = message.SerializeToString();
-  gossip::Payload payload(serialized.data(), serialized.size());
-  cluster_membership_.SendGossip(payload);
-
+  cluster_membership_.SetSelfActorSystemUp();
+  cluster_membership_.SendSelfActorSystemUpGossip();
   return ::grpc::Status::OK;
 }
 

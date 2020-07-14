@@ -138,7 +138,10 @@ class Subscriber {
 class Membership {
  public:
   Membership()
-      : retransmit_multiplier_(3), incarnation_(0), if_notify_leave_(true) {}
+      : retransmit_multiplier_(3),
+        incarnation_(0),
+        if_notify_leave_(true),
+        is_self_actor_system_up_(false) {}
   ~Membership();
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
@@ -151,6 +154,8 @@ class Membership {
   int IncreaseIncarnation();
   std::map<Member, bool> GetActorSystems() const;
   void NotifyLeave();
+  void SetSelfActorSystemUp();
+  void SendSelfActorSystemUpGossip();
 
  private:
   int AddMember(const Member& member);
@@ -196,6 +201,7 @@ class Membership {
   std::map<Member, bool> member_actor_system_;
   mutable std::mutex mutex_member_actor_system_;
   Member self_;
+  bool is_self_actor_system_up_;
   std::vector<Member> seed_members_;
   std::shared_ptr<gossip::Transportable> transport_;
   std::vector<std::shared_ptr<Subscriber>> subscribers_;

@@ -21,7 +21,7 @@ membership::Membership::~Membership() {
 void membership::Membership::NotifyLeave() {
   if (this->members_.size() > 1) {
     membership::UpdateMessage message;
-    message.InitAsDownMessage(this->self_, this->incarnation_ + 1);
+    message.InitAsDownMessage(this->self_, IncreaseIncarnation());
     auto message_serialized = message.SerializeToString();
     gossip::Payload payload{message_serialized};
 
@@ -375,16 +375,20 @@ void membership::Membership::HandleDidPull(
       }
 
       UpdateMessage update;
-      update.InitAsUpMessage(self_, incarnation_);
+      auto incarnation = IncreaseIncarnation();
+      update.InitAsUpMessage(self_, incarnation);
       CDCF_LOGGER_DEBUG(
           "Send self gossip up message to others, incarnation={}, role={}",
-          incarnation_, self_.GetRole());
+          incarnation, self_.GetRole());
       auto update_serialized = update.SerializeToString();
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
 
       gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                           GetRetransmitLimit());
+      if (is_self_actor_system_up_) {
+        SendSelfActorSystemUpGossip();
+      }
     } else {
       // Rejected from reentry
     }
@@ -824,6 +828,7 @@ void membership::Membership::MergeActorSystemDown(
 
 void membership::Membership::NotifyActorSystemDown() {
   membership::UpdateMessage message;
+  is_self_actor_system_up_ = false;
   message.InitAsActorSystemDownMessage(self_, IncreaseIncarnation());
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
@@ -835,6 +840,16 @@ std::map<membership::Member, bool> membership::Membership::GetActorSystems()
     const {
   const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
   return member_actor_system_;
+}
+void membership::Membership::SetSelfActorSystemUp() {
+  is_self_actor_system_up_ = true;
+}
+void membership::Membership::SendSelfActorSystemUpGossip() {
+  membership::UpdateMessage message;
+  message.InitAsActorSystemUpMessage(self_, IncreaseIncarnation());
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+  SendGossip(payload);
 }
 
 bool membership::operator==(const membership::Member& lhs,
