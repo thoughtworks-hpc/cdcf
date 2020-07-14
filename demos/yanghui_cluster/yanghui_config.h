@@ -6,6 +6,7 @@
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #include <actor_system.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self);
 calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
                                                std::atomic_int& deal_msg_count,
                                                int sleep_micro);
+
 
 class typed_calculator : public calculator::base {
  public:

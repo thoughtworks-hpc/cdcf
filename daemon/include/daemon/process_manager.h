@@ -12,11 +12,7 @@
 #include "../../logger/include/logger.h"
 
 class ProcessManager {
- protected:
-  cdcf::Logger& logger_;
-
  public:
-  explicit ProcessManager(cdcf::Logger& logger);
   virtual std::shared_ptr<void> NewProcessInfo() = 0;
   virtual void InstallSignalHandlersForQuit(
       std::shared_ptr<void> child_process_info, bool* guard) = 0;
@@ -32,7 +28,6 @@ class PosixProcessManager : public ProcessManager {
   void PrintErrno(const std::string& sys_call) const;
 
  public:
-  explicit PosixProcessManager(cdcf::Logger& logger);
   std::shared_ptr<void> NewProcessInfo() override;
   void InstallSignalHandlersForQuit(std::shared_ptr<void> child_process_info,
                                     bool* guard) override;

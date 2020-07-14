@@ -5,6 +5,7 @@
 
 #include <climits>
 #include <condition_variable>
+#include <sstream>
 #include <utility>
 
 #include <caf/all.hpp>
@@ -18,6 +19,9 @@
 #include "include/balance_count_cluster.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
+#include "../../logger/include/logger.h"
+#include "./yanghui_config.h"
+
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
@@ -37,6 +41,7 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 
   return ret_actor;
 }
+
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor1 = system.spawn<typed_calculator>();
@@ -67,6 +72,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
                                      "a actor can calculate for yanghui.");
   actor_status_monitor.RegisterActor(form_actor3, "calculator3",
                                      "a actor can calculate for yanghui.");
+
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
@@ -132,6 +138,7 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+
   //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
@@ -139,6 +146,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
 
   CountCluster* count_cluster;
+
+  CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
   count_cluster = new ActorUnionCountCluster(
       cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
@@ -210,6 +219,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
+  cdcf::Logger::Init(cfg);
   if (cfg.root) {
     SmartRootStart(system, cfg);
   } else {
