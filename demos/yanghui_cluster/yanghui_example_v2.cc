@@ -483,85 +483,65 @@ caf::behavior yanghui(caf::event_based_actor* self, CountCluster* counter) {
       }};
 }
 
-caf::behavior yanghui_with_priority(caf::event_based_actor* self,
-                                    WorkerPool* worker_pool) {
-  return {
-      [=](const std::vector<std::vector<int>>& data) {
-        int n = data.size();
-        //        int temp_states[n];
-        //        int states[n];
-        int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-        int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-        int error = 0;
+struct yanghui_state {
+  int level_ = 1;
+  int count_ = 0;
+  std::vector<std::vector<int>> triangle_data_;
+  std::vector<int> last_level_results_;
+};
 
-        states[0] = 1;
-        states[0] = data[0][0];
-        int i, j, k, min_sum = INT_MAX;
-        for (i = 1; i < n; i++) {
-          for (j = 0; j < i + 1; j++) {
-            if (j == 0) {
-              // temp_states[0] = states[0] + data[i][j];
-              //              error = counter->AddNumber(states[0], data[i][j],
-              //              temp_states[0]);
-
+using start_atom = caf::atom_constant<caf::atom("start")>;
+using end_atom = caf::atom_constant<caf::atom("end")>;
+caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
+                                    WorkerPool* worker_pool,
+                                    bool is_high_priority = false) {
+  return {[=](const std::vector<std::vector<int>>& triangle_data) {
+            self->state.last_level_results_ =
+                std::vector<int>(triangle_data.size(), 0);
+            self->state.last_level_results_[0] = triangle_data[0][0];
+            for (int k = 0; k < triangle_data.size(); k++) {
+              self->state.triangle_data_.emplace_back(triangle_data[k]);
+            }
+            self->send(self, start_atom::value);
+          },
+          [=](start_atom) {
+            int i = self->state.level_;
+            for (int j = 0; j < i + 1; j++) {
               auto worker =
                   caf::actor_cast<calculator>(worker_pool->GetWorker());
-              self->request(worker, std::chrono::seconds(30), states[0],
-                            data[i][j])
-                  .then([=](int result) { temp_states[0] = result; });
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
-              }
-            } else if (j == i) {
-              // temp_states[j] = states[j - 1] + data[i][j];
-              error =
-                  counter->AddNumber(states[j - 1], data[i][j], temp_states[j]);
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
-              }
-            } else {
-              // temp_states[j] = std::min(states[j - 1], states[j]) +
-              // data[i][j];
-              error = counter->AddNumber(std::min(states[j - 1], states[j]),
-                                         data[i][j], temp_states[j]);
-              if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
-                return INT_MAX;
+              if (j == 0) {
+                self->send(worker, self->state.last_level_results_[0],
+                           self->state.triangle_data_[i][j], j);
+              } else if (j == i) {
+                self->send(worker, self->state.last_level_results_[j - 1],
+                           self->state.triangle_data_[i][j], j);
+              } else {
+                self->send(worker,
+                           std::min(self->state.last_level_results_[j - 1],
+                                    self->state.last_level_results_[j]),
+                           self->state.triangle_data_[i][j], j);
               }
             }
-          }
-
-          for (k = 0; k < i + 1; k++) {
-            states[k] = temp_states[k];
-          }
-        }
-
-        //    for (j = 0; j < n; j++) {
-        //      if (states[j] < min_sum) min_sum = states[j];
-        //    }
-
-        std::vector<int> states_vec(states, states + n);
-
-        error = counter->Compare(states_vec, min_sum);
-        if (0 != error) {
-          caf::aout(self) << "cluster down, exit task" << std::endl;
-          return INT_MAX;
-        }
-
-        caf::aout(self) << "yanghui triangle actor task complete, result: "
-                        << min_sum << std::endl;
-        free(temp_states);
-        free(states);
-        return min_sum;
-      },
-      [=](std::string&) {
-        caf::aout(self) << "simulate get a critical error， yanghui actor quit."
-                        << std::endl;
-        self->quit();
-        return 0;
-      }};
+          },
+          [=](result_with_position result) {
+            self->state.last_level_results_[result.position] = result.result;
+            self->state.count_++;
+            if (self->state.level_ == self->state.count_ - 1) {
+              if (self->state.level_ == self->state.triangle_data_.size() - 1) {
+                self->send(self, end_atom::value);
+              } else {
+                self->state.level_++;
+                self->state.count_ = 0;
+                self->send(self, start_atom::value);
+              }
+            }
+          },
+          [=](end_atom) {
+            NumberCompareData send_data;
+            send_data.numbers = self->state.last_level_results_;
+            auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
+            self->request(worker, caf::infinite, send_data).await()
+          }};
 }
 
 std::vector<std::vector<int>> kYanghuiData2 = {

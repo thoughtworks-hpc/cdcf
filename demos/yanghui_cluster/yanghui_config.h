@@ -31,9 +31,14 @@ typename Inspector::result_type inspect(Inspector& f,
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
-using calculator =
-    caf::typed_actor<caf::replies_to<int, int>::with<int>,
-                     caf::replies_to<NumberCompareData>::with<int> >;
+struct result_with_position {
+  int result;
+  int position;
+};
+using calculator = caf::typed_actor<
+    caf::replies_to<int, int>::with<int>,
+    caf::replies_to<NumberCompareData>::with<int>,
+    caf::replies_to<int, int, int>::with<result_with_position>>;
 
 calculator::behavior_type calculator_fun(calculator::pointer self) {
   return {[=](int a, int b) -> int {
@@ -42,6 +47,14 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
 
             int result = a + b;
             caf::aout(self) << "return: " << result << std::endl;
+            return result;
+          },
+          [=](int a, int b, int position) -> result_with_position {
+            caf::aout(self) << "received add task. input a:" << a << " b:" << b
+                            << std::endl;
+
+            result_with_position result{a + b, position};
+            caf::aout(self) << "return: " << result.result << std::endl;
             return result;
           },
           [=](NumberCompareData& data) -> int {
