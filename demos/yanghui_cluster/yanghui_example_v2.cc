@@ -37,6 +37,7 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 const uint16_t k_yanghui_work_port1 = 55001;
+const std::string k_role_worker = "worker";
 
 class CountCluster : public actor_system::cluster::Observer {
  public:
@@ -86,11 +87,11 @@ class CountCluster : public actor_system::cluster::Observer {
     std::cout << "members size:" << members.size() << std::endl;
     for (auto& m : members) {
       std::cout << "member, host: " << m.host << std::endl;
-      if (m.hostname == host) {
-        continue;
+      std::cout << "role: " << m.role << std::endl;
+      if (m.role == k_role_worker) {
+        std::cout << "add worker, host: " << m.hostname << std::endl;
+        AddWorkerNode(m.host, k_yanghui_work_port1);
       }
-      std::cout << "add worker, host: " << m.hostname << std::endl;
-      AddWorkerNode(m.host, k_yanghui_work_port1);
     }
   }
 
@@ -100,7 +101,9 @@ class CountCluster : public actor_system::cluster::Observer {
         //         std::this_thread::sleep_for(std::chrono::seconds(2));
         CDCF_LOGGER_DEBUG("Actor system up, host: {}, role: {}",
                           event.member.host, event.member.role);
-        AddWorkerNode(event.member.host, k_yanghui_work_port1);
+        if (event.member.role == k_role_worker) {
+          AddWorkerNode(event.member.host, k_yanghui_work_port1);
+        }
         PrintClusterMembers();
       } else if (event.member.status == event.member.Down) {
         std::cout << "detect worker node down, host:" << event.member.host
