@@ -223,7 +223,7 @@ void SimulateReceivingPingMessage(
     const std::map<membership::Member, int>& members,
     std::shared_ptr<MockTransport> transport) {
   membership::PullRequestMessage message;
-  message.InitAsPingType(members);
+  message.InitAsPingType(members, {});
 
   gossip::Address address;
   std::string serialized_msg = message.SerializeToString();

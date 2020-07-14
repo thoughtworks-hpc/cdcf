@@ -438,7 +438,8 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     PullResponseMessage response;
     response.InitAsPingSuccess(self_);
     message_serialized = response.SerializeToString();
-    MergeMembers(request.GetMembersWithIncarnation());
+    MergeMembers(request.GetMembersWithIncarnation(),
+                 request.GetMembersWithActorSystem());
   } else if (request.IsPingRelayType()) {
     if (transport_) {
       PullRequestMessage request_message;
@@ -499,7 +500,18 @@ void membership::Membership::Ping() {
   auto failure_detector_functor = [this]() {
     if (transport_) {
       PullRequestMessage message;
-      message.InitAsPingType(members_);
+      std::map<Member, int> members;
+      std::map<Member, bool> member_actor_system;
+      {
+        const std::lock_guard<std::mutex> lock(mutex_members_);
+        members = members_;
+      }
+      {
+        const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+        member_actor_system = member_actor_system_;
+      }
+      message.InitAsPingType(members, member_actor_system);
+
       std::string pull_request_message = message.SerializeToString();
 
       auto [get_success, random_member] = GetRandomPingTarget();
@@ -717,25 +729,36 @@ void membership::Membership::MergeDownUpdate(const Member& member,
 }
 
 void membership::Membership::MergeMembers(
-    const std::map<membership::Member, int>& members) {
+    const std::map<membership::Member, int>& members,
+    const std::map<membership::Member, bool>& member_actor_system) {
   bool should_notify = false;
   {
     const std::lock_guard<std::mutex> lock_members_(mutex_members_);
+    const std::lock_guard<std::mutex> lock_member_actor_system(
+        mutex_member_actor_system_);
     for (const auto& member_pair : members) {
       auto member = member_pair.first;
       int incarnation = member_pair.second;
       CDCF_LOGGER_DEBUG("Receive update for ping member {}:{}",
                         member.GetIpAddress(), member.GetPort());
       if (members_.find(member) != members_.end()) {
-        //        if (incarnation > members_[member]) {
-        //          members_[member] = incarnation;
-        //          should_notify = true;
-        //          CDCF_LOGGER_INFO(
-        //              "Update member {}:{}'s incarnation by merging ping
-        //              member", member.GetIpAddress(), member.GetPort());
-        //        }
+        if (incarnation > members_[member]) {
+          members_[member] = incarnation;
+          if (auto it = member_actor_system.find(member);
+              it != member_actor_system.end()) {
+            member_actor_system_[member] = it->second;
+          }
+          should_notify = true;
+          CDCF_LOGGER_INFO(
+              "Update member {}:{}'s incarnation by merging ping member",
+              member.GetIpAddress(), member.GetPort());
+        }
       } else {
         members_[member] = incarnation;
+        if (auto it = member_actor_system.find(member);
+            it != member_actor_system.end()) {
+          member_actor_system_[member] = it->second;
+        }
         should_notify = true;
         CDCF_LOGGER_INFO("Add member {}:{} by merging ping member",
                          member.GetIpAddress(), member.GetPort());

@@ -21,6 +21,7 @@ message MemberUpdate {
     required MemberStatus status = 6;
     required int32 incarnation = 7;
     optional string member_id = 8;
+    optional bool actor_system_up = 9;
 }
 
 message MemberFullState {

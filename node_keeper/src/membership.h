@@ -168,7 +168,9 @@ class Membership {
   void MergeActorSystemDown(const Member& member, unsigned int incarnation);
   void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
-  void MergeMembers(const std::map<membership::Member, int>& members);
+  void MergeMembers(
+      const std::map<membership::Member, int>& members,
+      const std::map<membership::Member, bool>& member_actor_system);
   void Notify();
   void HandleGossip(const struct gossip::Address& node,
                     const gossip::Payload& payload);
