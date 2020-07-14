@@ -140,7 +140,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   CountCluster* count_cluster;
 
-  count_cluster = new actor_union_count_cluster(
+  count_cluster = new ActorUnionCountCluster(
       cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
 
   count_cluster->InitWorkerNodes();

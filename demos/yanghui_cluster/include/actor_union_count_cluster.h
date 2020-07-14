@@ -11,11 +11,11 @@
 
 #include "../../../actor_fault_tolerance/include/actor_union.h"
 #include "./count_cluster.h"
-class actor_union_count_cluster : public CountCluster {
+
+class ActorUnionCountCluster : public CountCluster {
  public:
-  explicit actor_union_count_cluster(std::string host,
-                                     caf::actor_system& system, uint16_t port,
-                                     uint16_t worker_port)
+  explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
+                                  uint16_t port, uint16_t worker_port)
       : CountCluster(host),
         host_(std::move(host)),
         system_(system),
@@ -23,7 +23,7 @@ class actor_union_count_cluster : public CountCluster {
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()) {}
 
-  ~actor_union_count_cluster() override = default;
+  ~ActorUnionCountCluster() override = default;
 
   void AddWorkerNodeWithPort(const std::string& host, uint16_t port);
   void AddWorkerNode(const std::string& host) override;
