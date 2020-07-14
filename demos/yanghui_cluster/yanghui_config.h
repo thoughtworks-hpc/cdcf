@@ -33,7 +33,6 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
                                                std::atomic_int& deal_msg_count,
                                                int sleep_micro);
 
-
 class typed_calculator : public calculator::base {
  public:
   explicit typed_calculator(caf::actor_config& cfg) : calculator::base(cfg) {}
