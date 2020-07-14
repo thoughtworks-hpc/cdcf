@@ -41,8 +41,13 @@ int main(int argc, char* argv[]) {
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config) {
   std::vector<std::string> args{"--host=" + config.host_,
                                 "--name=" + config.name_};
+
+  if (!config.role_.empty()) {
+    args.push_back("--role=" + config.role_);
+  }
+
   auto parsed = node_keeper::split(config.app_args_, ' ');
-  args.insert(args.begin(), parsed.begin(), parsed.end());
+  args.insert(args.end(), parsed.begin(), parsed.end());
 
   std::cout << "app-args:" << std::endl;
   std::cout << "app-arpg len: " << args.size() << std::endl;

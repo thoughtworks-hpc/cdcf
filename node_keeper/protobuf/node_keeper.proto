@@ -18,6 +18,7 @@ message Member {
     string hostname = 2;
     string host = 3;
     uint32 port = 4;
+    string role = 5;
 }
 
 message GetMembersReply {

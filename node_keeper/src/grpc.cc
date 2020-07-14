@@ -9,6 +9,7 @@ namespace {
 ::Member& UpdateMember(::Member* to, const membership::Member& from) {
   to->set_name(from.GetNodeName());
   to->set_hostname(from.GetHostName());
+  to->set_role(from.GetRole());
   to->set_host(from.GetIpAddress());
   to->set_port(from.GetPort());
   return *to;

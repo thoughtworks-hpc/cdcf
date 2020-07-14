@@ -46,6 +46,8 @@ class UpdateMessage : public Message {
   google::protobuf::Message& BaseMessage() override { return update_; }
 
  private:
+  void SetUpdate(const Member& member, unsigned int incarnation);
+
   MemberUpdate update_;
   unsigned int incarnation_;
 };

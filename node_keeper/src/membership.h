@@ -32,12 +32,14 @@ class Member {
  public:
   Member() : port_(0) {}
   Member(std::string node_name, std::string ip_address, uint16_t port,
-         std::string host_name = "", std::string uid = "")
+         std::string host_name = "", std::string uid = "",
+         std::string role = "")
       : node_name_(std::move(node_name)),
         host_name_(std::move(host_name)),
         ip_address_(std::move(ip_address)),
         port_(port),
-        uid_(std::move(uid)) {}
+        uid_(std::move(uid)),
+        role_(std::move(role)) {}
 
   friend bool operator==(const Member& lhs, const Member& rhs);
   friend bool operator!=(const Member& lhs, const Member& rhs);
@@ -46,6 +48,7 @@ class Member {
   std::string GetNodeName() const { return node_name_; }
   std::string GetHostName() const { return host_name_; }
   std::string GetIpAddress() const { return ip_address_; }
+  std::string GetRole() const { return role_; }
   uint16_t GetPort() const { return port_; }
   std::string GetUid() const { return uid_; }
 
@@ -56,6 +59,7 @@ class Member {
   std::string node_name_;
   std::string host_name_;
   std::string ip_address_;
+  std::string role_;
   uint16_t port_;
 };
 
@@ -75,7 +79,7 @@ class Config {
         logger_name_("default_logger") {}
 
   int SetHostMember(const std::string& node_name, const std::string& ip_address,
-                    uint16_t port);
+                    uint16_t port, std::string role = "");
   Member GetHostMember() const { return host_; }
 
   int AddOneSeedMember(const std::string& node_name,

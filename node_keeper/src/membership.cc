@@ -285,8 +285,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
   if (message.IsUpMessage()) {
     CDCF_LOGGER_INFO(
-        "Receive gossip up message for {}:{}, message incarnation={}",
-        member.GetIpAddress(), member.GetPort(), message.GetIncarnation());
+        "Receive gossip up message for {}:{}, message incarnation={}, role={}",
+        member.GetIpAddress(), member.GetPort(), message.GetIncarnation(),
+        member.GetRole());
     if (member == self_) {
       CDCF_LOGGER_DEBUG("Ignore self gossip up message");
       return;
@@ -375,8 +376,9 @@ void membership::Membership::HandleDidPull(
 
       UpdateMessage update;
       update.InitAsUpMessage(self_, incarnation_);
-      CDCF_LOGGER_DEBUG("Send self gossip up message to others, incarnation={}",
-                        incarnation_);
+      CDCF_LOGGER_DEBUG(
+          "Send self gossip up message to others, incarnation={}, role={}",
+          incarnation_, self_.GetRole());
       auto update_serialized = update.SerializeToString();
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
@@ -858,14 +860,15 @@ bool membership::Member::IsEmptyMember() {
 
 int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
-                                      uint16_t port) {
+                                      uint16_t port, std::string role) {
   std::string hostname;
   std::string ip_address_converted;
   auto ret =
       membership::ResolveHostName(ip_address, hostname, ip_address_converted);
 
   Member host(node_name, ip_address_converted, port, hostname,
-              uuid::generate_uuid_v4());
+              uuid::generate_uuid_v4(), role);
+  CDCF_LOGGER_DEBUG("SetHostMember, role={}", host.GetRole());
   host_ = host;
 
   return ret;

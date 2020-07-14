@@ -19,6 +19,7 @@ class CDCFConfig : public caf::actor_system_config {
   CDCFConfig& operator=(const CDCFConfig&) = delete;
 
   double threads_proportion = 1.0;
+  std::string role_ = "";
   std::string log_file_ = "cdcf.log";
   std::string log_level_ = "info";
   uint16_t log_file_size_in_bytes_ = 0;

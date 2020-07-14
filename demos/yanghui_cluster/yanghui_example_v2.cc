@@ -98,6 +98,8 @@ class CountCluster : public actor_system::cluster::Observer {
     if (event.member.host != host_) {
       if (event.member.status == event.member.ActorSystemUp) {
         //         std::this_thread::sleep_for(std::chrono::seconds(2));
+        CDCF_LOGGER_DEBUG("Actor system up, host: {}, role: {}",
+                          event.member.host, event.member.role);
         AddWorkerNode(event.member.host, k_yanghui_work_port1);
         PrintClusterMembers();
       } else if (event.member.status == event.member.Down) {
@@ -263,8 +265,6 @@ void shutdownAllActors(caf::scoped_actor& self, AllActorData& actors,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  CDCF_LOGGER_INFO("Actor system log, hello world, I'm worker.");
-
   auto cluster = actor_system::cluster::Cluster::GetInstance();
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
@@ -396,8 +396,6 @@ void dealSendErr(const caf::error& err) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
-
   CountCluster counter(cfg.root_host, system, cfg.node_keeper_port,
                        cfg.worker_port);
 
@@ -462,6 +460,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
 void caf_main(caf::actor_system& system, const config& cfg) {
   cdcf::Logger::Init(cfg);
+  CDCF_LOGGER_DEBUG("I am {}", cfg.role_);
   if (cfg.root) {
     SmartRootStart(system, cfg);
   } else {
