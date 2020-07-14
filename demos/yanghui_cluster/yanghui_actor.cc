@@ -14,10 +14,11 @@ caf::behavior yanghui(caf::event_based_actor* self,
   return {
       [=](const std::vector<std::vector<int>>& data) {
         int n = data.size();
-        //        int temp_states[n];
-        //        int states[n];
-        int temp_states[n];
-        int states[n];
+        std::vector<int> temp_states;
+        temp_states.resize(n);
+        std::vector<int> states;
+        states.resize(n);
+
         int error = 0;
 
         states[0] = 1;
@@ -61,9 +62,9 @@ caf::behavior yanghui(caf::event_based_actor* self,
         //      if (states[j] < min_sum) min_sum = states[j];
         //    }
 
-        std::vector<int> states_vec(states, states + n);
+        // std::vector<int> states_vec(states, states + n);
 
-        error = counter->Compare(states_vec, min_sum);
+        error = counter->Compare(states, min_sum);
         if (0 != error) {
           caf::aout(self) << "cluster down, exit task" << std::endl;
           return INT_MAX;
