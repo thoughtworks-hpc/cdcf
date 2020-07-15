@@ -111,6 +111,11 @@ class WorkerPool : public actor_system::cluster::Observer {
                 << std::endl;
       return 1;
     }
+
+    std::cout << "add worker 1 with id: " << worker1->id() << std::endl;
+    std::cout << "add worker 2 with id: " << worker2->id() << std::endl;
+    std::cout << "add worker 3 with id: " << worker3->id() << std::endl;
+
     std::cout << "add worker 3" << std::endl;
     workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
     workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
@@ -532,7 +537,6 @@ struct yanghui_state {
 using start_atom = caf::atom_constant<caf::atom("start")>;
 using end_atom = caf::atom_constant<caf::atom("end")>;
 
-// template <caf::message_priority P = caf::message_priority::normal>
 caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                                     WorkerPool* worker_pool,
                                     bool is_high_priority = false) {
@@ -561,9 +565,8 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                   worker, self->state.last_level_results_[0],
                   self->state.triangle_data_[i][j], j);
             } else {
-              self->send<caf::message_priority::normal>(
-                  worker, self->state.last_level_results_[0],
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker, self->state.last_level_results_[0],
+                         self->state.triangle_data_[i][j], j);
             }
           } else if (j == i) {
             std::cout << "start atom: 2" << std::endl;
@@ -572,9 +575,8 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                   worker, self->state.last_level_results_[j - 1],
                   self->state.triangle_data_[i][j], j);
             } else {
-              self->send<caf::message_priority::normal>(
-                  worker, self->state.last_level_results_[j - 1],
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker, self->state.last_level_results_[j - 1],
+                         self->state.triangle_data_[i][j], j);
             }
           } else {
             std::cout << "start atom: 3" << std::endl;
@@ -595,8 +597,9 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         }
         std::cout << "start atom: end" << std::endl;
       },
-      [=](std::pair<int, int> result) {
-        self->state.last_level_results_[result.second] = result.first;
+      [=](ResultWithPosition result_with_position) {
+        self->state.last_level_results_[result_with_position.position] =
+            result_with_position.result;
         self->state.count_++;
         std::cout << "get level result:1" << std::endl;
         if (self->state.level_ == self->state.count_ - 1) {
@@ -728,6 +731,11 @@ void StupidRootStart(caf::actor_system& system, const config& cfg) {
   auto yanghui_actor_high_priority =
       system.spawn(yanghui_with_priority, &worker_pool, true);
 
+  std::cout << "yanghui_actor_normal_priority id: "
+            << yanghui_actor_normal_priority.id() << std::endl;
+  std::cout << "yanghui_actor_high_priority id: "
+            << yanghui_actor_high_priority.id() << std::endl;
+
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
   while (true) {
@@ -739,6 +747,19 @@ void StupidRootStart(caf::actor_system& system, const config& cfg) {
   }
   caf::scoped_actor self{system};
   std::cout << "ready for scoped actor" << std::endl;
+
+  auto worker1 = worker_pool.GetWorker();
+  auto worker2 = worker_pool.GetWorker();
+
+  auto f1 = caf::make_function_view(caf::actor_cast<calculator>(worker1));
+  std::cout << "received result: " << f1(1, 2) << std::endl;
+  auto f2 = caf::make_function_view(caf::actor_cast<calculator>(worker2));
+  std::cout << "received result: " << f2(2, 3) << std::endl;
+
+  auto result = f1(1, 2, 3);
+  std::cout << "received result: " << result.value().result
+            << "received position: " << result.value().position << std::endl;
+
   self->send(yanghui_actor_normal_priority, kYanghuiData2);
   self->send(yanghui_actor_high_priority, kYanghuiData2);
   std::cout << "send message to two yanghui actors" << std::endl;
