@@ -26,7 +26,8 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
       gossip::CreateTransport(address, address);
 
   membership::Config membership_config;
-  membership_config.SetHostMember(name, address.host, address.port, config.role_);
+  membership_config.SetHostMember(name, address.host, address.port,
+                                  config.role_);
 
   const bool is_primary_seed = seeds.empty() || seeds[0] == address;
   if (!is_primary_seed) {
