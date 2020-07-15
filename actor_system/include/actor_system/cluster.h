@@ -17,6 +17,7 @@ namespace actor_system {
 namespace cluster {
 struct Member {
   std::string name;
+
   std::string hostname;
   std::string role;
   std::string host;

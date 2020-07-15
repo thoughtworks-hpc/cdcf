@@ -75,8 +75,7 @@ class Config {
         failure_detector_interval_(2000),
         leave_without_notification_(false),
         failure_detector_off_(false),
-        relay_ping_enabled_(false),
-        logger_name_("default_logger") {}
+        relay_ping_enabled_(false) {}
 
   int SetHostMember(const std::string& node_name, const std::string& ip_address,
                     uint16_t port, std::string role = "");
@@ -113,11 +112,6 @@ class Config {
   void EnableRelayPing() { relay_ping_enabled_ = true; }
   bool IsRelayPingEnabled() const { return relay_ping_enabled_; }
 
-  void SetLoggerName(const std::string& logger_name) {
-    logger_name_ = logger_name;
-  }
-  std::string GetLoggerName() const { return logger_name_; }
-
  private:
   Member host_;
   std::vector<Member> seed_members_;
@@ -127,7 +121,6 @@ class Config {
   bool leave_without_notification_;
   bool failure_detector_off_;
   bool relay_ping_enabled_;
-  std::string logger_name_;
 };
 
 class Subscriber {
@@ -215,7 +208,6 @@ class Membership {
   int retransmit_multiplier_;
   bool if_notify_leave_;
   bool is_relay_ping_enabled_;
-  std::shared_ptr<cdcf::Logger> logger_;
 };
 
 };  // namespace membership
