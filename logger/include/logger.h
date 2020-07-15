@@ -5,13 +5,14 @@
 #ifndef LOGGER_INCLUDE_LOGGER_H_
 #define LOGGER_INCLUDE_LOGGER_H_
 
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+#include <spdlog/spdlog.h>
+
 #include <memory>
 #include <mutex>
 #include <string>
 
 #include "../../config_manager/include/cdcf_config.h"
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#include <spdlog/spdlog.h>
 
 namespace cdcf {
 
