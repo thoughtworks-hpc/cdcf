@@ -11,13 +11,11 @@
 class test_config : public CDCFConfig {
  public:
   uint16_t my_port = 0;
-  std::string my_host = "localhost";
   bool my_server_mode = false;
 
   test_config() {
     opt_group{custom_options_, "global"}
         .add(my_port, "port,p", "set port")
-        .add(my_host, "host,H", "set node (ignored in server mode)")
         .add(my_server_mode, "server-mode,s", "enable server mode");
   }
 };
@@ -34,7 +32,7 @@ TEST(TestConfigLoad, load_from_file) { /* NOLINT */
 
   EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8089, config.my_port);
-  EXPECT_EQ("localhost111", config.my_host);
+  EXPECT_EQ("localhost111", config.host_);
   EXPECT_EQ(true, config.my_server_mode);
 }
 
@@ -53,7 +51,7 @@ TEST(TestConfigLoad, load_from_parameter) { /* NOLINT */
 
   EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8088, config.my_port);
-  EXPECT_EQ("localhost666", config.my_host);
+  EXPECT_EQ("localhost666", config.host_);
   EXPECT_EQ(true, config.my_server_mode);
 }
 
@@ -75,6 +73,6 @@ TEST(TestConfigLoad, load_from_parameter_short) { /* NOLINT */
 
   EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8088, config.my_port);
-  EXPECT_EQ("localhost666", config.my_host);
+  EXPECT_EQ("localhost666", config.host_);
   EXPECT_EQ(true, config.my_server_mode);
 }

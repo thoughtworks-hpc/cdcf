@@ -16,18 +16,14 @@ namespace node_keeper {
 
 class Config : public CDCFConfig {
  public:
-  std::string name_ = "node";
   uint16_t port_ = 4748;
-  std::string host_ = "localhost";
   std::string seeds_ = "";
   std::string app_;
   std::string app_args_;
 
   Config() {
     opt_group{custom_options_, "global"}
-        .add(name_, "name,n", "set node name")
         .add(port_, "port,p", "set port")
-        .add(host_, "host,H", "set host")
         .add(seeds_, "seeds,s",
              "seeds of cluster, format in: `host:port,host:port`")
         .add(app_, "app", "set application path")

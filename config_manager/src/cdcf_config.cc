@@ -20,7 +20,9 @@ CDCFConfig::CDCFConfig() {
       .add(log_display_filename_and_line_number_,
            "log_display_filename_and_line_num",
            "enable display filename and line num in log")
-      .add(role_, "role", "set node role, default: ''");
+      .add(role_, "role", "set node role, default: ''")
+      .add(name_, "name,n", "set node name")
+      .add(host_, "host,H", "set host");
 }
 
 CDCFConfig::RetValue CDCFConfig::parse_config(int argc, char** argv,
