@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
@@ -20,9 +21,9 @@ namespace cdcf::router_pool {
 class RouterPool : public caf::event_based_actor {
  public:
   RouterPool(caf::actor_config& cfg, std::string& name,
-             std::string& routee_name, caf::message& routee_args,
-             std::set<std::string>& routee_mpi, size_t& default_actor_num,
-             caf::actor_pool::policy& policy);
+             std::string& description, std::string& routee_name,
+             caf::message& routee_args, std::set<std::string>& routee_mpi,
+             size_t& default_actor_num, caf::actor_pool::policy& policy);
   virtual ~RouterPool();
   void enqueue(caf::mailbox_element_ptr, caf::execution_unit*) override;
 
@@ -34,11 +35,13 @@ class RouterPool : public caf::event_based_actor {
   bool ModifyMaxPerNode(size_t size, const std::string& host, uint16_t port);
   bool DeleteActor(const std::string& key);
   bool AddActor(const caf::actor& gateway, const std::string& key);
+  std::vector<caf::actor> GetActors(const std::string& host, uint16_t port);
   static std::string BuildWorkerKey(const std::string& host, uint16_t port);
   caf::actor GetSpawnActor(const std::string& host, uint16_t port);
   void DealOnExit(const caf::actor& actor, const std::string& key);
 
   std::string name_;
+  std::string description_;
   size_t default_actor_num_;
   std::string factory_name_;
   caf::message factory_args_;

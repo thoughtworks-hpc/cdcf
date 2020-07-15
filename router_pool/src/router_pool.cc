@@ -10,8 +10,9 @@
 namespace cdcf::router_pool {
 
 RouterPool::RouterPool(caf::actor_config& cfg, std::string& name,
-                       std::string& factory_name, caf::message& factory_msg,
-                       std::set<std::string>& mpi, size_t& default_actor_num,
+                       std::string& description, std::string& factory_name,
+                       caf::message& factory_msg, std::set<std::string>& mpi,
+                       size_t& default_actor_num,
                        caf::actor_pool::policy& policy)
     : event_based_actor(cfg) {
   caf::actor_system& system_1 = system();
@@ -19,6 +20,7 @@ RouterPool::RouterPool(caf::actor_config& cfg, std::string& name,
   caf::scoped_execution_unit context{&system_1};
   pool_ = caf::actor_pool::make(&context, std::move(policy));
   name_ = name;
+  description_ = description;
   factory_name_ = factory_name;
   factory_args_ = std::move(factory_msg);
   default_actor_num_ = default_actor_num;
@@ -51,6 +53,12 @@ void RouterPool::enqueue(caf::mailbox_element_ptr what,
                                     content.get_as<uint16_t>(4));
     what->sender->enqueue(nullptr, what->mid.response_id(),
                           caf::make_message(mdf_ret), host);
+  } else if (content.match_elements<caf::sys_atom, caf::get_atom, std::string,
+                                    uint16_t>()) {
+    auto get_ret =
+        GetActors(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(get_ret), host);
   } else {
     pool_->enqueue(std::move(what), host);
   }
@@ -173,7 +181,7 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
     auto tout = std::chrono::seconds(30);  // wait no longer than 30s
     caf::scoped_actor self(system());
     self->request(gateway, tout, caf::spawn_atom::value, name_, factory_name_,
-                  factory_args_, mpi_)
+                  factory_args_, mpi_, name_, description_)
         .receive([&](caf::actor& ret) { promise.set_value(std::move(ret)); },
                  [&](caf::error& err) {
                    std::cerr << "can't spawn actor from gateway" << std::endl;
@@ -202,6 +210,22 @@ caf::actor RouterPool::GetSpawnActor(const std::string& host, uint16_t port) {
     return nullptr;
   }
   return *gateway;
+}
+
+std::vector<caf::actor> RouterPool::GetActors(const std::string& host,
+                                              uint16_t port) {
+  std::unique_lock<std::mutex> ul(actor_lock_);
+  std::string key = BuildWorkerKey(host, port);
+  auto node_it = nodes_.find(key);
+  if (node_it == nodes_.end()) {
+    return std::vector<caf::actor>();
+  }
+  auto& actor_set = node_it->second;
+  std::vector<caf::actor> result;
+  for (auto& actor : actor_set) {
+    result.push_back(actor);
+  }
+  return std::move(result);
 }
 
 void RouterPool::DealOnExit(const caf::actor& actor, const std::string& key) {
