@@ -43,11 +43,14 @@ class WorkerPool : public actor_system::cluster::Observer {
       : system_(system), host_(std::move(host)), worker_port_(worker_port) {}
 
   int Init() {
+    std::cout << "worker pool init" << std::endl;
     auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
     actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
 
+    std::cout << "worker pool members size: " << members.size() << std::endl;
     for (const auto& member : members) {
-      if (member.hostname == host_) {
+      std::cout << "worker pool loop " << std::endl;
+      if (member.hostname == host_ || member.host == host_) {
         continue;
       }
       auto ret = AddWorker(member.host);
@@ -55,18 +58,28 @@ class WorkerPool : public actor_system::cluster::Observer {
         return ret;
       }
     }
+    std::cout << "worker pool init finish" << std::endl;
     return 0;
   }
 
+  bool IsEmpty() { return workers_.empty(); }
+
   caf::strong_actor_ptr GetWorker() {
+    std::cout << "get worker 1" << std::endl;
+    if (workers_.empty()) {
+      return caf::strong_actor_ptr();
+    }
     if (worker_index_ == workers_.size() - 1) {
       worker_index_ = 0;
+      std::cout << "get worker 3" << std::endl;
       return workers_[workers_.size() - 1];
     }
+    std::cout << "get worker 2" << std::endl;
     return workers_[worker_index_++];
   }
 
   int AddWorker(const std::string& host) {
+    std::cout << "add worker 1" << std::endl;
     auto node = system_.middleman().connect(host, worker_port_);
     if (!node) {
       std::cerr << "*** connect failed: " << to_string(node.error())
@@ -76,6 +89,7 @@ class WorkerPool : public actor_system::cluster::Observer {
     auto type = "calculator";              // type of the actor we wish to spawn
     auto args = caf::make_message();       // arguments to construct the actor
     auto tout = std::chrono::seconds(30);  // wait no longer than 30s
+    std::cout << "add worker 2" << std::endl;
     auto worker1 =
         system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
     if (!worker1) {
@@ -97,10 +111,11 @@ class WorkerPool : public actor_system::cluster::Observer {
                 << std::endl;
       return 1;
     }
-
+    std::cout << "add worker 3" << std::endl;
     workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
     workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
     workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
+    std::cout << "add worker 4" << std::endl;
     return 0;
   }
 
@@ -523,6 +538,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                                     bool is_high_priority = false) {
   return {
       [=](const std::vector<std::vector<int>>& triangle_data) {
+        std::cout << "ready to receive triangle data" << std::endl;
         self->state.triangle_sender_ = self->current_sender();
         self->state.last_level_results_ =
             std::vector<int>(triangle_data.size(), 0);
@@ -531,12 +547,15 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
           self->state.triangle_data_.emplace_back(triangle_data[k]);
         }
         self->send(self, start_atom::value);
+        std::cout << "already receive triangle data" << std::endl;
       },
       [=](start_atom) {
         int i = self->state.level_;
         for (int j = 0; j < i + 1; j++) {
+          std::cout << "start level:" << j << std::endl;
           auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
           if (j == 0) {
+            std::cout << "start atom: 1" << std::endl;
             if (is_high_priority) {
               self->send<caf::message_priority::high>(
                   worker, self->state.last_level_results_[0],
@@ -547,6 +566,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                   self->state.triangle_data_[i][j], j);
             }
           } else if (j == i) {
+            std::cout << "start atom: 2" << std::endl;
             if (is_high_priority) {
               self->send<caf::message_priority::high>(
                   worker, self->state.last_level_results_[j - 1],
@@ -557,6 +577,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                   self->state.triangle_data_[i][j], j);
             }
           } else {
+            std::cout << "start atom: 3" << std::endl;
             if (is_high_priority) {
               self->send<caf::message_priority::high>(
                   worker,
@@ -572,17 +593,22 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             }
           }
         }
+        std::cout << "start atom: end" << std::endl;
       },
       [=](std::pair<int, int> result) {
         self->state.last_level_results_[result.second] = result.first;
         self->state.count_++;
+        std::cout << "get level result:1" << std::endl;
         if (self->state.level_ == self->state.count_ - 1) {
+          std::cout << "get level result2" << std::endl;
           if (self->state.level_ == self->state.triangle_data_.size() - 1) {
             self->send(self, end_atom::value);
+            std::cout << "get level result3" << std::endl;
           } else {
             self->state.level_++;
             self->state.count_ = 0;
             self->send(self, start_atom::value);
+            std::cout << "get level result4" << std::endl;
           }
         }
       },
@@ -590,7 +616,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         NumberCompareData send_data;
         send_data.numbers = self->state.last_level_results_;
         auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
-
+        std::cout << "end atom:1" << std::endl;
         self->request(worker, caf::infinite, send_data)
             .await([=](int final_result) {
               if (is_high_priority) {
@@ -604,10 +630,12 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
               }
 
               if (is_high_priority) {
+                std::cout << "end atom:2" << std::endl;
                 self->send<caf::message_priority::high>(
                     caf::actor_cast<caf::actor>(self->state.triangle_sender_),
                     final_result);
               } else {
+                std::cout << "end atom:2" << std::endl;
                 self->send<caf::message_priority::normal>(
                     caf::actor_cast<caf::actor>(self->state.triangle_sender_),
                     final_result);
@@ -693,6 +721,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
 void StupidRootStart(caf::actor_system& system, const config& cfg) {
   WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
+  worker_pool.Init();
 
   auto yanghui_actor_normal_priority =
       system.spawn(yanghui_with_priority, &worker_pool, false);
@@ -701,17 +730,45 @@ void StupidRootStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
             << std::endl;
-
+  while (true) {
+    std::cout << "waiting for worker" << std::endl;
+    if (!worker_pool.IsEmpty()) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
   caf::scoped_actor self{system};
+  std::cout << "ready for scoped actor" << std::endl;
   self->send(yanghui_actor_normal_priority, kYanghuiData2);
   self->send(yanghui_actor_high_priority, kYanghuiData2);
+  std::cout << "send message to two yanghui actors" << std::endl;
 
-  std::string dummy;
-  std::getline(std::cin, dummy);
+  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  while (true) {
+    std::string dummy;
+    std::getline(std::cin, dummy);
+    std::cout << "in the loop, waiting for q" << std::endl;
+    if (dummy == "q") {
+      std::cout << "stop work" << std::endl;
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout << "end loop" << std::endl;
+  }
 }
 
 void StupidWorkerStart(caf::actor_system& system, const config& cfg) {
   system.middleman().open(cfg.worker_port, nullptr, true);
+  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  while (true) {
+    std::string dummy;
+    std::getline(std::cin, dummy);
+    if (dummy == "q") {
+      std::cout << "stop work" << std::endl;
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
