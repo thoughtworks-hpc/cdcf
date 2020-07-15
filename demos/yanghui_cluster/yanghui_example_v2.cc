@@ -41,8 +41,6 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
   return ret_actor;
 }
 
-const std::string k_role_worker = "worker";
-
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor1 = system.spawn<typed_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor1),

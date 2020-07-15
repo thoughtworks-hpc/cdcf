@@ -17,6 +17,8 @@ CountCluster::~CountCluster() {
   actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
 }
 
+const std::string k_role_worker = "worker";
+
 void CountCluster::InitWorkerNodes() {
   auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
 
@@ -24,11 +26,11 @@ void CountCluster::InitWorkerNodes() {
   std::cout << "members size:" << members.size() << std::endl;
   for (auto& m : members) {
     std::cout << "member, host: " << m.host << std::endl;
-    if (m.hostname == host_ || m.host == host_) {
-      continue;
+    std::cout << "role: " << m.role << std::endl;
+    if (m.role == k_role_worker) {
+      std::cout << "add worker, host: " << m.hostname << std::endl;
+      AddWorkerNode(m.host);
     }
-    std::cout << "add worker, host: " << m.host << std::endl;
-    AddWorkerNode(m.host);
   }
 }
 
@@ -45,12 +47,14 @@ void PrintClusterMembers() {
 }
 
 void CountCluster::Update(const actor_system::cluster::Event& event) {
-  CDCF_LOGGER_INFO("=======get update event, host: {}", event.member.host);
-
   if (event.member.hostname != host_ || event.member.host != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
+      CDCF_LOGGER_DEBUG("Actor system up, host: {}, role: {}",
+                        event.member.host, event.member.role);
       //         std::this_thread::sleep_for(std::chrono::seconds(2));
-      AddWorkerNode(event.member.host);
+      if (event.member.role == k_role_worker) {
+        AddWorkerNode(event.member.host);
+      }
       PrintClusterMembers();
     } else if (event.member.status == event.member.Down) {
       CDCF_LOGGER_INFO("detect worker node down, host: {}, port:{}",
