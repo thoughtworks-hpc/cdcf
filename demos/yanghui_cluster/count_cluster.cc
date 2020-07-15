@@ -5,6 +5,8 @@
 #include "include/count_cluster.h"
 
 #include <utility>
+
+#include "../../logger/include/logger.h"
 CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
   // auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
   // InitWorkerNodes(members, host_);
@@ -30,18 +32,32 @@ void CountCluster::InitWorkerNodes() {
   }
 }
 
-void CountCluster::Update(const actor_system::cluster::Event& event) {
-  std::cout << "=======get update event, host:" << event.member.host
-            << std::endl;
+void PrintClusterMembers() {
+  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  std::cout << "Current Cluster Members:" << std::endl;
+  for (int i = 0; i < members.size(); ++i) {
+    auto& member = members[i];
+    std::cout << "Member " << i + 1 << ": ";
+    std::cout << "name: " << member.name << ", hostname: " << member.hostname
+              << ", host: " << member.host << ", port:" << member.port
+              << std::endl;
+  }
+}
 
-  if (event.member.hostname != host_) {
-    if (event.member.status == event.member.Up) {
-      // std::this_thread::sleep_for(std::chrono::seconds(2));
+void CountCluster::Update(const actor_system::cluster::Event& event) {
+  CDCF_LOGGER_INFO("=======get update event, host: {}", event.member.host);
+
+  if (event.member.hostname != host_ || event.member.host != host_) {
+    if (event.member.status == event.member.ActorSystemUp) {
+      //         std::this_thread::sleep_for(std::chrono::seconds(2));
       AddWorkerNode(event.member.host);
-    } else {
-      // Todo(Yujia.Li): resource leak
-      std::cout << "detect worker node down, host:" << event.member.host
-                << " port:" << event.member.port << std::endl;
+      PrintClusterMembers();
+    } else if (event.member.status == event.member.Down) {
+      CDCF_LOGGER_INFO("detect worker node down, host: {}, port:{}",
+                       event.member.host, event.member.port);
+    } else if (event.member.status == event.member.ActorSystemDown) {
+      CDCF_LOGGER_INFO("detect worker actor system down, host: {}, port: {}",
+                       event.member.host, event.member.port);
     }
   }
 }

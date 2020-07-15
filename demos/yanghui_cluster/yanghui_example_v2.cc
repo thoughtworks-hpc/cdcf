@@ -73,6 +73,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
+  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
   // start compute
   while (true) {
@@ -184,6 +185,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       system);
 
   actor_status_service.Run();
+  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
   // start compute
   while (true) {

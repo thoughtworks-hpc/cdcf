@@ -11,7 +11,7 @@
 
 #include "../../config_manager/include/cdcf_config.h"
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 namespace cdcf {
 
