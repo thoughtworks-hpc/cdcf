@@ -219,7 +219,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 void caf_main(caf::actor_system& system, const config& cfg) {
   cdcf::Logger::Init(cfg);
   CDCF_LOGGER_DEBUG("I am {}", cfg.role_);
-  if (cfg.root) {
+  if (cfg.role_ == "root") {
     SmartRootStart(system, cfg);
   } else {
     SmartWorkerStart(system, cfg);
