@@ -597,9 +597,22 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         }
         std::cout << "start atom: end" << std::endl;
       },
-      [=](ResultWithPosition result_with_position) {
-        self->state.last_level_results_[result_with_position.position] =
-            result_with_position.result;
+      [=](std::string& result_with_position) {
+        std::cout << "result with position: " << result_with_position
+                  << std::endl;
+
+        int index = result_with_position.find(":");
+        std::cout << "result string: " << result_with_position.substr(0, index)
+                  << std::endl;
+        std::cout << "position string: "
+                  << result_with_position.substr(
+                         index + 1, result_with_position.size() - index)
+                  << std::endl;
+        int result = std::stoi(result_with_position.substr(0, index));
+        int position = std::stoi(result_with_position.substr(
+            index + 1, result_with_position.size() - index));
+        self->state.last_level_results_[position] = result;
+        std::cout << "position " << position << ":" << result << std::endl;
         self->state.count_++;
         std::cout << "get level result:1" << std::endl;
         if (self->state.level_ == self->state.count_ - 1) {
@@ -755,10 +768,6 @@ void StupidRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "received result: " << f1(1, 2) << std::endl;
   auto f2 = caf::make_function_view(caf::actor_cast<calculator>(worker2));
   std::cout << "received result: " << f2(2, 3) << std::endl;
-
-  auto result = f1(1, 2, 3);
-  std::cout << "received result: " << result.value().result
-            << "received position: " << result.value().position << std::endl;
 
   self->send(yanghui_actor_normal_priority, kYanghuiData2);
   self->send(yanghui_actor_high_priority, kYanghuiData2);
