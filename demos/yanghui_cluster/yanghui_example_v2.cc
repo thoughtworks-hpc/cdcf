@@ -19,6 +19,8 @@
 #include "./yanghui_config.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/balance_count_cluster.h"
+#include "include/cdcf_spawn.h"
+#include "include/router_pool_count_cluster.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
 
@@ -60,6 +62,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
+  auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
+  system.middleman().publish(cdcf_spawn, cfg.worker_port);
+
   auto form_actor1 = caf::actor_cast<caf::actor>(actor1);
   auto form_actor2 = caf::actor_cast<caf::actor>(actor2);
   auto form_actor3 = caf::actor_cast<caf::actor>(actor3);
@@ -92,6 +97,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   self->send_exit(actor1, caf::exit_reason::user_shutdown);
   self->send_exit(actor2, caf::exit_reason::user_shutdown);
   self->send_exit(actor3, caf::exit_reason::user_shutdown);
+  self->send_exit(cdcf_spawn, caf::exit_reason::user_shutdown);
 }
 
 std::vector<std::vector<int>> kYanghuiData2 = {
@@ -135,7 +141,56 @@ void dealSendErr(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
+std::string InputHostIp() {
+  std::cout << "Please Input host IP : " << std::endl;
+  std::string dummy;
+  std::getline(std::cin, dummy);
+  return std::move(dummy);
+}
+
+size_t InputSize() {
+  std::cout << "Please Input size : " << std::endl;
+  std::string dummy;
+  std::getline(std::cin, dummy);
+  return (size_t)std::stoi(dummy);
+}
+
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+  ActorStatusMonitor actor_status_monitor(system);
+  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+
+  // router pool
+  std::string routee_name = "calculator";
+  auto routee_args = caf::make_message();
+  auto routee_ifs = system.message_types<calculator>();
+  auto policy = caf::actor_pool::round_robin();
+  size_t default_size = 3;
+  auto pool_cluster = new RouterPoolCountCluster(
+      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port, routee_name,
+      routee_args, routee_ifs, default_size, policy);
+  pool_cluster->InitWorkerNodes();
+  auto pool_actor = system.spawn(yanghui, pool_cluster);
+  actor_status_monitor.RegisterActor(pool_actor, "Yanghui",
+                                     "a actor can count yanghui triangle.");
+
+  std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
+            << std::endl;
+
+  auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
+  SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
+
+  ActorGuard pool_guard(
+      pool_actor,
+      [&](std::atomic<bool>& active) {
+        active = true;
+        auto new_yanghui = system.spawn(yanghui, pool_cluster);
+        actor_status_monitor.RegisterActor(
+            pool_actor, "Yanghui", "a actor can count yanghui triangle.");
+        // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
+        return new_yanghui;
+      },
+      system);
+
   //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
@@ -158,9 +213,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   // counter.AddWorkerNode("localhost");
   // count_cluster->AddWorkerNode("localhost");
-
-  ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto yanghui_actor = system.spawn(yanghui, count_cluster);
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
@@ -200,7 +252,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
-
       continue;
     }
 
@@ -208,8 +259,48 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, "quit");
-
       continue;
+    }
+
+    if (dummy == "pool n") {
+      std::cout << "pool start count." << std::endl;
+      pool_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+    }
+
+    if (dummy == "pool get nodes") {
+      std::cout << pool_cluster->NodeList() << std::endl;
+    }
+
+    if (dummy == "pool remove node") {
+      std::string host = InputHostIp();
+      std::cout << pool_cluster->RemoveNode(host, cfg.worker_port) << std::endl;
+    }
+
+    if (dummy == "pool add node") {
+      std::string host = InputHostIp();
+      std::cout << pool_cluster->AddNode(host, cfg.worker_port) << std::endl;
+    }
+
+    if (dummy == "pool get size") {
+      std::cout << pool_cluster->GetPoolSize() << std::endl;
+    }
+
+    if (dummy == "pool get size by ip") {
+      std::string host = InputHostIp();
+      std::cout << pool_cluster->GetPoolSize(host, cfg.worker_port)
+                << std::endl;
+    }
+
+    if (dummy == "pool change size") {
+      auto size = InputSize();
+      std::cout << pool_cluster->ChangePoolSize(size) << std::endl;
+    }
+
+    if (dummy == "pool change size by ip") {
+      auto size = InputSize();
+      std::string host = InputHostIp();
+      std::cout << pool_cluster->ChangePoolSize(size, host, cfg.worker_port)
+                << std::endl;
     }
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
