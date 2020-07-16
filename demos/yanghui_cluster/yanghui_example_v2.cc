@@ -17,11 +17,11 @@
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "../../logger/include/logger.h"
 #include "./yanghui_config.h"
-#include "./yanghui_with_priority.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/balance_count_cluster.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
+#include "include/yanghui_with_priority.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
@@ -252,9 +252,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
             }
           },
           [&](caf::error error) {
-            std::cout << "error2: " << system.render(error) << std::endl;
+            std::cout << "Receive yanghui priority result error: "
+                      << system.render(error) << std::endl;
           });
-      std::cout << "send message to two yanghui actors" << std::endl;
 
       continue;
     }

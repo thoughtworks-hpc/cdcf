@@ -2,145 +2,126 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_YANGHUI_WITH_PRIORITY_H
-#define CDCF_YANGHUI_WITH_PRIORITY_H
-class WorkerPool : public actor_system::cluster::Observer {
- public:
-  WorkerPool(caf::actor_system& system, std::string host, uint16_t worker_port)
-      : system_(system), host_(std::move(host)), worker_port_(worker_port) {}
+#include "./include/yanghui_with_priority.h"
 
-  int Init() {
-    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+int WorkerPool::Init() {
+  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
 
-    for (const auto& member : members) {
-      if (member.hostname == host_ || member.host == host_) {
-        continue;
-      }
-      auto ret = AddWorker(member.host);
-      if (ret != 0) {
-        return ret;
-      }
+  for (const auto& member : members) {
+    if (member.hostname == host_ || member.host == host_) {
+      continue;
     }
-    return 0;
-  }
-
-  bool IsEmpty() { return workers_.empty(); }
-
-  caf::strong_actor_ptr GetWorker() {
-    if (workers_.empty()) {
-      return caf::strong_actor_ptr();
-    }
-    if (worker_index_ == workers_.size() - 1) {
-      worker_index_ = 0;
-      return workers_[workers_.size() - 1];
-    }
-    return workers_[worker_index_++];
-  }
-
-  int AddWorker(const std::string& host) {
-    auto node = system_.middleman().connect(host, worker_port_);
-    if (!node) {
-      std::cerr << "*** connect failed: " << to_string(node.error())
-                << std::endl;
-      return 1;
-    }
-    auto type = "calculator";              // type of the actor we wish to spawn
-    auto args = caf::make_message();       // arguments to construct the actor
-    auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-    auto worker1 =
-        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-    if (!worker1) {
-      std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
-                << std::endl;
-      return 1;
-    }
-    auto worker2 =
-        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-    if (!worker2) {
-      std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
-                << std::endl;
-      return 1;
-    }
-    auto worker3 =
-        system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-    if (!worker3) {
-      std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
-                << std::endl;
-      return 1;
-    }
-
-    std::cout << "add worker 1 with id: " << worker1->id() << std::endl;
-    std::cout << "add worker 2 with id: " << worker2->id() << std::endl;
-    std::cout << "add worker 3 with id: " << worker3->id() << std::endl;
-
-    workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
-    workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
-    workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
-    return 0;
-  }
-
-  void Update(const actor_system::cluster::Event& event) override {
-    if (event.member.hostname != host_) {
-      if (event.member.status == event.member.ActorSystemUp) {
-        //         std::this_thread::sleep_for(std::chrono::seconds(2));
-        AddWorker(event.member.host);
-        PrintClusterMembers();
-      } else if (event.member.status == event.member.Down) {
-        std::cout << "detect worker node down, host:" << event.member.host
-                  << " port:" << event.member.port << std::endl;
-      } else if (event.member.status == event.member.ActorSystemDown) {
-        std::cout << "detect worker actor system down, host:"
-                  << event.member.host << " port:" << event.member.port
-                  << std::endl;
-      }
+    auto ret = AddWorker(member.host);
+    if (ret != 0) {
+      return ret;
     }
   }
+  return 0;
+}
 
-  void PrintClusterMembers() {
-    auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-    std::cout << "Current Cluster Members:" << std::endl;
-    for (int i = 0; i < members.size(); ++i) {
-      auto& member = members[i];
-      std::cout << "Member " << i + 1 << ": ";
-      std::cout << "name: " << member.name << ", hostname: " << member.hostname
-                << ", host: " << member.host << ", port:" << member.port
-                << std::endl;
-    }
+bool WorkerPool::IsEmpty() { return workers_.empty(); }
+
+caf::strong_actor_ptr WorkerPool::GetWorker() {
+  if (workers_.empty()) {
+    return caf::strong_actor_ptr();
+  }
+  if (worker_index_ == workers_.size() - 1) {
+    worker_index_ = 0;
+    return workers_[workers_.size() - 1];
+  }
+  return workers_[worker_index_++];
+}
+
+int WorkerPool::AddWorker(const std::string& host) {
+  auto node = system_.middleman().connect(host, worker_port_);
+  if (!node) {
+    std::cerr << "*** connect failed: " << to_string(node.error()) << std::endl;
+    return 1;
+  }
+  auto type = "calculator";              // type of the actor we wish to spawn
+  auto args = caf::make_message();       // arguments to construct the actor
+  auto tout = std::chrono::seconds(30);  // wait no longer than 30s
+  auto worker1 =
+      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+  if (!worker1) {
+    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
+              << std::endl;
+    return 1;
+  }
+  auto worker2 =
+      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+  if (!worker2) {
+    std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
+              << std::endl;
+    return 1;
+  }
+  auto worker3 =
+      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+  if (!worker3) {
+    std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
+              << std::endl;
+    return 1;
   }
 
- private:
-  std::vector<caf::strong_actor_ptr> workers_;
-  int worker_index_ = 0;
-  std::string host_;
-  caf::actor_system& system_;
-  uint16_t worker_port_;
-};
+  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
+  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
+  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
+  return 0;
+}
 
-struct yanghui_state {
-  int level_ = 1;
-  int count_ = 0;
-  std::vector<std::vector<int>> triangle_data_;
-  std::vector<int> last_level_results_;
-  caf::strong_actor_ptr triangle_sender_;
-};
+void WorkerPool::Update(const actor_system::cluster::Event& event) {
+  if (event.member.hostname != host_) {
+    if (event.member.status == event.member.ActorSystemUp) {
+      //         std::this_thread::sleep_for(std::chrono::seconds(2));
+      AddWorker(event.member.host);
+      PrintClusterMembers();
+    } else if (event.member.status == event.member.Down) {
+      std::cout << "detect worker node down, host:" << event.member.host
+                << " port:" << event.member.port << std::endl;
+    } else if (event.member.status == event.member.ActorSystemDown) {
+      std::cout << "detect worker actor system down, host:" << event.member.host
+                << " port:" << event.member.port << std::endl;
+    }
+  }
+}
+
+void WorkerPool::PrintClusterMembers() {
+  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  std::cout << "Current Cluster Members:" << std::endl;
+  for (int i = 0; i < members.size(); ++i) {
+    auto& member = members[i];
+    std::cout << "Member " << i + 1 << ": ";
+    std::cout << "name: " << member.name << ", hostname: " << member.hostname
+              << ", host: " << member.host << ", port:" << member.port
+              << std::endl;
+  }
+}
 
 using start_atom = caf::atom_constant<caf::atom("start")>;
 using end_atom = caf::atom_constant<caf::atom("end")>;
 
 caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
                                     WorkerPool* worker_pool,
-                                    bool is_high_priority = false) {
+                                    bool is_high_priority) {
   return {
       [=](const std::vector<std::vector<int>>& triangle_data) {
         self->state.triangle_sender_ = self->current_sender();
         self->state.last_level_results_ =
             std::vector<int>(triangle_data.size(), 0);
         self->state.last_level_results_[0] = triangle_data[0][0];
+        std::cout << "triangle data size original: " << triangle_data.size()
+                  << std::endl;
+        std::cout << "triangle data size before: "
+                  << self->state.triangle_data_.size() << std::endl;
+        self->state.triangle_data_.clear();
         for (int k = 0; k < triangle_data.size(); k++) {
           self->state.triangle_data_.emplace_back(triangle_data[k]);
         }
         self->send(self, start_atom::value);
+
+        std::cout << "triangle data size after: "
+                  << self->state.triangle_data_.size() << std::endl;
       },
       [=](start_atom) {
         int i = self->state.level_;
@@ -190,6 +171,8 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         self->state.count_++;
         if (self->state.level_ == self->state.count_ - 1) {
           if (self->state.level_ == self->state.triangle_data_.size() - 1) {
+            self->state.level_ = 1;
+            self->state.count_ = 0;
             self->send(self, end_atom::value);
           } else {
             std::cout << "finish level: " << self->state.level_
@@ -206,15 +189,17 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
         self->request(worker, caf::infinite, send_data)
             .await([=](int final_result) {
-              if (is_high_priority) {
-                caf::aout(self)
-                    << "high priority final result: " << final_result
-                    << std::endl;
-              } else {
-                caf::aout(self)
-                    << "normal priority final result: " << final_result
-                    << std::endl;
-              }
+              //              if (is_high_priority) {
+              //                caf::aout(self)
+              //                    << "high priority final result: " <<
+              //                    final_result
+              //                    << std::endl;
+              //              } else {
+              //                caf::aout(self)
+              //                    << "normal priority final result: " <<
+              //                    final_result
+              //                    << std::endl;
+              //              }
 
               if (is_high_priority) {
                 self->send<caf::message_priority::high>(
@@ -229,10 +214,6 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
       }};
 }
 
-struct dispatcher_state {
-  std::vector<std::pair<bool, int>> result;
-  caf::strong_actor_ptr triangle_sender_;
-};
 caf::behavior yanghui_job_dispatcher(
     caf::stateful_actor<dispatcher_state>* self, caf::actor target1,
     caf::actor target2) {
@@ -251,9 +232,8 @@ caf::behavior yanghui_job_dispatcher(
               self->send(
                   caf::actor_cast<caf::actor>(self->state.triangle_sender_),
                   self->state.result);
+              self->state.result.clear();
               std::cout << "send final result to system" << std::endl;
             }
           }};
 }
-
-#endif  // CDCF_YANGHUI_WITH_PRIORITY_H
