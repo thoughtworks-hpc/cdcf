@@ -21,7 +21,7 @@ membership::Membership::~Membership() {
 void membership::Membership::NotifyLeave() {
   if (this->members_.size() > 1) {
     membership::UpdateMessage message;
-    message.InitAsDownMessage(this->self_, this->incarnation_ + 1);
+    message.InitAsDownMessage(this->self_, IncreaseIncarnation());
     auto message_serialized = message.SerializeToString();
     gossip::Payload payload{message_serialized};
 
@@ -285,8 +285,9 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
 
   if (message.IsUpMessage()) {
     CDCF_LOGGER_INFO(
-        "Receive gossip up message for {}:{}, message incarnation={}",
-        member.GetIpAddress(), member.GetPort(), message.GetIncarnation());
+        "Receive gossip up message for {}:{}, message incarnation={}, role={}",
+        member.GetIpAddress(), member.GetPort(), message.GetIncarnation(),
+        member.GetRole());
     if (member == self_) {
       CDCF_LOGGER_DEBUG("Ignore self gossip up message");
       return;
@@ -374,15 +375,20 @@ void membership::Membership::HandleDidPull(
       }
 
       UpdateMessage update;
-      update.InitAsUpMessage(self_, incarnation_);
-      CDCF_LOGGER_DEBUG("Send self gossip up message to others, incarnation={}",
-                        incarnation_);
+      auto incarnation = IncreaseIncarnation();
+      update.InitAsUpMessage(self_, incarnation);
+      CDCF_LOGGER_DEBUG(
+          "Send self gossip up message to others, incarnation={}, role={}",
+          incarnation, self_.GetRole());
       auto update_serialized = update.SerializeToString();
       gossip::Payload payload(update_serialized.data(),
                               update_serialized.size());
 
       gossip_queue_->Push([this, payload]() { DisseminateGossip(payload); },
                           GetRetransmitLimit());
+      if (is_self_actor_system_up_) {
+        SendSelfActorSystemUpGossip();
+      }
     } else {
       // Rejected from reentry
     }
@@ -432,7 +438,8 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     PullResponseMessage response;
     response.InitAsPingSuccess(self_);
     message_serialized = response.SerializeToString();
-    MergeMembers(request.GetMembersWithIncarnation());
+    MergeMembers(request.GetMembersWithIncarnation(),
+                 request.GetMembersWithActorSystem());
   } else if (request.IsPingRelayType()) {
     if (transport_) {
       PullRequestMessage request_message;
@@ -493,7 +500,18 @@ void membership::Membership::Ping() {
   auto failure_detector_functor = [this]() {
     if (transport_) {
       PullRequestMessage message;
-      message.InitAsPingType(members_);
+      std::map<Member, int> members;
+      std::map<Member, bool> member_actor_system;
+      {
+        const std::lock_guard<std::mutex> lock(mutex_members_);
+        members = members_;
+      }
+      {
+        const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+        member_actor_system = member_actor_system_;
+      }
+      message.InitAsPingType(members, member_actor_system);
+
       std::string pull_request_message = message.SerializeToString();
 
       auto [get_success, random_member] = GetRandomPingTarget();
@@ -711,25 +729,36 @@ void membership::Membership::MergeDownUpdate(const Member& member,
 }
 
 void membership::Membership::MergeMembers(
-    const std::map<membership::Member, int>& members) {
+    const std::map<membership::Member, int>& members,
+    const std::map<membership::Member, bool>& member_actor_system) {
   bool should_notify = false;
   {
     const std::lock_guard<std::mutex> lock_members_(mutex_members_);
+    const std::lock_guard<std::mutex> lock_member_actor_system(
+        mutex_member_actor_system_);
     for (const auto& member_pair : members) {
       auto member = member_pair.first;
       int incarnation = member_pair.second;
       CDCF_LOGGER_DEBUG("Receive update for ping member {}:{}",
                         member.GetIpAddress(), member.GetPort());
       if (members_.find(member) != members_.end()) {
-        //        if (incarnation > members_[member]) {
-        //          members_[member] = incarnation;
-        //          should_notify = true;
-        //          CDCF_LOGGER_INFO(
-        //              "Update member {}:{}'s incarnation by merging ping
-        //              member", member.GetIpAddress(), member.GetPort());
-        //        }
+        if (incarnation > members_[member]) {
+          members_[member] = incarnation;
+          if (auto it = member_actor_system.find(member);
+              it != member_actor_system.end()) {
+            member_actor_system_[member] = it->second;
+          }
+          should_notify = true;
+          CDCF_LOGGER_INFO(
+              "Update member {}:{}'s incarnation by merging ping member",
+              member.GetIpAddress(), member.GetPort());
+        }
       } else {
         members_[member] = incarnation;
+        if (auto it = member_actor_system.find(member);
+            it != member_actor_system.end()) {
+          member_actor_system_[member] = it->second;
+        }
         should_notify = true;
         CDCF_LOGGER_INFO("Add member {}:{} by merging ping member",
                          member.GetIpAddress(), member.GetPort());
@@ -822,6 +851,7 @@ void membership::Membership::MergeActorSystemDown(
 
 void membership::Membership::NotifyActorSystemDown() {
   membership::UpdateMessage message;
+  is_self_actor_system_up_ = false;
   message.InitAsActorSystemDownMessage(self_, IncreaseIncarnation());
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
@@ -833,6 +863,16 @@ std::map<membership::Member, bool> membership::Membership::GetActorSystems()
     const {
   const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
   return member_actor_system_;
+}
+void membership::Membership::SetSelfActorSystemUp() {
+  is_self_actor_system_up_ = true;
+}
+void membership::Membership::SendSelfActorSystemUpGossip() {
+  membership::UpdateMessage message;
+  message.InitAsActorSystemUpMessage(self_, IncreaseIncarnation());
+  auto serialized = message.SerializeToString();
+  gossip::Payload payload(serialized.data(), serialized.size());
+  SendGossip(payload);
 }
 
 bool membership::operator==(const membership::Member& lhs,
@@ -858,14 +898,15 @@ bool membership::Member::IsEmptyMember() {
 
 int membership::Config::SetHostMember(const std::string& node_name,
                                       const std::string& ip_address,
-                                      uint16_t port) {
+                                      uint16_t port, std::string role) {
   std::string hostname;
   std::string ip_address_converted;
   auto ret =
       membership::ResolveHostName(ip_address, hostname, ip_address_converted);
 
   Member host(node_name, ip_address_converted, port, hostname,
-              uuid::generate_uuid_v4());
+              uuid::generate_uuid_v4(), role);
+  CDCF_LOGGER_DEBUG("SetHostMember, role={}", host.GetRole());
   host_ = host;
 
   return ret;

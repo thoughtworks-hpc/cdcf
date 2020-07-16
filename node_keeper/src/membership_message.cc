@@ -16,51 +16,48 @@ void membership::Message::DeserializeFromArray(const void* data, int size) {
   BaseMessage().ParseFromArray(data, size);
 }
 
-void membership::UpdateMessage::InitAsUpMessage(const Member& member,
-                                                unsigned int incarnation) {
+void membership::UpdateMessage::SetUpdate(const Member& member,
+                                          unsigned int incarnation) {
   update_.set_name(member.GetNodeName());
   update_.set_hostname(member.GetHostName());
   update_.set_ip(member.GetIpAddress());
   update_.set_port(member.GetPort());
-  update_.set_status(MemberUpdate::UP);
   update_.set_incarnation(incarnation);
   update_.set_member_id(member.GetUid());
+  update_.set_role(member.GetRole());
+}
+
+void membership::UpdateMessage::InitAsUpMessage(const Member& member,
+                                                unsigned int incarnation) {
+  SetUpdate(member, incarnation);
+  update_.set_status(MemberUpdate::UP);
 }
 
 void membership::UpdateMessage::InitAsDownMessage(const Member& member,
                                                   unsigned int incarnation) {
-  update_.set_name(member.GetNodeName());
-  update_.set_hostname(member.GetHostName());
-  update_.set_ip(member.GetIpAddress());
-  update_.set_port(member.GetPort());
+  SetUpdate(member, incarnation);
   update_.set_status(MemberUpdate::DOWN);
-  update_.set_incarnation(incarnation);
 }
 
 void membership::UpdateMessage::InitAsSuspectMessage(const Member& member,
                                                      unsigned int incarnation) {
-  update_.set_name(member.GetNodeName());
-  update_.set_hostname(member.GetHostName());
-  update_.set_ip(member.GetIpAddress());
-  update_.set_port(member.GetPort());
+  SetUpdate(member, incarnation);
   update_.set_status(MemberUpdate::SUSPECT);
-  update_.set_incarnation(incarnation);
 }
 
 void membership::UpdateMessage::InitAsRecoveryMessage(
     const Member& member, unsigned int incarnation) {
-  update_.set_name(member.GetNodeName());
-  update_.set_hostname(member.GetHostName());
-  update_.set_ip(member.GetIpAddress());
-  update_.set_port(member.GetPort());
+  SetUpdate(member, incarnation);
   update_.set_status(MemberUpdate::RECOVERY);
-  update_.set_incarnation(incarnation);
 }
 
 membership::Member membership::UpdateMessage::GetMember() const {
-  return Member{update_.name(), update_.ip(),
-                static_cast<uint16_t>(update_.port()), update_.hostname(),
-                update_.member_id()};
+  return Member{update_.name(),
+                update_.ip(),
+                static_cast<uint16_t>(update_.port()),
+                update_.hostname(),
+                update_.member_id(),
+                update_.role()};
 }
 
 bool membership::UpdateMessage::IsUpMessage() const {
@@ -103,6 +100,7 @@ void membership::FullStateMessage::InitAsFullStateMessage(
     new_state->set_name(member.GetNodeName());
     new_state->set_hostname(member.GetHostName());
     new_state->set_ip(member.GetIpAddress());
+    new_state->set_role(member.GetRole());
     new_state->set_port(member.GetPort());
     new_state->set_status(MemberUpdate::UP);
     new_state->set_incarnation(1);
@@ -111,22 +109,14 @@ void membership::FullStateMessage::InitAsFullStateMessage(
 
 void membership::UpdateMessage::InitAsActorSystemDownMessage(
     const membership::Member& member, unsigned int incarnation) {
-  update_.set_name(member.GetNodeName());
-  update_.set_ip(member.GetIpAddress());
-  update_.set_port(member.GetPort());
-  update_.set_hostname(member.GetHostName());
+  SetUpdate(member, incarnation);
   update_.set_status(MemberUpdate::ACTOR_SYSTEM_DOWN);
-  update_.set_incarnation(incarnation);
 }
 
 void membership::UpdateMessage::InitAsActorSystemUpMessage(
     const Member& member, unsigned int incarnation) {
-  update_.set_name(member.GetNodeName());
-  update_.set_ip(member.GetIpAddress());
-  update_.set_port(member.GetPort());
-  update_.set_hostname(member.GetHostName());
+  SetUpdate(member, incarnation);
   update_.set_status(MemberUpdate::ACTOR_SYSTEM_UP);
-  update_.set_incarnation(incarnation);
 }
 
 void membership::FullStateMessage::InitAsReentryRejected() {
@@ -157,7 +147,8 @@ void membership::PullRequestMessage::InitAsPingType() {
 
 // Todo(davidzwb): consider using md5 to optimize message size
 void membership::PullRequestMessage::InitAsPingType(
-    const std::map<Member, int>& members) {
+    const std::map<Member, int>& members,
+    const std::map<Member, bool>& member_actor_system) {
   pull_request_.set_type(::membership::PullRequest_Type::PullRequest_Type_PING);
 
   for (const auto& member_pair : members) {
@@ -168,8 +159,15 @@ void membership::PullRequestMessage::InitAsPingType(
     new_state->set_hostname(member.GetHostName());
     new_state->set_ip(member.GetIpAddress());
     new_state->set_port(member.GetPort());
+    new_state->set_role(member.GetRole());
     new_state->set_status(MemberUpdate::UP);
     new_state->set_incarnation(incarnation);
+    if (auto it = member_actor_system.find(member);
+        it != member_actor_system.end()) {
+      new_state->set_actor_system_up(it->second);
+    } else {
+      new_state->set_actor_system_up(false);
+    }
   }
 }
 
@@ -243,13 +241,34 @@ membership::PullRequestMessage::GetMembersWithIncarnation() {
   for (int i = 0; i < pull_request_.states_size(); i++) {
     auto update = pull_request_.states(i);
     if (update.status() == MemberUpdate::UP) {
-      membership::Member member{update.name(), update.ip(),
+      membership::Member member{update.name(),
+                                update.ip(),
                                 static_cast<uint16_t>(update.port()),
-                                update.hostname()};
+                                update.hostname(),
+                                update.member_id(),
+                                update.role()};
       members[member] = update.incarnation();
     }
   }
   return members;
+}
+
+std::map<membership::Member, bool>
+membership::PullRequestMessage::GetMembersWithActorSystem() {
+  std::map<membership::Member, bool> member_actor_system;
+  for (int i = 0; i < pull_request_.states_size(); i++) {
+    auto update = pull_request_.states(i);
+    if (update.status() == MemberUpdate::UP) {
+      membership::Member member{update.name(),
+                                update.ip(),
+                                static_cast<uint16_t>(update.port()),
+                                update.hostname(),
+                                update.member_id(),
+                                update.role()};
+      member_actor_system[member] = update.actor_system_up();
+    }
+  }
+  return member_actor_system;
 }
 
 void membership::PullResponseMessage::InitAsPingSuccess(const Member& member) {

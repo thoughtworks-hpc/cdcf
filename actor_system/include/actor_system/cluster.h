@@ -19,16 +19,19 @@ struct Member {
   std::string name;
 
   std::string hostname;
+  std::string role;
   std::string host;
   uint16_t port;
   enum Status { Up, Down, ActorSystemDown, ActorSystemUp };
   Status status{Status::Up};
 
   Member(const std::string& name, const std::string& hostname,
-         const std::string& host, uint16_t port, Status status = Up)
+         const std::string& host, const std::string& role, uint16_t port,
+         Status status = Up)
       : name(name),
         hostname(hostname),
         host(host),
+        role(role),
         port(port),
         status(status) {}
 

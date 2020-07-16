@@ -26,7 +26,8 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
       gossip::CreateTransport(address, address);
 
   membership::Config membership_config;
-  membership_config.SetHostMember(name, address.host, address.port);
+  membership_config.SetHostMember(name, address.host, address.port,
+                                  config.role_);
 
   const bool is_primary_seed = seeds.empty() || seeds[0] == address;
   if (!is_primary_seed) {
@@ -97,7 +98,9 @@ class Subscriber : public membership::Subscriber {
               {{node_keeper::MemberEvent::kActorSystemDown, event.member}});
           break;
         case MemberEvent::kActorSystemUp:
-          CDCF_LOGGER_DEBUG("Send actor system up event to self actor system.");
+          CDCF_LOGGER_DEBUG(
+              "Send actor system up event to self actor system. ip={}, role={}",
+              event.member.GetIpAddress(), event.member.GetRole());
           service.Notify(
               {{node_keeper::MemberEvent::kActorSystemUp, event.member}});
           break;

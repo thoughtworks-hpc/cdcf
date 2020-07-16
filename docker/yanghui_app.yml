@@ -4,6 +4,7 @@ services:
     image: cdcf:latest
     environment:
       HOST: yanghui_root_v2
+      ROLE: root
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
@@ -17,6 +18,7 @@ services:
     image: cdcf:latest
     environment:
       HOST: yanghui_worker1_v2
+      ROLE: worker
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
@@ -29,6 +31,7 @@ services:
     image: cdcf:latest
     environment:
       HOST: yanghui_worker2_v2
+      ROLE: worker
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2

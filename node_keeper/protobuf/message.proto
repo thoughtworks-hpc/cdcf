@@ -7,6 +7,7 @@ message MemberUpdate {
     required string hostname = 2;
     required string ip = 3;
     required int32 port = 4;
+    required string role = 5;
 
     enum MemberStatus {
         UP = 0;
@@ -17,9 +18,10 @@ message MemberUpdate {
         ACTOR_SYSTEM_UP = 5;
     }
 
-    required MemberStatus status = 5;
-    required int32 incarnation = 6;
-    optional string member_id = 7;
+    required MemberStatus status = 6;
+    required int32 incarnation = 7;
+    optional string member_id = 8;
+    optional bool actor_system_up = 9;
 }
 
 message MemberFullState {

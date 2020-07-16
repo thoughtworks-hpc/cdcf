@@ -9,6 +9,7 @@ namespace {
 ::Member& UpdateMember(::Member* to, const membership::Member& from) {
   to->set_name(from.GetNodeName());
   to->set_hostname(from.GetHostName());
+  to->set_role(from.GetRole());
   to->set_host(from.GetIpAddress());
   to->set_port(from.GetPort());
   return *to;
@@ -28,13 +29,8 @@ namespace node_keeper {
 ::grpc::Status GRPCImpl::ActorSystemUp(::grpc::ServerContext* context,
                                        const ::google::protobuf::Empty* request,
                                        ::google::protobuf::Empty* response) {
-  membership::UpdateMessage message;
-  message.InitAsActorSystemUpMessage(cluster_membership_.GetSelf(),
-                                     cluster_membership_.IncreaseIncarnation());
-  auto serialized = message.SerializeToString();
-  gossip::Payload payload(serialized.data(), serialized.size());
-  cluster_membership_.SendGossip(payload);
-
+  cluster_membership_.SetSelfActorSystemUp();
+  cluster_membership_.SendSelfActorSystemUpGossip();
   return ::grpc::Status::OK;
 }
 

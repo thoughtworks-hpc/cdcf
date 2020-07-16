@@ -19,11 +19,14 @@ class CDCFConfig : public caf::actor_system_config {
   CDCFConfig& operator=(const CDCFConfig&) = delete;
 
   double threads_proportion = 1.0;
+  std::string role_ = "";
   std::string log_file_ = "cdcf.log";
   std::string log_level_ = "info";
   uint16_t log_file_size_in_bytes_ = 0;
   uint16_t log_file_number_ = 0;
   bool log_display_filename_and_line_number_ = true;
+  std::string name_ = "node";
+  std::string host_ = "localhost";
 
   enum class RetValue {
     kSuccess = 0,
