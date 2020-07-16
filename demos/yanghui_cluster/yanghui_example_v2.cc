@@ -17,6 +17,7 @@
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "../../logger/include/logger.h"
 #include "./yanghui_config.h"
+#include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/balance_count_cluster.h"
 #include "include/yanghui_actor.h"
@@ -119,6 +120,13 @@ void printRet(int return_value) {
   // std::cout << "call actor return value:" << return_value << std::endl;
 }
 
+caf::behavior result_print_actor(caf::event_based_actor* self) {
+  return {[](int result) {
+    std::cout << "load balance count yanghui complete, get result:" << result
+              << std::endl;
+  }};
+}
+
 void downMsgHandle(const caf::down_msg& downMsg,
                    const std::string& actor_description) {
   std::cout << std::endl;
@@ -146,8 +154,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
-  count_cluster = new ActorUnionCountCluster(
+  auto* actor_cluster = new ActorUnionCountCluster(
       cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+  count_cluster = actor_cluster;
 
   count_cluster->InitWorkerNodes();
 
@@ -184,6 +193,15 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       },
       system);
 
+  auto yanghui_load_balance_result = system.spawn(result_print_actor);
+  auto yanghui_load_balance_get_min =
+      system.spawn(yanghui_get_final_result, actor_cluster->load_balance_,
+                   yanghui_load_balance_result);
+
+  auto yanghui_load_balance_count_path =
+      system.spawn(yanghui_count_path, actor_cluster->load_balance_,
+                   yanghui_load_balance_get_min);
+
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
@@ -200,6 +218,13 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+
+      continue;
+    }
+
+    if (dummy == "b") {
+      std::cout << "start load balance count." << std::endl;
+      caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
 
       continue;
     }
