@@ -20,6 +20,7 @@
 #include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/balance_count_cluster.h"
+#include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
 
@@ -56,7 +57,15 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor3 = system.spawn<typed_slow_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
                              k_yanghui_work_port3);
-  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+  std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
+
+  auto actor_for_load_balance_demo =
+      system.spawn(simple_counter_add_load, cfg.worker_load);
+  system.middleman().publish(
+      caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
+      k_yanghui_work_port4);
+  std::cout << "load balance worker start at port:" << k_yanghui_work_port4
+            << std::endl;
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
@@ -71,6 +80,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
                                      "a actor can calculate for yanghui.");
   actor_status_monitor.RegisterActor(form_actor3, "calculator3",
                                      "a actor can calculate for yanghui.");
+  actor_status_monitor.RegisterActor(
+      actor_for_load_balance_demo, "calculator for load balance",
+      "a actor can calculate for load balance yanghui.");
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
