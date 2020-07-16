@@ -17,7 +17,7 @@ CountCluster::~CountCluster() {
   actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
 }
 
-const std::string k_role_worker = "worker";
+const char k_role_worker[] = "worker";
 
 void CountCluster::InitWorkerNodes() {
   auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
