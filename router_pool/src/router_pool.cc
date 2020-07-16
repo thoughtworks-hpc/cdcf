@@ -4,6 +4,8 @@
 
 #include "./router_pool.h"
 
+#include <unordered_set>
+
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
@@ -33,45 +35,81 @@ void RouterPool::enqueue(caf::mailbox_element_ptr what,
   if (content.match_elements<caf::exit_msg>()) {
     Exit();
   } else if (content.match_elements<caf::down_msg>()) {
-    Down();
-  } else if (content.match_elements<caf::sys_atom, caf::add_atom, std::string,
-                                    uint16_t>()) {
-    bool add_ret =
-        AddNode(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
-    what->sender->enqueue(nullptr, what->mid.response_id(),
-                          caf::make_message(add_ret), host);
-  } else if (content.match_elements<caf::sys_atom, caf::delete_atom,
+    Down(const_cast<caf::down_msg&>(content.get_as<caf::down_msg>(0)));
+  } else if (content.match_elements<caf::sys_atom, caf::add_atom, node_atom,
                                     std::string, uint16_t>()) {
-    auto del_ret =
-        DeleteNode(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
+    // sys add node host port
+    bool ret =
+        AddNode(content.get_as<std::string>(3), content.get_as<uint16_t>(4));
     what->sender->enqueue(nullptr, what->mid.response_id(),
-                          caf::make_message(del_ret), host);
+                          caf::make_message(ret), host);
+  } else if (content.match_elements<caf::sys_atom, caf::delete_atom, node_atom,
+                                    std::string, uint16_t>()) {
+    // sys delete node host port
+    auto ret =
+        DeleteNode(content.get_as<std::string>(3), content.get_as<uint16_t>(4));
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(ret), host);
+  } else if (content
+                 .match_elements<caf::sys_atom, caf::get_atom, node_atom>()) {
+    // sys get node
+    auto ret = GetNode();
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(ret), host);
+  } else if (content
+                 .match_elements<caf::sys_atom, caf::get_atom, actor_atom>()) {
+    // sys get actor
+    auto ret = GetActors();
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(ret), host);
+  } else if (content.match_elements<caf::sys_atom, caf::get_atom, actor_atom,
+                                    std::string, uint16_t>()) {
+    // sys get actor host port
+    auto ret =
+        GetActors(content.get_as<std::string>(3), content.get_as<uint16_t>(4));
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(ret), host);
+  } else if (content
+                 .match_elements<caf::sys_atom, caf::update_atom, size_t>()) {
+    // sys update size
+    auto ret = ModifyMaxPerNode(content.get_as<size_t>(2));
+    what->sender->enqueue(nullptr, what->mid.response_id(),
+                          caf::make_message(ret), host);
   } else if (content.match_elements<caf::sys_atom, caf::update_atom, size_t,
                                     std::string, uint16_t>()) {
-    auto mdf_ret = ModifyMaxPerNode(content.get_as<size_t>(2),
-                                    content.get_as<std::string>(3),
-                                    content.get_as<uint16_t>(4));
+    // sys update size port host
+    auto ret = ModifyMaxPerNode(content.get_as<size_t>(2),
+                                content.get_as<std::string>(3),
+                                content.get_as<uint16_t>(4));
     what->sender->enqueue(nullptr, what->mid.response_id(),
-                          caf::make_message(mdf_ret), host);
-  } else if (content.match_elements<caf::sys_atom, caf::get_atom, std::string,
-                                    uint16_t>()) {
-    auto get_ret =
-        GetActors(content.get_as<std::string>(2), content.get_as<uint16_t>(3));
-    what->sender->enqueue(nullptr, what->mid.response_id(),
-                          caf::make_message(get_ret), host);
+                          caf::make_message(ret), host);
   } else {
     pool_->enqueue(std::move(what), host);
   }
 }
 
-std::string RouterPool::BuildWorkerKey(const std::string& host, uint16_t port) {
+std::string RouterPool::BuildNodeKey(const std::string& host, uint16_t port) {
   if (host.empty()) {
     return "";
   }
   return host + ":" + std::to_string(port);
 }
 
-void RouterPool::Down() { send(pool_, caf::down_msg()); }
+std::tuple<std::string, uint16_t> RouterPool::ParserNodeKey(
+    const std::string& key) {
+  if (key.empty()) {
+    return std::move(std::tuple<std::string, uint16_t>("", 0));
+  }
+  size_t pos = key.find_last_of(':');
+  std::string host = key.substr(0, pos);
+  uint16_t port = (uint16_t)std::stoi(key.substr(pos + 1));
+  return std::tuple<std::string, uint16_t>(host, port);
+}
+
+void RouterPool::Down(caf::down_msg& msg) {
+  DeleteActor(msg.source);
+  send(pool_, msg);
+}
 
 void RouterPool::Exit() { send(pool_, caf::exit_msg()); }
 
@@ -82,7 +120,7 @@ bool RouterPool::AddNode(const std::string& host, uint16_t port) {
       return false;
     }
   }
-  std::string key = BuildWorkerKey(host, port);
+  std::string key = BuildNodeKey(host, port);
   if (nodes_.find(key) != nodes_.end()) {
     return false;
   }
@@ -100,7 +138,7 @@ bool RouterPool::AddNode(const std::string& host, uint16_t port) {
 
 bool RouterPool::DeleteNode(const std::string& host, uint16_t port) {
   std::lock_guard<std::mutex> mutx(actor_lock_);
-  std::string key = BuildWorkerKey(host, port);
+  std::string key = BuildNodeKey(host, port);
   auto node_it = nodes_.find(key);
   if (node_it == nodes_.end()) {
     return false;
@@ -108,25 +146,40 @@ bool RouterPool::DeleteNode(const std::string& host, uint16_t port) {
   auto actors = std::move(node_it->second);
   nodes_.erase(node_it);
   for (const auto& it : actors) {
-    anon_send(pool_, caf::sys_atom(), caf::delete_atom(), it);
+    anon_send(it, caf::exit_reason::user_shutdown);
+    // anon_send(pool_, caf::sys_atom(), caf::delete_atom(), it);
+  }
+  return true;
+}
+
+std::vector<std::string> RouterPool::GetNode() {
+  std::lock_guard<std::mutex> mutx(actor_lock_);
+  std::vector<std::string> result;
+  for (auto& it : nodes_) {
+    result.push_back(it.first);
+  }
+  return std::move(result);
+}
+
+bool RouterPool::ModifyMaxPerNode(size_t size) {
+  default_actor_num_ = size;
+  for (auto& node_it : nodes_) {
+    auto [host, port] = ParserNodeKey(node_it.first);
+    ModifyMaxPerNode(size, host, port);
   }
   return true;
 }
 
 bool RouterPool::ModifyMaxPerNode(size_t size, const std::string& host,
                                   uint16_t port) {
-  std::string key = BuildWorkerKey(host, port);
+  std::string key = BuildNodeKey(host, port);
   auto it = nodes_.find(key);
   if (it == nodes_.end()) {
     return false;
   }
   auto pre_size = it->second.size();
   if (pre_size > size) {
-    for (int i = 0; i < pre_size - size; i++) {
-      if (!DeleteActor(key)) {
-        return false;
-      }
-    }
+    return DeleteActor(key, pre_size - size);
   }
   if (pre_size < size) {
     caf::actor gateway = nullptr;
@@ -145,18 +198,36 @@ bool RouterPool::ModifyMaxPerNode(size_t size, const std::string& host,
   return true;
 }
 
-bool RouterPool::DeleteActor(const std::string& key) {
+bool RouterPool::DeleteActor(caf::actor_addr& actor_addr) {
+  aout(this) << "delete actor : " << actor_addr << "" << std::endl;
+  std::unique_lock<std::mutex> mutx(actor_lock_);
+  for (auto& node_it : nodes_) {
+    for (auto& actor_it : node_it.second) {
+      if (actor_it.address() == actor_addr) {
+        this->demonitor(actor_it);
+        node_it.second.erase(actor_it);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool RouterPool::DeleteActor(const std::string& key, size_t num) {
   std::lock_guard<std::mutex> mutx(actor_lock_);
   auto it = nodes_.find(key);
   if (it == nodes_.end()) {
     return false;
   }
-  std::unordered_set<caf::actor>& actor_set = it->second;
-  if (actor_set.empty()) {
-    return false;
+  auto& actor_set = it->second;
+  size_t count = 0;
+  for (auto& actor : actor_set) {
+    if (count >= num) {
+      break;
+    }
+    anon_send(actor, caf::exit_reason::user_shutdown);
+    count++;
   }
-  auto del_it = actor_set.begin();
-  anon_send(*del_it, caf::exit_reason::user_shutdown);
   return true;
 }
 
@@ -180,7 +251,7 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
     std::promise<caf::actor> promise;
     auto tout = std::chrono::seconds(30);  // wait no longer than 30s
     caf::scoped_actor self(system());
-    self->request(gateway, tout, caf::spawn_atom::value, name_, factory_name_,
+    self->request(gateway, tout, caf::spawn_atom::value, factory_name_,
                   factory_args_, mpi_, name_, description_)
         .receive([&](caf::actor& ret) { promise.set_value(std::move(ret)); },
                  [&](caf::error& err) {
@@ -192,8 +263,8 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
   if (add_actor != nullptr) {
     anon_send(pool_, caf::sys_atom::value, caf::put_atom::value, add_actor);
     actor_set.insert(add_actor);
+    this->monitor(add_actor);
     mutx.unlock();
-    DealOnExit(add_actor, key);
     return true;
   }
   return false;
@@ -212,35 +283,32 @@ caf::actor RouterPool::GetSpawnActor(const std::string& host, uint16_t port) {
   return *gateway;
 }
 
+std::vector<caf::actor> RouterPool::GetActors() {
+  std::unique_lock<std::mutex> ul(actor_lock_);
+  std::vector<caf::actor> result;
+  for (auto& node_it : nodes_) {
+    for (auto& actor_it : node_it.second) {
+      result.push_back(actor_it);
+    }
+  }
+  return std::move(result);
+}
+
 std::vector<caf::actor> RouterPool::GetActors(const std::string& host,
                                               uint16_t port) {
   std::unique_lock<std::mutex> ul(actor_lock_);
-  std::string key = BuildWorkerKey(host, port);
+  std::string key = BuildNodeKey(host, port);
   auto node_it = nodes_.find(key);
   if (node_it == nodes_.end()) {
     return std::vector<caf::actor>();
   }
   auto& actor_set = node_it->second;
   std::vector<caf::actor> result;
+  result.reserve(actor_set.size());
   for (auto& actor : actor_set) {
     result.push_back(actor);
   }
   return std::move(result);
-}
-
-void RouterPool::DealOnExit(const caf::actor& actor, const std::string& key) {
-  actor->attach_functor([&](const caf::error&) {
-    std::lock_guard<std::mutex> mutx(actor_lock_);
-    auto it = nodes_.find(key);
-    if (it == nodes_.end()) {
-      return;
-    }
-    std::unordered_set<caf::actor>& actor_set = it->second;
-    if (actor_set.empty()) {
-      return;
-    }
-    actor_set.erase(actor);
-  });
 }
 
 RouterPool::~RouterPool() {
