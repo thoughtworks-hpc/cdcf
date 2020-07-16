@@ -23,6 +23,15 @@ target_link_libraries(worker_test caf::caf config_manager actor_monitor actor_fa
 add_executable(multiple_actor_test simple_counter.cc yanghui_multiple_actor_test.cc yanghui_sample_actor.cc yanghui_demo_calculator.cc)
 target_link_libraries(multiple_actor_test caf::caf config_manager actor_monitor actor_fault_tolerance actor_system logger)
 
-
+add_executable(${PROJECT_NAME}_router_test
+        yanghui_router_pool.cc
+        count_cluster.cc
+        yanghui_actor.cc
+        yanghui_demo_calculator.cc
+        cdcf_spawn.cc
+        router_pool_count_cluster.cc)
+target_link_libraries(${PROJECT_NAME}_router_test caf::caf)
+target_link_libraries(${PROJECT_NAME}_router_test
+        config_manager actor_monitor actor_fault_tolerance actor_system logger router_pool)
 
 
