@@ -6,30 +6,39 @@ services:
       HOST: node_a
       SEEDS: node_a:4445,node_b:4445
       APP: /bin/cluster
+      LOG_COMMANDS: --log-file=/tmp/log/node_a_test.log --log-level=debug
     ports:
       - 50051:50051
       - 3335:3335
     networks:
       - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
   node_b:
     image: cdcf:latest
     environment:
       HOST: node_b
       SEEDS: node_a:4445,node_b:4445
       APP: /bin/cluster
+      LOG_COMMANDS: --log-file=/tmp/log/node_b_test.log --log-level=debug
     ports:
       - 50052:50051
     networks:
       - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
   node_c:
     image: cdcf:latest
     environment:
       HOST: node_c
       SEEDS: node_a:4445,node_b:4445
       APP: /bin/cluster
+      LOG_COMMANDS: --log-file=/tmp/log/node_c_test.log --log-level=debug
     ports:
       - 50053:50051
     networks:
       - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
 networks:
   cdcf:

@@ -16,6 +16,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  cdcf::Logger::Init(config);
+
   auto seeds = config.GetSeeds();
   if (seeds.size()) {
     std::cout << "seeding with: " << std::endl;
@@ -24,11 +26,10 @@ int main(int argc, char* argv[]) {
     }
   }
   node_keeper::NodeKeeper keeper(config);
-  auto logger = std::make_shared<cdcf::Logger>("node_keeper");
-  PosixProcessManager process_manager(*logger);
+  PosixProcessManager process_manager;
   auto args = ConstructAppArgs(config);
   Daemon daemon(
-      process_manager, *logger, config.app_, args,
+      process_manager, config.app_, args,
       [&keeper]() { keeper.NotifyActorSystemDown(); },
       [&keeper]() { keeper.NotifyLeave(); });
   daemon.Start();
@@ -40,8 +41,13 @@ int main(int argc, char* argv[]) {
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config) {
   std::vector<std::string> args{"--host=" + config.host_,
                                 "--name=" + config.name_};
+
+  if (!config.role_.empty()) {
+    args.push_back("--role=" + config.role_);
+  }
+
   auto parsed = node_keeper::split(config.app_args_, ' ');
-  args.insert(args.begin(), parsed.begin(), parsed.end());
+  args.insert(args.end(), parsed.begin(), parsed.end());
 
   std::cout << "app-args:" << std::endl;
   std::cout << "app-arpg len: " << args.size() << std::endl;

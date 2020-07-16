@@ -6,7 +6,7 @@ input {
 
   filter {
   grok {
-  match => { "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:module}%{DATA} %{DATA}%{WORD:level}%{DATA} %{GREEDYDATA:line}" }
+  match => { "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:level}%{DATA} %{DATA}%{PATH:source}:%{NUMBER:line_num}%{DATA} %{GREEDYDATA:line}" }
   }
 }
 

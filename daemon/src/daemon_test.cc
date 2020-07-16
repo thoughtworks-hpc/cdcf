@@ -8,7 +8,6 @@
 
 class MockProcessManager : public ProcessManager {
  public:
-  explicit MockProcessManager(cdcf::Logger &logger) : ProcessManager(logger) {}
   MOCK_METHOD(std::shared_ptr<void>, NewProcessInfo, (), (override));
   MOCK_METHOD(void, CreateProcess,
               (const std::string &, const std::vector<std::string> &,
@@ -21,11 +20,10 @@ class MockProcessManager : public ProcessManager {
 };
 
 TEST(Daemon, should_guard_process_until_stop_guard) {
-  cdcf::StdoutLogger logger("console");
-  MockProcessManager mock_process_manager(logger);
+  MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
 
-  Daemon d(mock_process_manager, logger, path, {"-l"}, nullptr, nullptr,
+  Daemon d(mock_process_manager, path, {"-l"}, nullptr, nullptr,
            std::chrono::milliseconds(10));
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
@@ -45,10 +43,9 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
 }
 
 TEST(Daemon, should_exit_when_process_not_stable) {
-  cdcf::StdoutLogger logger("console");
-  MockProcessManager mock_process_manager(logger);
+  MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
-  Daemon d(mock_process_manager, logger, path, {"-l"});
+  Daemon d(mock_process_manager, path, {"-l"});
   EXPECT_CALL(mock_process_manager, NewProcessInfo());
   EXPECT_CALL(mock_process_manager,
               InstallSignalHandlersForQuit(testing::_, testing::_));

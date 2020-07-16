@@ -15,8 +15,6 @@ namespace node_keeper {
 
 class NodeKeeper {
   membership::Membership membership_;
-  std::shared_ptr<cdcf::Logger> logger_;
-  const std::string logger_name_ = "node_keeper";
 
  public:
   explicit NodeKeeper(const Config& config);

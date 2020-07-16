@@ -18,6 +18,7 @@ COPY node_keeper node_keeper
 COPY actor_fault_tolerance actor_fault_tolerance
 COPY actor_monitor actor_monitor
 COPY actor_system actor_system
+COPY router_pool router_pool
 COPY logger logger
 COPY demos demos
 COPY cluster_monitor cluster_monitor
