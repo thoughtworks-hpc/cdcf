@@ -168,8 +168,14 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             self->state.count_ = 0;
             self->send(self, end_atom::value);
           } else {
-            std::cout << "finish level: " << self->state.level_
-                      << " with priority: " << is_high_priority << std::endl;
+            if (is_high_priority) {
+              caf::aout(self) << "finish level " << self->state.level_
+                              << " with high priority" << std::endl;
+            } else {
+              caf::aout(self) << "finish level: " << self->state.level_
+                              << " with normal priority: " << std::endl;
+            }
+
             self->state.level_++;
             self->state.count_ = 0;
             self->send(self, start_atom::value);
@@ -182,16 +188,6 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
         self->request(worker, caf::infinite, send_data)
             .await([=](int final_result) {
-              if (is_high_priority) {
-                caf::aout(self)
-                    << "high priority final result: " << final_result
-                    << std::endl;
-              } else {
-                caf::aout(self)
-                    << "normal priority final result: " << final_result
-                    << std::endl;
-              }
-
               if (is_high_priority) {
                 self->send<caf::message_priority::high>(
                     caf::actor_cast<caf::actor>(self->state.triangle_sender_),

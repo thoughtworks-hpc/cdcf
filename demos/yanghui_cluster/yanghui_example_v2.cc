@@ -140,6 +140,8 @@ void dealSendErr(const caf::error& err) {
 
 caf::actor InitHighPriorityYanghuiActors(caf::actor_system& system,
                                          WorkerPool& worker_pool) {
+  worker_pool.Init();
+
   auto yanghui_actor_normal_priority =
       system.spawn(yanghui_with_priority, &worker_pool, false);
   auto yanghui_actor_high_priority =

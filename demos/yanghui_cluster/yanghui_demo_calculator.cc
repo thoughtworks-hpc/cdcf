@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
+
 #include "include/yanghui_demo_calculator.h"
 
 calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
@@ -72,6 +73,29 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
             std::string result;
             result =
                 result + std::to_string(a + b) + ":" + std::to_string(position);
+
+            //            int c = 0;
+            //            for (int n = 0; n < std::numeric_limits<int>::max();
+            //            n++)
+            //              for (int m = 0; m < std::numeric_limits<int>::max();
+            //              m++)
+            //                for (int l = 0; l <
+            //                std::numeric_limits<int>::max(); l++)
+            //                  for (int o = 0; o <
+            //                  std::numeric_limits<int>::max(); o++)
+            //                    for (int p = 0; p <
+            //                    std::numeric_limits<int>::max(); p++) {
+            //                      c++;
+            //                    }
+
+            auto start = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsed_seconds =
+                std::chrono::seconds(0);
+            std::chrono::duration<double> time_limit = std::chrono::seconds(1);
+            while (elapsed_seconds < time_limit) {
+              auto end = std::chrono::steady_clock::now();
+              elapsed_seconds = end - start;
+            }
 
             std::cout << "return: " << result << std::endl;
             return result;
