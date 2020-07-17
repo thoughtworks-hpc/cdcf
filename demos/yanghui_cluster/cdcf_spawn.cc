@@ -19,7 +19,7 @@ caf::behavior CdcfSpawn::make_behavior() {
           const caf::actor_system::mpi& actor_ifs, std::string& reg_name,
           std::string& reg_description) -> caf::actor {
         if (auto res = system().spawn<caf::actor>(actor_type, actor_args,
-                                                  nullptr, false, &actor_ifs)) {
+                                                  nullptr, true, &actor_ifs)) {
           if (monitor_ != nullptr) {
             monitor_->RegisterActor(*res, reg_name, reg_description);
           }
@@ -30,7 +30,7 @@ caf::behavior CdcfSpawn::make_behavior() {
       [&](caf::spawn_atom, std::string& actor_type, caf::message& actor_args,
           const caf::actor_system::mpi& actor_ifs) -> caf::actor {
         if (auto res = system().spawn<caf::actor>(actor_type, actor_args,
-                                                  nullptr, false, &actor_ifs)) {
+                                                  nullptr, true, &actor_ifs)) {
           return *res;
         }
         return nullptr;

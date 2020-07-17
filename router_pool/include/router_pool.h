@@ -33,7 +33,6 @@ class RouterPool : public caf::event_based_actor {
 
  private:
   void Down(caf::down_msg& nsg);
-  void Exit();
   bool AddNode(const std::string& host, uint16_t port);
   bool DeleteNode(const std::string& host, uint16_t port);
   std::vector<std::string> GetNode();
