@@ -11,25 +11,26 @@ caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,
                                        const caf::actor& worker,
                                        const caf::actor& out_data) {
   const int batch = 3;
-  return {[=](const std::vector<int>& data) {
-            int len = data.size();
-            if (1 == len) {
-              // std::cout << "final result:" << data[0] << std::endl;
-              self->send(out_data, data[0]);
-              return;
-            }
+  return {
+      [=](const std::vector<int>& data) {
+        int len = data.size();
+        if (1 == len) {
+          // std::cout << "final result:" << data[0] << std::endl;
+          self->send(out_data, data[0]);
+          return;
+        }
 
-            int count = 0;
-            int more = 0;
+        int count = 0;
+        int more = 0;
 
-            if (0 != len % batch) {
-              more = 1;
-            }
+        if (0 != len % batch) {
+          more = 1;
+        }
 
-            self->state.count = len / batch + more;
-            self->state.current_result.clear();
+        self->state.count = len / batch + more;
+        self->state.current_result.clear();
 
-            for (int i = 0; i < len; i += batch) {
+        for (int i = 0; i < len; i += batch) {
           int endIndex = i + batch < len ? i + batch : len;
           NumberCompareData send_data;
           send_data.numbers =
@@ -60,19 +61,19 @@ caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,
           count++;
         }
       },
-          [=](int result, int id) {
-            if (0 == self->state.current_result.count(id)) {
-              self->state.current_result.emplace(id, result);
-            }
-            if (self->state.count == self->state.current_result.size()) {
-              std::vector<int> newData;
-              for (auto& mapMember : self->state.current_result) {
-                newData.emplace_back(mapMember.second);
-              }
+      [=](int result, int id) {
+        if (0 == self->state.current_result.count(id)) {
+          self->state.current_result.emplace(id, result);
+        }
+        if (self->state.count == self->state.current_result.size()) {
+          std::vector<int> newData;
+          for (auto& mapMember : self->state.current_result) {
+            newData.emplace_back(mapMember.second);
+          }
 
-              self->send(self, newData);
-            }
-          }};
+          self->send(self, newData);
+        }
+      }};
 }
 
 caf::behavior yanghui_count_path(caf::stateful_actor<YanghuiState>* self,
