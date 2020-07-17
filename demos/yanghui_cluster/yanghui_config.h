@@ -6,6 +6,7 @@
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #include <actor_system.h>
 
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,6 +16,8 @@ struct NumberCompareData {
   int index;
   friend bool operator==(const NumberCompareData& lhs,
                          const NumberCompareData& rhs);
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const NumberCompareData& data);
 };
 
 template <class Inspector>

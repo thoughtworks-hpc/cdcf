@@ -178,7 +178,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
   // counter.AddWorkerNode("localhost");
-  // count_cluster->AddWorkerNode("localhost");
+   count_cluster->AddWorkerNode("localhost");
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);

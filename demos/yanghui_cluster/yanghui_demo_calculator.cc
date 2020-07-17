@@ -90,3 +90,11 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
 bool operator==(const NumberCompareData& lhs, const NumberCompareData& rhs) {
   return lhs.numbers == rhs.numbers && lhs.index == rhs.index;
 }
+std::ostream& operator<<(std::ostream& os, const NumberCompareData& data) {
+  os << "numbers: ";
+  for (auto & x : data.numbers) {
+    os << x << " ";
+  }
+  os << " index: " << data.index;
+  return os;
+}

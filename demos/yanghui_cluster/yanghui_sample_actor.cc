@@ -77,21 +77,25 @@ caf::behavior yanghui_count_path(caf::stateful_actor<YanghuiState>* self,
             self->state.index = index;
             self->state.current_result.clear();
 
+            auto sender = caf::actor_cast<caf::strong_actor_ptr>(self->current_sender());
+            auto self_actor = caf::actor_cast<caf::actor>(std::move(sender));
+
             for (int i = 0; i < index + 1; i++) {
               if (0 == i) {
                 self->send(worker, self->state.data[index - 1][0],
-                           self->state.data[index][0], i);
+                           self->state.data[index][0], i, self_actor);
               } else if (i == index) {
                 self->send(worker, self->state.data[index - 1][i - 1],
-                           self->state.data[index][i], i);
+                           self->state.data[index][i], i, self_actor);
               } else {
                 self->send(worker, self->state.data[index - 1][i - 1],
                            self->state.data[index - 1][i],
-                           self->state.data[index][i], i);
+                           self->state.data[index][i], i, self_actor);
               }
             }
           },
           [=](int result, int id) {
+            std::cout << ">>> receive result: " << result << ", id: " << id << std::endl;
             if (0 == self->state.current_result.count(id)) {
               self->state.current_result.emplace(id, result);
             }
