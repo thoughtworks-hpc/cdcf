@@ -22,13 +22,13 @@ class WorkerPool : public actor_system::cluster::Observer {
 
   caf::strong_actor_ptr GetWorker();
 
+ private:
   int AddWorker(const std::string& host);
 
   void Update(const actor_system::cluster::Event& event) override;
 
   void PrintClusterMembers();
 
- private:
   std::vector<caf::strong_actor_ptr> workers_;
   int worker_index_ = 0;
   std::string host_;

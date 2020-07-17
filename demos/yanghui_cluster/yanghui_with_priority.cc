@@ -49,24 +49,24 @@ int WorkerPool::AddWorker(const std::string& host) {
               << std::endl;
     return 1;
   }
-  auto worker2 =
-      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-  if (!worker2) {
-    std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
-              << std::endl;
-    return 1;
-  }
-  auto worker3 =
-      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-  if (!worker3) {
-    std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
-              << std::endl;
-    return 1;
-  }
+  //  auto worker2 =
+  //      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+  //  if (!worker2) {
+  //    std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
+  //              << std::endl;
+  //    return 1;
+  //  }
+  //  auto worker3 =
+  //      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
+  //  if (!worker3) {
+  //    std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
+  //              << std::endl;
+  //    return 1;
+  //  }
 
   workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
-  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
-  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
+  //  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
+  //  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
   return 0;
 }
 
@@ -93,7 +93,7 @@ void WorkerPool::PrintClusterMembers() {
     auto& member = members[i];
     std::cout << "Member " << i + 1 << ": ";
     std::cout << "name: " << member.name << ", hostname: " << member.hostname
-              << ", host: " << member.host << ", port:" << member.port
+              << ", ip: " << member.host << ", port:" << member.port
               << std::endl;
   }
 }
@@ -110,18 +110,11 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         self->state.last_level_results_ =
             std::vector<int>(triangle_data.size(), 0);
         self->state.last_level_results_[0] = triangle_data[0][0];
-        std::cout << "triangle data size original: " << triangle_data.size()
-                  << std::endl;
-        std::cout << "triangle data size before: "
-                  << self->state.triangle_data_.size() << std::endl;
         self->state.triangle_data_.clear();
         for (int k = 0; k < triangle_data.size(); k++) {
           self->state.triangle_data_.emplace_back(triangle_data[k]);
         }
         self->send(self, start_atom::value);
-
-        std::cout << "triangle data size after: "
-                  << self->state.triangle_data_.size() << std::endl;
       },
       [=](start_atom) {
         int i = self->state.level_;
@@ -189,17 +182,15 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         auto worker = caf::actor_cast<calculator>(worker_pool->GetWorker());
         self->request(worker, caf::infinite, send_data)
             .await([=](int final_result) {
-              //              if (is_high_priority) {
-              //                caf::aout(self)
-              //                    << "high priority final result: " <<
-              //                    final_result
-              //                    << std::endl;
-              //              } else {
-              //                caf::aout(self)
-              //                    << "normal priority final result: " <<
-              //                    final_result
-              //                    << std::endl;
-              //              }
+              if (is_high_priority) {
+                caf::aout(self)
+                    << "high priority final result: " << final_result
+                    << std::endl;
+              } else {
+                caf::aout(self)
+                    << "normal priority final result: " << final_result
+                    << std::endl;
+              }
 
               if (is_high_priority) {
                 self->send<caf::message_priority::high>(
@@ -221,19 +212,15 @@ caf::behavior yanghui_job_dispatcher(
             self->state.triangle_sender_ = self->current_sender();
             self->send(target1, triangle_data);
             self->send(target2, triangle_data);
-            std::cout << "send triangle data to two actors finish" << std::endl;
           },
           [=](bool is_high_priority, int result) {
             self->state.result.emplace_back(
                 std::make_pair(is_high_priority, result));
-            std::cout << "get result in job dispatcher: " << is_high_priority
-                      << std::endl;
             if (self->state.result.size() == 2) {
               self->send(
                   caf::actor_cast<caf::actor>(self->state.triangle_sender_),
                   self->state.result);
               self->state.result.clear();
-              std::cout << "send final result to system" << std::endl;
             }
           }};
 }

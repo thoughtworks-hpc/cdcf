@@ -64,10 +64,12 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
             caf::aout(self) << "return: " << result << std::endl;
             return result;
           },
+          // currently, for remotely spawned actor, it seems caf does not
+          // support return types other than c++ primitive types and std::string
           [=](int a, int b, int position) -> std::string {
             std::cout << "received add task. input a:" << a << " b:" << b
                       << std::endl;
-            std::string result = "";
+            std::string result;
             result =
                 result + std::to_string(a + b) + ":" + std::to_string(position);
 

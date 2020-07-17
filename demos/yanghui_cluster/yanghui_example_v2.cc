@@ -138,6 +138,19 @@ void dealSendErr(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
+caf::actor InitHighPriorityYanghuiActors(caf::actor_system& system,
+                                         WorkerPool& worker_pool) {
+  auto yanghui_actor_normal_priority =
+      system.spawn(yanghui_with_priority, &worker_pool, false);
+  auto yanghui_actor_high_priority =
+      system.spawn(yanghui_with_priority, &worker_pool, true);
+  auto yanghui_job_dispatcher_actor =
+      system.spawn(yanghui_job_dispatcher, yanghui_actor_normal_priority,
+                   yanghui_actor_high_priority);
+
+  return yanghui_job_dispatcher_actor;
+}
+
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
@@ -191,15 +204,17 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
   WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
-  worker_pool.Init();
-
-  auto yanghui_actor_normal_priority =
-      system.spawn(yanghui_with_priority, &worker_pool, false);
-  auto yanghui_actor_high_priority =
-      system.spawn(yanghui_with_priority, &worker_pool, true);
+  //  worker_pool.Init();
+  //
+  //  auto yanghui_actor_normal_priority =
+  //      system.spawn(yanghui_with_priority, &worker_pool, false);
+  //  auto yanghui_actor_high_priority =
+  //      system.spawn(yanghui_with_priority, &worker_pool, true);
+  //  auto yanghui_job_dispatcher_actor =
+  //      system.spawn(yanghui_job_dispatcher, yanghui_actor_normal_priority,
+  //                   yanghui_actor_high_priority);
   auto yanghui_job_dispatcher_actor =
-      system.spawn(yanghui_job_dispatcher, yanghui_actor_normal_priority,
-                   yanghui_actor_high_priority);
+      InitHighPriorityYanghuiActors(system, worker_pool);
 
   // start compute
   while (true) {
@@ -236,7 +251,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
       caf::scoped_actor self{system};
-      std::cout << "ready for scoped actor" << std::endl;
 
       self->send(yanghui_job_dispatcher_actor, kYanghuiData2);
       self->receive(
@@ -259,86 +273,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       continue;
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
-}
-
-void StupidRootStart(caf::actor_system& system, const config& cfg) {
-  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
-  worker_pool.Init();
-
-  auto yanghui_actor_normal_priority =
-      system.spawn(yanghui_with_priority, &worker_pool, false);
-  auto yanghui_actor_high_priority =
-      system.spawn(yanghui_with_priority, &worker_pool, true);
-  auto yanghui_job_dispatcher_actor =
-      system.spawn(yanghui_job_dispatcher, yanghui_actor_normal_priority,
-                   yanghui_actor_high_priority);
-
-  std::cout << "yanghui_actor_normal_priority id: "
-            << yanghui_actor_normal_priority.id() << std::endl;
-  std::cout << "yanghui_actor_high_priority id: "
-            << yanghui_actor_high_priority.id() << std::endl;
-
-  std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
-            << std::endl;
-  while (true) {
-    std::cout << "waiting for worker" << std::endl;
-    if (!worker_pool.IsEmpty()) {
-      break;
-    }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-  }
-  caf::scoped_actor self{system};
-  std::cout << "ready for scoped actor" << std::endl;
-
-  //  self->send(yanghui_actor_normal_priority, kYanghuiData2);
-  //  self->send(yanghui_actor_high_priority, kYanghuiData2);
-  //
-  //  std::this_thread::sleep_for(std::chrono::seconds(3));
-
-  self->send(yanghui_job_dispatcher_actor, kYanghuiData2);
-  self->receive(
-      [=](std::vector<std::pair<bool, int>> result) {
-        for (const auto& pair : result) {
-          if (pair.first) {
-            std::cout << "high priority with final result: " << pair.second
-                      << std::endl;
-          } else {
-            std::cout << "normal priority with final result: " << pair.second
-                      << std::endl;
-          }
-        }
-      },
-      [&](caf::error error) {
-        std::cout << "error2: " << system.render(error) << std::endl;
-      });
-  std::cout << "send message to two yanghui actors" << std::endl;
-
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
-  while (true) {
-    std::string dummy;
-    std::getline(std::cin, dummy);
-    std::cout << "in the loop, waiting for q" << std::endl;
-    if (dummy == "q") {
-      std::cout << "stop work" << std::endl;
-      break;
-    }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "end loop" << std::endl;
-  }
-}
-
-void StupidWorkerStart(caf::actor_system& system, const config& cfg) {
-  system.middleman().open(cfg.worker_port, nullptr, true);
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
-  while (true) {
-    std::string dummy;
-    std::getline(std::cin, dummy);
-    if (dummy == "q") {
-      std::cout << "stop work" << std::endl;
-      break;
-    }
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
