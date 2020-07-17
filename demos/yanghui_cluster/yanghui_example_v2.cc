@@ -17,10 +17,12 @@
 #include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "../../logger/include/logger.h"
 #include "./yanghui_config.h"
+#include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/balance_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"
+#include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
 
@@ -57,7 +59,15 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor3 = system.spawn<typed_slow_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
                              k_yanghui_work_port3);
-  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+  std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
+
+  auto actor_for_load_balance_demo =
+      system.spawn(simple_counter_add_load, cfg.worker_load);
+  system.middleman().publish(
+      caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
+      k_yanghui_work_port4);
+  std::cout << "load balance worker start at port:" << k_yanghui_work_port4
+            << ", worker_load:" << cfg.worker_load << std::endl;
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
@@ -75,6 +85,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
                                      "a actor can calculate for yanghui.");
   actor_status_monitor.RegisterActor(form_actor3, "calculator3",
                                      "a actor can calculate for yanghui.");
+  actor_status_monitor.RegisterActor(
+      actor_for_load_balance_demo, "calculator for load balance",
+      "a actor can calculate for load balance yanghui.");
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
@@ -123,6 +136,13 @@ std::vector<std::vector<int>> kYanghuiData2 = {
 void printRet(int return_value) {
   printf("call actor return value: %d\n", return_value);
   // std::cout << "call actor return value:" << return_value << std::endl;
+}
+
+caf::behavior result_print_actor(caf::event_based_actor* self) {
+  return {[](int result) {
+    std::cout << "load balance count yanghui complete, get result:" << result
+              << std::endl;
+  }};
 }
 
 void downMsgHandle(const caf::down_msg& downMsg,
@@ -201,8 +221,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
-  count_cluster = new ActorUnionCountCluster(
+  auto* actor_cluster = new ActorUnionCountCluster(
       cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+  count_cluster = actor_cluster;
 
   count_cluster->InitWorkerNodes();
 
@@ -236,6 +257,15 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       },
       system);
 
+  auto yanghui_load_balance_result = system.spawn(result_print_actor);
+  auto yanghui_load_balance_get_min =
+      system.spawn(yanghui_get_final_result, actor_cluster->load_balance_,
+                   yanghui_load_balance_result);
+
+  auto yanghui_load_balance_count_path =
+      system.spawn(yanghui_count_path, actor_cluster->load_balance_,
+                   yanghui_load_balance_get_min);
+
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
@@ -252,6 +282,13 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       std::cout << "start count." << std::endl;
       // self->send(yanghui_actor, kYanghuiData2);
       actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+      continue;
+    }
+
+    if (dummy == "b") {
+      std::cout << "start load balance count." << std::endl;
+      caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
+
       continue;
     }
 

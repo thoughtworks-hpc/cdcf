@@ -6,6 +6,7 @@
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #include <actor_system.h>
 
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,6 +16,8 @@ struct NumberCompareData {
   int index;
   friend bool operator==(const NumberCompareData& lhs,
                          const NumberCompareData& rhs);
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const NumberCompareData& data);
 };
 
 template <class Inspector>
@@ -63,6 +66,7 @@ class config : public actor_system::Config {
   uint16_t worker_port = 0;
   uint16_t node_keeper_port = 0;
   bool root = false;
+  int worker_load = 0;
 
   config() {
     add_actor_type("calculator", calculator_fun);
@@ -71,6 +75,7 @@ class config : public actor_system::Config {
         .add(root_host, "root_host", "set root node")
         .add(worker_port, "worker_port, w", "set worker port")
         .add(root, "root, r", "set current node be root")
+        .add(worker_load, "load, l", "load balance worker sleep second")
         .add(node_keeper_port, "node_port", "set node keeper port");
     add_message_type<NumberCompareData>("NumberCompareData");
   }

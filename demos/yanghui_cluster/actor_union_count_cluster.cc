@@ -19,6 +19,16 @@ void ActorUnionCountCluster::AddWorkerNode(const std::string& host) {
   AddWorkerNodeWithPort(host, k_yanghui_work_port1);
   AddWorkerNodeWithPort(host, k_yanghui_work_port2);
   AddWorkerNodeWithPort(host, k_yanghui_work_port3);
+
+  auto worker_actor =
+      system_.middleman().remote_actor(host, k_yanghui_work_port4);
+  if (!worker_actor) {
+    std::cout << "connect remote actor failed. host:" << host
+              << ", port:" << k_yanghui_work_port4 << std::endl;
+  }
+
+  caf::anon_send(load_balance_, caf::sys_atom::value, caf::put_atom::value,
+                 *worker_actor);
 }
 
 int ActorUnionCountCluster::AddNumber(int a, int b, int& result) {
