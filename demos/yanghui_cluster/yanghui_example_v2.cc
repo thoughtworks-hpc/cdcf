@@ -65,7 +65,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
       caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
       k_yanghui_work_port4);
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
-            << std::endl;
+            << ", worker_load:" << cfg.worker_load << std::endl;
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
@@ -178,7 +178,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  counter.AddWorkerNode("localhost", k_yanghui_work_port3);
 
   // counter.AddWorkerNode("localhost");
-   count_cluster->AddWorkerNode("localhost");
+  // count_cluster->AddWorkerNode("localhost");
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
