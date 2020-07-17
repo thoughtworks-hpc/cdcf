@@ -33,7 +33,8 @@ void RouterPool::enqueue(caf::mailbox_element_ptr what,
                          caf::execution_unit* host) {
   const auto& content = what->content();
   if (content.match_elements<caf::exit_msg>()) {
-    Exit();
+    send(pool_, caf::exit_msg());
+    caf::event_based_actor::enqueue(std::move(what), host);
   } else if (content.match_elements<caf::down_msg>()) {
     Down(const_cast<caf::down_msg&>(content.get_as<caf::down_msg>(0)));
   } else if (content.match_elements<caf::sys_atom, caf::add_atom, node_atom,
@@ -110,8 +111,6 @@ void RouterPool::Down(caf::down_msg& msg) {
   DeleteActor(msg.source);
   send(pool_, msg);
 }
-
-void RouterPool::Exit() { send(pool_, caf::exit_msg()); }
 
 bool RouterPool::AddNode(const std::string& host, uint16_t port) {
   auto gateway = GetSpawnActor(host, port);
