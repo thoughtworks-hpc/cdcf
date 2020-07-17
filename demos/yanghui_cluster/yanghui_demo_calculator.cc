@@ -92,7 +92,7 @@ bool operator==(const NumberCompareData& lhs, const NumberCompareData& rhs) {
 }
 std::ostream& operator<<(std::ostream& os, const NumberCompareData& data) {
   os << "numbers: ";
-  for (auto & x : data.numbers) {
+  for (auto& x : data.numbers) {
     os << x << " ";
   }
   os << " index: " << data.index;
