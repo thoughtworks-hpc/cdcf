@@ -40,7 +40,9 @@ class ActorUnion {
       std::function<void(caf::error)> handle_error_function,
       uint16_t has_try_time, const send_type&... messages) {
     caf::message send_message = caf::make_message(messages...);
-    sender_actor_->request(pool_actor_, std::chrono::seconds(1), messages...)
+    sender_actor_
+        ->request<caf::message_priority::high>(
+            pool_actor_, std::chrono::seconds(1), messages...)
         .receive(return_function, [=](caf::error err) {
           HandleSendFailed(send_message, return_function, handle_error_function,
                            err, has_try_time);

@@ -254,6 +254,14 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       }
       caf::scoped_actor self{system};
 
+      auto worker1 = worker_pool.GetWorker();
+      auto worker2 = system.spawn(calculator_fun);
+      auto worker3 = system.spawn<CalculatorWithPriority>();
+      self->send<caf::message_priority::high>(
+          caf::actor_cast<calculator>(worker1), 1, 2, 3);
+      self->send<caf::message_priority::high>(worker2, 3, 2, 1);
+      self->send(worker3, "high priority", 4, 5, 6);
+
       self->send(yanghui_job_dispatcher_actor, kYanghuiData2);
       self->receive(
           [=](std::vector<std::pair<bool, int>> result) {
