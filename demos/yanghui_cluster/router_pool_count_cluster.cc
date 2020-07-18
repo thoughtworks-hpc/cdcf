@@ -22,7 +22,7 @@ RouterPoolCountCluster::RouterPoolCountCluster(
 
 void RouterPoolCountCluster::Update(const actor_system::cluster::Event& event) {
   if (event.member.hostname != host_) {
-    if (event.member.status == event.member.Down) {
+    if (event.member.status == event.member.ActorSystemDown) {
       RemoveNode(event.member.host, worker_port_);
       return;
     }
