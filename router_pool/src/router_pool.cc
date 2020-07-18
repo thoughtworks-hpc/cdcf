@@ -198,7 +198,7 @@ bool RouterPool::ModifyMaxPerNode(size_t size, const std::string& host,
 }
 
 bool RouterPool::DeleteActor(caf::actor_addr& actor_addr) {
-  aout(this) << "delete actor : " << actor_addr << "" << std::endl;
+  //  aout(this) << "delete actor : " << actor_addr << "" << std::endl;
   std::unique_lock<std::mutex> mutx(actor_lock_);
   for (auto& node_it : nodes_) {
     for (auto& actor_it : node_it.second) {
@@ -263,7 +263,6 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
     anon_send(pool_, caf::sys_atom::value, caf::put_atom::value, add_actor);
     actor_set.insert(add_actor);
     this->monitor(add_actor);
-    mutx.unlock();
     return true;
   }
   return false;
