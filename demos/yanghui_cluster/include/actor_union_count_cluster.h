@@ -19,9 +19,14 @@ class ActorUnionCountCluster : public CountCluster {
       : CountCluster(host),
         host_(std::move(host)),
         system_(system),
+        context_(&system_),
         port_(port),
         worker_port_(worker_port),
-        counter_(system, caf::actor_pool::round_robin()) {}
+        counter_(system, caf::actor_pool::round_robin()) {
+    auto policy = cdcf::load_balancer::policy::MinLoad(1);
+    load_balance_ =
+        cdcf::load_balancer::Router::Make(&context_, std::move(policy));
+  }
 
   ~ActorUnionCountCluster() override = default;
 
@@ -35,6 +40,8 @@ class ActorUnionCountCluster : public CountCluster {
   uint16_t port_;
   uint16_t worker_port_;
   ActorUnion counter_;
+  caf::scoped_execution_unit context_;
+  caf::actor load_balance_;
 };
 
 #endif  //  DEMOS_YANGHUI_CLUSTER_INCLUDE_ACTOR_UNION_COUNT_CLUSTER_H_

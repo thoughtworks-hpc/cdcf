@@ -158,16 +158,12 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
           }
         }
       },
-      [=](std::string& result_with_position) {
-        int index = result_with_position.find(":");
-        int result = std::stoi(result_with_position.substr(0, index));
-        int position = std::stoi(result_with_position.substr(
-            index + 1, result_with_position.size() - index));
-
+      [=](ResultWithPosition& result_with_position) {
         caf::aout(self) << "level: " << self->state.level_
-                        << " position: " << position
+                        << " position: " << result_with_position.position
                         << " priority: " << is_high_priority << std::endl;
-        self->state.last_level_results_[position] = result;
+        self->state.last_level_results_[result_with_position.position] =
+            result_with_position.result;
         self->state.count_++;
         if (self->state.level_ == self->state.count_ - 1) {
           if (self->state.level_ == self->state.triangle_data_.size() - 1) {
@@ -227,4 +223,3 @@ caf::behavior yanghui_job_dispatcher(
             }
           }};
 }
-

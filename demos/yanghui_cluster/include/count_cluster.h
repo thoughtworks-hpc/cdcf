@@ -14,6 +14,7 @@
 const uint16_t k_yanghui_work_port1 = 55001;
 const uint16_t k_yanghui_work_port2 = 55002;
 const uint16_t k_yanghui_work_port3 = 55003;
+const uint16_t k_yanghui_work_port4 = 55004;
 
 class CountCluster : public actor_system::cluster::Observer,
                      public counter_interface {

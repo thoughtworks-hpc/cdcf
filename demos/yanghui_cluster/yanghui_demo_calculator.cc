@@ -24,7 +24,9 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
         caf::aout(self) << "return: " << result << std::endl;
         return result;
       },
-      [=](int a, int b, int position) -> std::string { return "empty"; },
+      [=](int a, int b, int position) -> ResultWithPosition {
+        return ResultWithPosition();
+      },
       [self, &deal_msg_count, sleep_micro](NumberCompareData& data) -> int {
         ++deal_msg_count;
         if (data.numbers.empty()) {
@@ -68,15 +70,13 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
           },
           // currently, for remotely spawned actor, it seems caf does not
           // support return types other than c++ primitive types and std::string
-          [=](int a, int b, int position) -> std::string {
+          [=](int a, int b, int position) -> ResultWithPosition {
             self->mailbox();
             caf::aout(self)
                 << self->current_mailbox_element()->is_high_priority()
                 << " received add task. input a:" << a << " b:" << b
                 << std::endl;
-            std::string result;
-            result =
-                result + std::to_string(a + b) + ":" + std::to_string(position);
+            ResultWithPosition result = {a + b, position};
 
             auto start = std::chrono::steady_clock::now();
             std::chrono::duration<double> elapsed_seconds =
@@ -88,7 +88,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
               elapsed_seconds = end - start;
             }
 
-            std::cout << "return: " << result << std::endl;
+            std::cout << "return: " << result.result << std::endl;
             return result;
           },
           [=](NumberCompareData& data) -> int {
@@ -118,7 +118,11 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
 bool operator==(const NumberCompareData& lhs, const NumberCompareData& rhs) {
   return lhs.numbers == rhs.numbers && lhs.index == rhs.index;
 }
-
-// caf::behavior CalculatorWithPriority::make_behavior(){
-//
-//}
+std::ostream& operator<<(std::ostream& os, const NumberCompareData& data) {
+  os << "numbers: ";
+  for (auto& x : data.numbers) {
+    os << x << " ";
+  }
+  os << " index: " << data.index;
+  return os;
+}
