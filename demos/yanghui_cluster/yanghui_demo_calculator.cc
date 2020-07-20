@@ -106,3 +106,57 @@ std::ostream& operator<<(std::ostream& os, const NumberCompareData& data) {
   os << " index: " << data.index;
   return os;
 }
+
+caf::behavior CalculatorWithPriority::make_behavior() {
+  return {[=](int a, int b) -> int {
+            caf::aout(this) << "received add task. input a:" << a << " b:" << b
+                            << std::endl;
+
+            int result = a + b;
+            caf::aout(this) << "return: " << result << std::endl;
+            return result;
+          },
+          [=](int a, int b, int position) -> ResultWithPosition {
+            this->mailbox();
+            caf::aout(this)
+                << this->current_mailbox_element()->is_high_priority()
+                << " received add task. input a:" << a << " b:" << b
+                << std::endl;
+            ResultWithPosition result = {a + b, position};
+
+            auto start = std::chrono::steady_clock::now();
+            std::chrono::duration<double> elapsed_seconds =
+                std::chrono::milliseconds(0);
+            std::chrono::duration<double> time_limit =
+                std::chrono::milliseconds(300);
+            while (elapsed_seconds < time_limit) {
+              auto end = std::chrono::steady_clock::now();
+              elapsed_seconds = end - start;
+            }
+
+            std::cout << "return: " << result.result << std::endl;
+            return result;
+          },
+          [=](NumberCompareData& data) -> int {
+            if (data.numbers.empty()) {
+              caf::aout(this) << "get empty compare" << std::endl;
+              return 999;
+            }
+
+            int result = data.numbers[0];
+
+            caf::aout(this) << "received compare task, input: ";
+
+            for (int number : data.numbers) {
+              caf::aout(this) << number << " ";
+              if (number < result) {
+                result = number;
+              }
+            }
+
+            caf::aout(this) << std::endl;
+            caf::aout(this) << "return: " << result << std::endl;
+
+            return result;
+          }};
+}

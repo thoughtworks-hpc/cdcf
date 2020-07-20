@@ -76,61 +76,7 @@ class typed_slow_calculator : public calculator::base {
 class CalculatorWithPriority : public MessagePriorityActor {
  public:
   CalculatorWithPriority(caf::actor_config& cfg) : MessagePriorityActor(cfg){};
-  caf::behavior make_behavior() override {
-    return {
-        [=](int a, int b) -> int {
-          caf::aout(this) << "received add task. input a:" << a << " b:" << b
-                          << std::endl;
-
-          int result = a + b;
-          caf::aout(this) << "return: " << result << std::endl;
-          return result;
-        },
-        // currently, for remotely spawned actor, it seems caf does not
-        // support return types other than c++ primitive types and std::string
-        [=](int a, int b, int position) -> ResultWithPosition {
-          this->mailbox();
-          caf::aout(this) << this->current_mailbox_element()->is_high_priority()
-                          << " received add task. input a:" << a << " b:" << b
-                          << std::endl;
-          ResultWithPosition result = {a + b, position};
-
-          auto start = std::chrono::steady_clock::now();
-          std::chrono::duration<double> elapsed_seconds =
-              std::chrono::milliseconds(0);
-          std::chrono::duration<double> time_limit =
-              std::chrono::milliseconds(300);
-          while (elapsed_seconds < time_limit) {
-            auto end = std::chrono::steady_clock::now();
-            elapsed_seconds = end - start;
-          }
-
-          std::cout << "return: " << result.result << std::endl;
-          return result;
-        },
-        [=](NumberCompareData& data) -> int {
-          if (data.numbers.empty()) {
-            caf::aout(this) << "get empty compare" << std::endl;
-            return 999;
-          }
-
-          int result = data.numbers[0];
-
-          caf::aout(this) << "received compare task, input: ";
-
-          for (int number : data.numbers) {
-            caf::aout(this) << number << " ";
-            if (number < result) {
-              result = number;
-            }
-          }
-
-          caf::aout(this) << std::endl;
-          caf::aout(this) << "return: " << result << std::endl;
-
-          return result;
-        }};
-  }
+  caf::behavior make_behavior() override;
 };
 
 class config : public actor_system::Config {
