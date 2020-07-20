@@ -34,23 +34,23 @@ void GetActorSystemStatus(const std::string& host, uint16_t port) {
 
   if (!status.ok()) {
     std::cout << "get actor system status from（" << host << ":" << port
-              << ") status failed, error message:" << status.error_message()
+              << ") status failed, error message: " << status.error_message()
               << std::endl;
     return;
   }
 
-  std::cout << "Get actor system status from:" << host << ":" << port
+  std::cout << "Get actor system status from: " << host << ":" << port
             << std::endl;
 
   std::cout << std::endl;
-  std::cout << "Actor executor:" << actor_status.actor_worker() << std::endl;
-  std::cout << "Total actor:" << actor_status.actor_infos_size() << std::endl;
+  std::cout << "Actor executor: " << actor_status.actor_worker() << std::endl;
+  std::cout << "Total actor: " << actor_status.actor_infos_size() << std::endl;
   std::cout << std::endl;
 
   for (auto& one_actor_info : actor_status.actor_infos()) {
-    std::cout << " actor:id=(" << one_actor_info.id() << ")" << std::endl;
-    std::cout << "  name:" << one_actor_info.name() << std::endl;
-    std::cout << "  description:" << one_actor_info.description() << std::endl;
+    std::cout << " actor: id=(" << one_actor_info.id() << ")" << std::endl;
+    std::cout << "  name: " << one_actor_info.name() << std::endl;
+    std::cout << "  description: " << one_actor_info.description() << std::endl;
     std::cout << std::endl;
   }
 }
@@ -76,21 +76,21 @@ int GetNodeStatus(const std::string& host) {
   std::cout << "Total node:" << all_node_status.node_status_size() << std::endl;
 
   for (auto& one_node_status : all_node_status.node_status()) {
-    std::cout << "Cluster node ip:" << one_node_status.ip() << std::endl;
+    std::cout << "Cluster node ip: " << one_node_status.ip() << std::endl;
 
     if ("" == one_node_status.error_message()) {
-      std::cout << "  Node name:" << one_node_status.node_name() << std::endl;
-      std::cout << "  Node role:" << one_node_status.node_role() << std::endl;
-      std::cout << "  Cpu use rate:" << one_node_status.cpu_use_rate() * 100
+      std::cout << "  Node name: " << one_node_status.node_name() << std::endl;
+      std::cout << "  Node role: " << one_node_status.node_role() << std::endl;
+      std::cout << "  Cpu use rate: " << one_node_status.cpu_use_rate() * 100
                 << "%" << std::endl;
-      std::cout << "  Memory use rate:" << one_node_status.mem_use_rate() * 100
+      std::cout << "  Memory use rate: " << one_node_status.mem_use_rate() * 100
                 << "%" << std::endl;
-      std::cout << "  Max memory:" << one_node_status.max_memory() << "kB"
+      std::cout << "  Max memory: " << one_node_status.max_memory() << "kB"
                 << std::endl;
-      std::cout << "  Use memory:" << one_node_status.use_memory() << "kB"
+      std::cout << "  Use memory: " << one_node_status.use_memory() << "kB"
                 << std::endl;
     } else {
-      std::cout << " error:" << one_node_status.error_message() << std::endl;
+      std::cout << " error: " << one_node_status.error_message() << std::endl;
     }
 
     std::cout << std::endl;
