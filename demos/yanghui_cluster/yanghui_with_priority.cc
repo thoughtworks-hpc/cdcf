@@ -152,9 +152,15 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         }
       },
       [=](ResultWithPosition& result_with_position) {
-        caf::aout(self) << "level: " << self->state.level_
-                        << " position: " << result_with_position.position
-                        << " priority: " << is_high_priority << std::endl;
+        std::string priority_text;
+        if (is_high_priority) {
+          priority_text = "high";
+        } else {
+          priority_text = "normal";
+        }
+        caf::aout(self) << "received result for level " << self->state.level_
+                        << " at position " << result_with_position.position
+                        << " with priority: " << priority_text << std::endl;
         self->state.last_level_results_[result_with_position.position] =
             result_with_position.result;
         self->state.count_++;

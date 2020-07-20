@@ -117,11 +117,15 @@ caf::behavior CalculatorWithPriority::make_behavior() {
             return result;
           },
           [=](int a, int b, int position) -> ResultWithPosition {
-            this->mailbox();
-            caf::aout(this)
-                << this->current_mailbox_element()->is_high_priority()
-                << " received add task. input a:" << a << " b:" << b
-                << std::endl;
+            if (this->current_message_id().is_urgent_message()) {
+              caf::aout(this)
+                  << "received high priority add task. input a:" << a
+                  << " b:" << b << std::endl;
+            } else {
+              caf::aout(this)
+                  << "received normal priority add task. input a:" << a
+                  << " b:" << b << std::endl;
+            }
             ResultWithPosition result = {a + b, position};
 
             auto start = std::chrono::steady_clock::now();

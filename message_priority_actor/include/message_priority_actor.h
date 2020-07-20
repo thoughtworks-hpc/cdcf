@@ -13,6 +13,11 @@ class MessagePriorityActor : public caf::event_based_actor {
   void enqueue(caf::mailbox_element_ptr ptr, caf::execution_unit* eu) override;
 
  private:
+  bool IsFirstElementString(const caf::message& message);
+  bool IsFirstElementInHighOrNormalPriority(const caf::message& message,
+                                            bool& is_high_priority);
+  void DeleteFirstElement(caf::message& message);
+  void AddMessageIdWithHighPriority(caf::message_id& id);
 };
 
 #endif  // CDCF_MESSAGE_PRIORITY_ACTOR_H
