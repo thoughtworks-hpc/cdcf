@@ -22,9 +22,13 @@ int WorkerPool::Init() {
   return 0;
 }
 
-bool WorkerPool::IsEmpty() { return workers_.empty(); }
+bool WorkerPool::IsEmpty() {
+  std::shared_lock lock(workers_mutex_);
+  return workers_.empty();
+}
 
 caf::strong_actor_ptr WorkerPool::GetWorker() {
+  std::shared_lock lock(workers_mutex_);
   if (workers_.empty()) {
     return caf::strong_actor_ptr();
   }
@@ -32,7 +36,7 @@ caf::strong_actor_ptr WorkerPool::GetWorker() {
     worker_index_ = 0;
     return workers_[workers_.size() - 1];
   }
-  auto worker_index_to_return = worker_index_;
+  auto worker_index_to_return = worker_index_.load();
   worker_index_++;
   return workers_[worker_index_to_return];
 }
@@ -55,6 +59,8 @@ int WorkerPool::AddWorker(const std::string& host) {
   }
   std::cout << "add worker for calculator with priority on host: " << host
             << std::endl;
+
+  std::unique_lock lock(workers_mutex_);
   workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
 
   return 0;
@@ -63,9 +69,8 @@ int WorkerPool::AddWorker(const std::string& host) {
 void WorkerPool::Update(const actor_system::cluster::Event& event) {
   if (event.member.hostname != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
-      //         std::this_thread::sleep_for(std::chrono::seconds(2));
       AddWorker(event.member.host);
-      PrintClusterMembers();
+      //      PrintClusterMembers();
     } else if (event.member.status == event.member.Down) {
       std::cout << "detect worker node down, host:" << event.member.host
                 << " port:" << event.member.port << std::endl;

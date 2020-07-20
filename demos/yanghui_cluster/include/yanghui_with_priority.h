@@ -5,6 +5,10 @@
 #ifndef CDCF_YANGHUI_WITH_PRIORITY_H
 #define CDCF_YANGHUI_WITH_PRIORITY_H
 
+#include <atomic>
+#include <mutex>
+#include <shared_mutex>
+
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
@@ -29,8 +33,9 @@ class WorkerPool : public actor_system::cluster::Observer {
 
   void PrintClusterMembers();
 
+  mutable std::shared_mutex workers_mutex_;
   std::vector<caf::strong_actor_ptr> workers_;
-  int worker_index_ = 0;
+  std::atomic<int> worker_index_ = 0;
   std::string host_;
   caf::actor_system& system_;
   uint16_t worker_port_;
