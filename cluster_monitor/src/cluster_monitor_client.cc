@@ -14,7 +14,7 @@ class ClientConfig : public CDCFConfig {
 
   ClientConfig() {
     opt_group{custom_options_, "global"}
-        .add(server_host, "host,H",
+        .add(server_host, "server_host,S",
              "server ip and port, example: 10.13.2.2:50051")
         .add(actor_node_host, "node,N", "get one node actor system status")
         .add(port, "port,P",
@@ -79,6 +79,8 @@ int GetNodeStatus(const std::string& host) {
     std::cout << "Cluster node ip:" << one_node_status.ip() << std::endl;
 
     if ("" == one_node_status.error_message()) {
+      std::cout << "  Node name:" << one_node_status.node_name() << std::endl;
+      std::cout << "  Node role:" << one_node_status.node_role() << std::endl;
       std::cout << "  Cpu use rate:" << one_node_status.cpu_use_rate() * 100
                 << "%" << std::endl;
       std::cout << "  Memory use rate:" << one_node_status.mem_use_rate() * 100

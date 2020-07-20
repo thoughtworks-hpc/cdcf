@@ -20,7 +20,9 @@ message NodeStatus {
     uint64 max_memory = 3;
     uint64 use_memory = 4;
     string ip = 5;
-    string error_message = 6;
+    string node_name = 6;
+    string node_role = 7;
+    string error_message = 8;
 }
 
 message AllNodeStatus {
