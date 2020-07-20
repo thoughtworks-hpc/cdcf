@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "./include/priority_actor.h"
+#include "../../message_priority_actor/include/message_priority_actor.h"
 
 struct NumberCompareData {
   std::vector<int> numbers;
@@ -42,7 +42,7 @@ typename Inspector::result_type inspect(Inspector& f,
 using calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<int>,
                      caf::replies_to<NumberCompareData>::with<int>,
-                     caf::replies_to<int, int, int>::with<std::string> >;
+                     caf::replies_to<int, int, int>::with<ResultWithPosition> >;
 
 calculator::behavior_type calculator_fun(calculator::pointer self);
 
@@ -73,9 +73,9 @@ class typed_slow_calculator : public calculator::base {
   std::atomic_int deal_msg_count = 0;
 };
 
-class CalculatorWithPriority : public PriorityActor {
+class CalculatorWithPriority : public MessagePriorityActor {
  public:
-  CalculatorWithPriority(caf::actor_config& cfg) : PriorityActor(cfg){};
+  CalculatorWithPriority(caf::actor_config& cfg) : MessagePriorityActor(cfg){};
   caf::behavior make_behavior() override {
     return {
         [=](int a, int b) -> int {
@@ -88,14 +88,12 @@ class CalculatorWithPriority : public PriorityActor {
         },
         // currently, for remotely spawned actor, it seems caf does not
         // support return types other than c++ primitive types and std::string
-        [=](int a, int b, int position) -> std::string {
+        [=](int a, int b, int position) -> ResultWithPosition {
           this->mailbox();
           caf::aout(this) << this->current_mailbox_element()->is_high_priority()
                           << " received add task. input a:" << a << " b:" << b
                           << std::endl;
-          std::string result;
-          result =
-              result + std::to_string(a + b) + ":" + std::to_string(position);
+          ResultWithPosition result = {a + b, position};
 
           auto start = std::chrono::steady_clock::now();
           std::chrono::duration<double> elapsed_seconds =
@@ -107,7 +105,7 @@ class CalculatorWithPriority : public PriorityActor {
             elapsed_seconds = end - start;
           }
 
-          std::cout << "return: " << result << std::endl;
+          std::cout << "return: " << result.result << std::endl;
           return result;
         },
         [=](NumberCompareData& data) -> int {

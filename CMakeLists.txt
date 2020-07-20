@@ -19,5 +19,6 @@ add_subdirectory(actor_fault_tolerance)
 add_subdirectory(cluster_monitor)
 add_subdirectory(daemon)
 add_subdirectory(router_pool)
+add_subdirectory(message_priority_actor)
 
 

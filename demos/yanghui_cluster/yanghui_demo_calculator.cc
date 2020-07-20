@@ -68,28 +68,8 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
             caf::aout(self) << "return: " << result << std::endl;
             return result;
           },
-          // currently, for remotely spawned actor, it seems caf does not
-          // support return types other than c++ primitive types and std::string
           [=](int a, int b, int position) -> ResultWithPosition {
-            self->mailbox();
-            caf::aout(self)
-                << self->current_mailbox_element()->is_high_priority()
-                << " received add task. input a:" << a << " b:" << b
-                << std::endl;
-            ResultWithPosition result = {a + b, position};
-
-            auto start = std::chrono::steady_clock::now();
-            std::chrono::duration<double> elapsed_seconds =
-                std::chrono::milliseconds(0);
-            std::chrono::duration<double> time_limit =
-                std::chrono::milliseconds(300);
-            while (elapsed_seconds < time_limit) {
-              auto end = std::chrono::steady_clock::now();
-              elapsed_seconds = end - start;
-            }
-
-            std::cout << "return: " << result.result << std::endl;
-            return result;
+            return ResultWithPosition();
           },
           [=](NumberCompareData& data) -> int {
             if (data.numbers.empty()) {

@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include "./include/priority_actor.h"
+#include "../include/message_priority_actor.h"
 
-void PriorityActor::enqueue(caf::mailbox_element_ptr ptr,
-                            caf::execution_unit *eu) {
+void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
+                                   caf::execution_unit *eu) {
   auto message = ptr->copy_content_to_message();
   auto message_id = ptr->mid;
 

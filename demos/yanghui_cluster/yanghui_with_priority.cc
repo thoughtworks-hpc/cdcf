@@ -213,6 +213,14 @@ caf::behavior yanghui_job_dispatcher(
             self->send(target2, triangle_data);
           },
           [=](bool is_high_priority, int result) {
+            auto time_now = std::chrono::steady_clock::now();
+            if (is_high_priority) {
+              caf::aout(self)
+                  << "high priority job finished at: " << time_now << std::endl;
+            } else {
+              caf::aout(self) << "normal priority job finished at: " << time_now
+                              << std::endl;
+            }
             self->state.result.emplace_back(
                 std::make_pair(is_high_priority, result));
             if (self->state.result.size() == 2) {
