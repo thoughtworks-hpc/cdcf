@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_MESSAGE_PRIORITY_ACTOR_H
-#define CDCF_MESSAGE_PRIORITY_ACTOR_H
+#ifndef MESSAGE_PRIORITY_ACTOR_INCLUDE_MESSAGE_PRIORITY_ACTOR_H_
+#define MESSAGE_PRIORITY_ACTOR_INCLUDE_MESSAGE_PRIORITY_ACTOR_H_
 
 #include <caf/all.hpp>
 
@@ -12,7 +12,8 @@ using normal_priority_atom = caf::atom_constant<caf::atom("normal_pri")>;
 
 class MessagePriorityActor : public caf::event_based_actor {
  public:
-  MessagePriorityActor(caf::actor_config& cfg) : event_based_actor(cfg){};
+  explicit MessagePriorityActor(caf::actor_config& cfg)
+      : event_based_actor(cfg) {}
   void enqueue(caf::mailbox_element_ptr ptr, caf::execution_unit* eu) override;
 
  private:
@@ -22,4 +23,4 @@ class MessagePriorityActor : public caf::event_based_actor {
   void AddMessageIdWithHighPriority(caf::message_id& id);
 };
 
-#endif  // CDCF_MESSAGE_PRIORITY_ACTOR_H
+#endif  // MESSAGE_PRIORITY_ACTOR_INCLUDE_MESSAGE_PRIORITY_ACTOR_H_

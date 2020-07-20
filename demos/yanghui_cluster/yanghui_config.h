@@ -75,7 +75,8 @@ class typed_slow_calculator : public calculator::base {
 
 class CalculatorWithPriority : public MessagePriorityActor {
  public:
-  CalculatorWithPriority(caf::actor_config& cfg) : MessagePriorityActor(cfg){};
+  explicit CalculatorWithPriority(caf::actor_config& cfg)
+      : MessagePriorityActor(cfg) {}
   caf::behavior make_behavior() override;
 };
 

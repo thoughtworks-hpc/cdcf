@@ -2,12 +2,15 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_YANGHUI_WITH_PRIORITY_H
-#define CDCF_YANGHUI_WITH_PRIORITY_H
+#ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_WITH_PRIORITY_H_
+#define DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_WITH_PRIORITY_H_
 
 #include <atomic>
 #include <mutex>
 #include <shared_mutex>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
@@ -65,4 +68,4 @@ caf::behavior yanghui_job_dispatcher(
     caf::stateful_actor<dispatcher_state>* self, caf::actor target1,
     caf::actor target2);
 
-#endif  // CDCF_YANGHUI_WITH_PRIORITY_H
+#endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_WITH_PRIORITY_H_
