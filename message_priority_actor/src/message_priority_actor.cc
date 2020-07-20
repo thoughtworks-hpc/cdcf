@@ -7,14 +7,15 @@ void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
                                    caf::execution_unit* eu) {
   auto message = ptr->copy_content_to_message();
   auto message_id = ptr->mid;
-  bool is_high_priority = false;
 
-  if (IsFirstElementString(message) &&
-      IsFirstElementInHighOrNormalPriority(message, is_high_priority)) {
+  if (IsFirstElementHighPriorityAtom(message)) {
     DeleteFirstElement(message);
-    if (is_high_priority) {
-      AddMessageIdWithHighPriority(message_id);
-    }
+    AddMessageIdWithHighPriority(message_id);
+    auto element =
+        make_mailbox_element(ptr->sender, message_id, ptr->stages, message);
+    scheduled_actor::enqueue(std::move(element), eu);
+  } else if (IsFirstElementNormalPriorityAtom(message)) {
+    DeleteFirstElement(message);
     auto element =
         make_mailbox_element(ptr->sender, message_id, ptr->stages, message);
     scheduled_actor::enqueue(std::move(element), eu);
@@ -23,18 +24,14 @@ void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
   }
 }
 
-bool MessagePriorityActor::IsFirstElementString(const caf::message& message) {
-  return message.match_element<std::string>(0);
+bool MessagePriorityActor::IsFirstElementHighPriorityAtom(
+    const caf::message& message) {
+  return message.match_element<high_priority_atom>(0);
 }
 
-bool MessagePriorityActor::IsFirstElementInHighOrNormalPriority(
-    const caf::message& message, bool& is_high_priority) {
-  auto priority = message.get_as<std::string>(0);
-  if (priority == "high priority") {
-    is_high_priority = true;
-  }
-
-  return (priority == "high priority" || priority == "normal priority");
+bool MessagePriorityActor::IsFirstElementNormalPriorityAtom(
+    const caf::message& message) {
+  return message.match_element<normal_priority_atom>(0);
 }
 
 void MessagePriorityActor::DeleteFirstElement(caf::message& message) {

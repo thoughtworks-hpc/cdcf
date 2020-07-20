@@ -211,9 +211,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_monitor.RegisterActor(pool_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
-  std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
-            << std::endl;
-
   auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
 
@@ -257,7 +254,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
-  std::cout << "yanghui server ready to work, press 'n' to go, 'q' to stop"
+  std::cout << "yanghui server ready to work, press 'n', 'p', 'b' or 'e' to "
+               "go, 'q' to stop"
             << std::endl;
 
   auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
