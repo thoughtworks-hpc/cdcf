@@ -66,6 +66,8 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
     auto new_node_status = response->add_node_status();
 
     if (status.ok()) {
+      new_node_status->set_node_name(member.GetNodeName());
+      new_node_status->set_node_role(member.GetRole());
       new_node_status->set_max_memory(resp.max_memory());
       new_node_status->set_use_memory(resp.use_memory());
       new_node_status->set_mem_use_rate(resp.mem_use_rate());
