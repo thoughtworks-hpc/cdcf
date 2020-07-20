@@ -23,6 +23,7 @@ COPY logger logger
 COPY demos demos
 COPY cluster_monitor cluster_monitor
 COPY daemon daemon
+COPY message_priority_actor message_priority_actor
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
     && cmake --build . -j 4
 

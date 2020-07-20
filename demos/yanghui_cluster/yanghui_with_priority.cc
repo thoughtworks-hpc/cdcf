@@ -32,7 +32,9 @@ caf::strong_actor_ptr WorkerPool::GetWorker() {
     worker_index_ = 0;
     return workers_[workers_.size() - 1];
   }
-  return workers_[worker_index_++];
+  auto worker_index_to_return = worker_index_;
+  worker_index_++;
+  return workers_[worker_index_to_return];
 }
 
 int WorkerPool::AddWorker(const std::string& host) {
@@ -51,24 +53,10 @@ int WorkerPool::AddWorker(const std::string& host) {
               << std::endl;
     return 1;
   }
-  //  auto worker2 =
-  //      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-  //  if (!worker2) {
-  //    std::cerr << "*** remote spawn failed: " << to_string(worker2.error())
-  //              << std::endl;
-  //    return 1;
-  //  }
-  //  auto worker3 =
-  //      system_.middleman().remote_spawn<calculator>(*node, type, args, tout);
-  //  if (!worker3) {
-  //    std::cerr << "*** remote spawn failed: " << to_string(worker3.error())
-  //              << std::endl;
-  //    return 1;
-  //  }
-
+  std::cout << "add worker for calculator with priority on host: " << host
+            << std::endl;
   workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
-  //  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker2));
-  //  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker3));
+
   return 0;
 }
 
