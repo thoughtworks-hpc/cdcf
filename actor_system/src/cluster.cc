@@ -29,6 +29,18 @@ class ClusterImpl {
     thread_ = std::thread(&ClusterImpl::Routine, this);
   }
 
+  ClusterImpl(const std::string& host_ip, uint16_t port) {
+    const std::string& host{host_ip};
+    auto address = host + ":" + std::to_string(port);
+    auto channel =
+        grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
+    auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);
+    channel->WaitForConnected(deadline);
+    stub_ = NodeKeeper::NewStub(channel);
+    Fetch();
+    thread_ = std::thread(&ClusterImpl::Routine, this);
+  }
+
   ~ClusterImpl() {
     stop_ = true;
     if (thread_.joinable()) {
@@ -133,9 +145,24 @@ Cluster* Cluster::GetInstance() {
   return &*instance_;
 }
 
+Cluster* Cluster::GetInstance(const std::string& host_ip, uint16_t port) {
+  if (instance_) {
+    return &*instance_;
+  }
+  std::lock_guard lock(instance_mutex_);
+  if (instance_) {
+    return &*instance_;
+  }
+  instance_.reset(new Cluster(host_ip, port));
+  return &*instance_;
+}
+
 std::vector<Member> Cluster::GetMembers() { return impl_->GetMembers(); }
 
 Cluster::Cluster() : impl_(std::make_unique<ClusterImpl>()) {}
+
+Cluster::Cluster(const std::string& host_ip, uint16_t port)
+    : impl_(std::make_unique<ClusterImpl>(host_ip, port)) {}
 
 Cluster::~Cluster() {}
 

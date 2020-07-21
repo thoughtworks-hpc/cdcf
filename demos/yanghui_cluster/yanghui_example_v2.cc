@@ -19,12 +19,10 @@
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
-#include "include/balance_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"
 #include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
-#include "include/yanghui_demo_calculator.h"
 #include "include/yanghui_with_priority.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
@@ -204,8 +202,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto policy = caf::actor_pool::round_robin();
   size_t default_size = 3;
   auto pool_cluster = new RouterPoolCountCluster(
-      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port, routee_name,
-      routee_args, routee_ifs, default_size, policy);
+      cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
+      cfg.worker_port, routee_name, routee_args, routee_ifs, default_size,
+      policy);
   pool_cluster->InitWorkerNodes();
   auto pool_actor = system.spawn(yanghui, pool_cluster);
   actor_status_monitor.RegisterActor(pool_actor, "Yanghui",
@@ -236,8 +235,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
-  auto* actor_cluster = new ActorUnionCountCluster(
-      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+  auto* actor_cluster =
+      new ActorUnionCountCluster(cfg.root_host, system, cfg.node_keeper_host,
+                                 cfg.node_keeper_port, cfg.worker_port);
   count_cluster = actor_cluster;
 
   count_cluster->InitWorkerNodes();

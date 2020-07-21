@@ -4,14 +4,14 @@
 #include "include/router_pool_count_cluster.h"
 
 RouterPoolCountCluster::RouterPoolCountCluster(
-    std::string host, caf::actor_system& system, uint16_t port,
+    std::string host, caf::actor_system& system,
+    const std::string& node_keeper_host, uint16_t node_keeper_port,
     uint16_t worker_port, std::string& routee_name, caf::message& routee_args,
     caf::actor_system::mpi& routee_ifs, size_t& default_actor_num,
     caf::actor_pool::policy& policy)
-    : CountCluster(host),
+    : CountCluster(host, node_keeper_host, node_keeper_port),
       host_(std::move(host)),
       system_(system),
-      port_(port),
       worker_port_(worker_port) {
   std::string pool_name = "pool name";
   std::string pool_description = "pool description";
@@ -171,3 +171,4 @@ bool RouterPoolCountCluster::AddNode(const std::string& host, uint16_t port) {
                [&](const caf::error& err) { result.set_value(false); });
   return result.get_future().get();
 }
+RouterPoolCountCluster::~RouterPoolCountCluster() {}
