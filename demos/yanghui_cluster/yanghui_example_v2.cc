@@ -286,15 +286,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
   WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
-  //  worker_pool.Init();
-  //
-  //  auto yanghui_actor_normal_priority =
-  //      system.spawn(yanghui_with_priority, &worker_pool, false);
-  //  auto yanghui_actor_high_priority =
-  //      system.spawn(yanghui_with_priority, &worker_pool, true);
-  //  auto yanghui_job_dispatcher_actor =
-  //      system.spawn(yanghui_job_dispatcher, yanghui_actor_normal_priority,
-  //                   yanghui_actor_high_priority);
+
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
 
@@ -339,14 +331,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
       }
       caf::scoped_actor self{system};
-
-      auto worker1 = worker_pool.GetWorker();
-      auto worker2 = system.spawn(calculator_fun);
-      auto worker3 = system.spawn<CalculatorWithPriority>();
-      self->send<caf::message_priority::high>(
-          caf::actor_cast<calculator>(worker1), 1, 2, 3);
-      self->send<caf::message_priority::high>(worker2, 3, 2, 1);
-      self->send(worker3, "high priority", 4, 5, 6);
 
       self->send(yanghui_job_dispatcher_actor, kYanghuiData2);
       self->receive(

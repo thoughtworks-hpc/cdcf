@@ -117,37 +117,33 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
           auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
           if (j == 0) {
             if (is_high_priority) {
-              self->send<caf::message_priority::high>(
-                  worker, high_priority_atom::value,
-                  self->state.last_level_results_[0],
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker, high_priority_atom::value,
+                         self->state.last_level_results_[0],
+                         self->state.triangle_data_[i][j], j);
             } else {
               self->send(worker, self->state.last_level_results_[0],
                          self->state.triangle_data_[i][j], j);
             }
           } else if (j == i) {
             if (is_high_priority) {
-              self->send<caf::message_priority::high>(
-                  worker, high_priority_atom::value,
-                  self->state.last_level_results_[j - 1],
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker, high_priority_atom::value,
+                         self->state.last_level_results_[j - 1],
+                         self->state.triangle_data_[i][j], j);
             } else {
               self->send(worker, self->state.last_level_results_[j - 1],
                          self->state.triangle_data_[i][j], j);
             }
           } else {
             if (is_high_priority) {
-              self->send<caf::message_priority::high>(
-                  worker, high_priority_atom::value,
-                  std::min(self->state.last_level_results_[j - 1],
-                           self->state.last_level_results_[j]),
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker, high_priority_atom::value,
+                         std::min(self->state.last_level_results_[j - 1],
+                                  self->state.last_level_results_[j]),
+                         self->state.triangle_data_[i][j], j);
             } else {
-              self->send<caf::message_priority::normal>(
-                  worker,
-                  std::min(self->state.last_level_results_[j - 1],
-                           self->state.last_level_results_[j]),
-                  self->state.triangle_data_[i][j], j);
+              self->send(worker,
+                         std::min(self->state.last_level_results_[j - 1],
+                                  self->state.last_level_results_[j]),
+                         self->state.triangle_data_[i][j], j);
             }
           }
         }
