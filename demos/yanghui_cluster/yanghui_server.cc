@@ -4,9 +4,41 @@
 
 #include "./include/yanghui_server.h"
 
-yanghui_job_compare_actor::behavior_type yanghui_job_compare_actor_fun(
-    yanghui_job_compare_actor::pointer self) {
-  return {[=](const std::vector<std::vector<int>>& yanghui_data) { return 1; }};
+yanghui_compare_job_actor::behavior_type yanghui_compare_job_actor_fun(
+    yanghui_compare_job_actor::pointer self) {
+  return {[=](const std::vector<std::vector<int>>& yanghui_data) {
+    int n = yanghui_data.size();
+    int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+    int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+
+    states[0] = 1;
+    states[0] = yanghui_data[0][0];
+    int i, j, k, min_sum = INT_MAX;
+    for (i = 1; i < n; i++) {
+      for (j = 0; j < i + 1; j++) {
+        if (j == 0) {
+          temp_states[0] = states[0] + yanghui_data[i][j];
+        } else if (j == i) {
+          temp_states[j] = states[j - 1] + yanghui_data[i][j];
+        } else {
+          temp_states[j] =
+              std::min(states[j - 1], states[j]) + yanghui_data[i][j];
+        }
+      }
+
+      for (k = 0; k < i + 1; k++) {
+        states[k] = temp_states[k];
+      }
+    }
+
+    for (j = 0; j < n; j++) {
+      if (states[j] < min_sum) min_sum = states[j];
+    }
+
+    free(temp_states);
+    free(states);
+    return min_sum;
+  }};
 }
 
 yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
@@ -52,7 +84,7 @@ yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
             auto result_pair_2 = result[1];
 
             if (result_pair_1.first != true) {
-              // return false
+              return false;
             }
 
             // TODO: add compare function and return
@@ -70,12 +102,12 @@ void ErrorHandler(const caf::error& err) {
 }
 
 yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
-    yanghui_standard_job_actor::pointer self, ActorGuard& actor_guard) {
+    yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             caf::aout(self) << "start count." << std::endl;
             //      actor_guard.SendAndReceive(printRet, dealSendErr,
             //      yanghui_data);
-            actor_guard.SendAndReceive(
+            actor_guard->SendAndReceive(
                 [&](int return_value) { self->send(self, return_value); },
                 ErrorHandler, yanghui_data);
           },

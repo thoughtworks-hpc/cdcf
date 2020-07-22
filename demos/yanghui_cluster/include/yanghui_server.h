@@ -28,12 +28,12 @@ using yanghui_standard_job_actor =
                      caf::reacts_to<int>>;
 
 yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
-    yanghui_standard_job_actor::pointer self, ActorGuard& actor_guard);
+    yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard);
 
-using yanghui_job_compare_actor =
+using yanghui_compare_job_actor =
     caf::typed_actor<caf::replies_to<std::vector<std::vector<int>>>::with<int>>;
 
-yanghui_job_compare_actor::behavior_type yanghui_job_compare_actor_fun(
-    yanghui_job_compare_actor::pointer self);
+yanghui_compare_job_actor::behavior_type yanghui_compare_job_actor_fun(
+    yanghui_compare_job_actor::pointer self);
 
 #endif  // CDCF_YANGHUI_SERVER_H
