@@ -26,13 +26,16 @@ int main(int argc, char* argv[]) {
     }
   }
   node_keeper::NodeKeeper keeper(config);
-  PosixProcessManager process_manager;
-  auto args = ConstructAppArgs(config);
-  Daemon daemon(
-      process_manager, config.app_, args,
-      [&keeper]() { keeper.NotifyActorSystemDown(); },
-      [&keeper]() { keeper.NotifyLeave(); });
-  daemon.Start();
+
+  if (!config.single_run_){
+    PosixProcessManager process_manager;
+    auto args = ConstructAppArgs(config);
+    Daemon daemon(
+        process_manager, config.app_, args,
+        [&keeper]() { keeper.NotifyActorSystemDown(); },
+        [&keeper]() { keeper.NotifyLeave(); });
+    daemon.Start();
+  }
 
   keeper.Run();
   return 0;
