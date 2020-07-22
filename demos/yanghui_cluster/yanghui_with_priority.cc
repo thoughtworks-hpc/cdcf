@@ -22,7 +22,7 @@ int WorkerPool::Init() {
   return 0;
 }
 
-bool WorkerPool::IsEmpty() {
+bool WorkerPool::IsEmpty() const {
   std::shared_lock lock(workers_mutex_);
   return workers_.empty();
 }

@@ -12,7 +12,8 @@ include_directories(../../config_manager/include)
 add_executable(${PROJECT_NAME}_root_v2 yanghui_example_v2.cc count_cluster.cc balance_count_cluster.cc actor_union_count_cluster.cc yanghui_actor.cc yanghui_demo_calculator.cc
         cdcf_spawn.cc
         router_pool_count_cluster.cc yanghui_sample_actor.cc simple_counter.cc
-        yanghui_with_priority.cc)
+        yanghui_with_priority.cc
+        yanghui_server.cc)
 
 target_link_libraries(${PROJECT_NAME}_root_v2 caf::caf)
 target_link_libraries(${PROJECT_NAME}_root_v2 config_manager actor_monitor actor_fault_tolerance actor_system logger router_pool message_priority_actor)

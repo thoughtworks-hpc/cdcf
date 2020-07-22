@@ -25,6 +25,7 @@
 #include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
+#include "include/yanghui_server.h"
 #include "include/yanghui_with_priority.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
@@ -289,6 +290,13 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
+
+  auto yanghui_priority_job_actor =
+      system.spawn(yanghui_priority_job_actor_fun, worker_pool,
+                   yanghui_job_dispatcher_actor);
+
+  auto yanghui_standard_job_actor =
+      system.spawn(yanghui_standard_job_actor_fun, actor_guard);
 
   // start compute
   while (true) {

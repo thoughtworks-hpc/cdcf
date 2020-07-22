@@ -25,7 +25,7 @@ class WorkerPool : public actor_system::cluster::Observer {
 
   int Init();
 
-  bool IsEmpty();
+  bool IsEmpty() const;
 
   caf::strong_actor_ptr GetWorker();
 
