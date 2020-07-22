@@ -4,21 +4,27 @@
 
 #include "./include/yanghui_server.h"
 
-yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_job_actor::pointer self, WorkerPool& worker_pool,
-    caf::actor& dispatcher) {
+yanghui_job_compare_actor::behavior_type yanghui_job_compare_actor_fun(
+    yanghui_job_compare_actor::pointer self) {
+  return {[=](const std::vector<std::vector<int>>& yanghui_data) { return 1; }};
+}
+
+yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
+    yanghui_priority_job_actor::stateful_pointer<yanghui_priority_job_state>
+        self,
+    WorkerPool* worker_pool, caf::actor dispatcher) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             std::cout << "start yanghui calculation with priority."
                       << std::endl;
             while (true) {
               std::cout << "waiting for worker" << std::endl;
-              if (!worker_pool.IsEmpty()) {
+              if (!worker_pool->IsEmpty()) {
                 break;
               }
               std::this_thread::sleep_for(std::chrono::seconds(1));
             }
             //    caf::scoped_actor self{system};
-
+            self->state.referer = self->current_sender();
             anon_send(dispatcher, yanghui_data);
             //            self->receive(
             //                [=](std::vector<std::pair<bool, int>> result) {
@@ -48,6 +54,7 @@ yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
             if (result_pair_1.first != true) {
               // return false
             }
+
             // TODO: add compare function and return
             return false;
           }};
@@ -58,7 +65,7 @@ yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
 //  // std::cout << "call actor return value:" << return_value << std::endl;
 //}
 
-void dealSendErr(const caf::error& err) {
+void ErrorHandler(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
@@ -70,10 +77,10 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
             //      yanghui_data);
             actor_guard.SendAndReceive(
                 [&](int return_value) { self->send(self, return_value); },
-                dealSendErr, yanghui_data);
+                ErrorHandler, yanghui_data);
           },
           [=](int return_value) {
             // TODO: add compare function and return
-            return false;
+            //            return false;
           }};
 }

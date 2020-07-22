@@ -18,7 +18,7 @@ caf::behavior yanghui(caf::event_based_actor* self,
         temp_states.resize(n);
         std::vector<int> states;
         states.resize(n);
-
+        self->send<caf::message_priority::high>(self, 1);
         int error = 0;
 
         states[0] = 1;

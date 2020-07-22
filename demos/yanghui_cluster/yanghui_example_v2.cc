@@ -292,11 +292,11 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       InitHighPriorityYanghuiActors(system, worker_pool);
 
   auto yanghui_priority_job_actor =
-      system.spawn(yanghui_priority_job_actor_fun, worker_pool,
+      system.spawn(yanghui_priority_job_actor_fun, &worker_pool,
                    yanghui_job_dispatcher_actor);
 
-  auto yanghui_standard_job_actor =
-      system.spawn(yanghui_standard_job_actor_fun, actor_guard);
+  //  auto yanghui_standard_job_actor =
+  //      system.spawn(yanghui_standard_job_actor_fun, actor_guard);
 
   // start compute
   while (true) {
