@@ -5,9 +5,9 @@
 #include "./include/yanghui_server.h"
 
 yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_job_actor::pointer self, const WorkerPool& worker_pool,
+    yanghui_job_actor::pointer self, WorkerPool& worker_pool,
     caf::actor& dispatcher) {
-  return {[=](const std::vector<std::vector<int>>& yanghui_data) {
+  return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             std::cout << "start yanghui calculation with priority."
                       << std::endl;
             while (true) {
@@ -19,7 +19,7 @@ yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
             }
             //    caf::scoped_actor self{system};
 
-            self->send(dispatcher, yanghui_data);
+            anon_send(dispatcher, yanghui_data);
             //            self->receive(
             //                [=](std::vector<std::pair<bool, int>> result) {
             //                  for (const auto& pair : result) {
@@ -40,16 +40,16 @@ yanghui_job_actor::behavior_type yanghui_priority_job_actor_fun(
             //                  error: "
             //                            << system.render(error) << std::endl;
             //                });
-            // TODO: add compare function and return
-            return false;
           },
-          [=](std::vector<std::pair<bool, int>> result) {
+          [=](std::vector<std::pair<bool, int>> result) -> bool {
             auto result_pair_1 = result[0];
             auto result_pair_2 = result[1];
 
             if (result_pair_1.first != true) {
               // return false
             }
+            // TODO: add compare function and return
+            return false;
           }};
 }
 
@@ -62,19 +62,18 @@ void dealSendErr(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
-yanghui_job_actor::behavior_type yanghui_standard_job_actor_fun(
-    yanghui_job_actor::pointer self, ActorGuard& actor_guard) {
-  return {
-    [=](const std::vector<std::vector<int>>& yanghui_data) {
-      caf::aout(self) << "start count." << std::endl;
-      actor_guard.SendAndReceive(printRet, dealSendErr, yanghui_data);
-      actor_guard.SendAndReceive(
-          [&](int return_value) { self->send(self, return_value); },
-          dealSendErr, kYanghuiData2);
-    },
-        [=](int return_value) {
-          // TODO: add compare function and return
-          return false;
-        }
-  }
+yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
+    yanghui_standard_job_actor::pointer self, ActorGuard& actor_guard) {
+  return {[&](const std::vector<std::vector<int>>& yanghui_data) {
+            caf::aout(self) << "start count." << std::endl;
+            //      actor_guard.SendAndReceive(printRet, dealSendErr,
+            //      yanghui_data);
+            actor_guard.SendAndReceive(
+                [&](int return_value) { self->send(self, return_value); },
+                dealSendErr, yanghui_data);
+          },
+          [=](int return_value) {
+            // TODO: add compare function and return
+            return false;
+          }};
 }
