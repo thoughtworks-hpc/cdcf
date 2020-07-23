@@ -30,8 +30,8 @@ yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
         self,
     WorkerPool* worker_pool, caf::actor dispatcher);
 
-// using yanghui_load_balance_job_actor =
-//    caf::typed_actor < caf::reacts_to<std::vector<std::vector<int>>>>;
+using yanghui_load_balance_job_actor =
+    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>>;
 
 using yanghui_compare_job_actor =
     caf::typed_actor<caf::replies_to<std::vector<std::vector<int>>>::with<int>>;

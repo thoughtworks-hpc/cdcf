@@ -96,3 +96,8 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
                       result);
           }};
 }
+
+// yanghui_load_balance_job_actor::behavior_type
+// yanghui_load_balance_job_actor_fun(
+//    yanghui_load_balance_job_actor::pointer self, caf::actor
+//    yanghui_load_balance_count_path) {}
