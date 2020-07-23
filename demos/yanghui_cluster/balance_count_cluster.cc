@@ -7,6 +7,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <caf/openssl/all.hpp>
 BalanceCountCluster::BalanceCountCluster(std::string host,
                                          caf::actor_system& system)
     : CountCluster(host),
@@ -20,7 +22,7 @@ BalanceCountCluster::BalanceCountCluster(std::string host,
 
 void BalanceCountCluster::AddWorkerNodeWithPort(const std::string& host,
                                                 uint16_t port) {
-  auto worker_actor = system_.middleman().remote_actor(host, port);
+  auto worker_actor = caf::openssl::remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
               << ", port:" << port << std::endl;
