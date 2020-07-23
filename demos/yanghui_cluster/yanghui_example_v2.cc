@@ -313,6 +313,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   auto yanghui_compare_job_actor = system.spawn(yanghui_compare_job_actor_fun);
 
+  auto yanghui_router_pool_job_actor =
+      system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
+
   // start compute
   while (true) {
     std::string dummy;

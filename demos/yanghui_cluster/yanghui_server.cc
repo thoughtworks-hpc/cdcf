@@ -114,3 +114,18 @@ yanghui_load_balance_job_actor_fun(
                 final_result);
           }};
 }
+
+yanghui_router_pool_job_actor::behavior_type yanghui_router_pool_job_actor_fun(
+    yanghui_router_pool_job_actor::pointer self, ActorGuard* pool_guard) {
+  return {[&](const std::vector<std::vector<int>>& yanghui_data) {
+            caf::aout(self) << "start count." << std::endl;
+            caf::strong_actor_ptr message_sender = self->current_sender();
+            pool_guard->SendAndReceive(
+                [&](int result) { self->send(self, message_sender, result); },
+                ErrorHandler, yanghui_data);
+          },
+          [=](caf::strong_actor_ptr message_sender, int result) {
+            anon_send(caf::actor_cast<caf::actor>(message_sender), true,
+                      result);
+          }};
+}
