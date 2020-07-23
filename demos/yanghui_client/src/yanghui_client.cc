@@ -54,6 +54,39 @@ class config : public actor_system::Config {
   const std::string kCompareGroupName = "compare";
 };
 
+int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
+  int n = yanghui_data.size();
+  int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+  int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+
+  states[0] = 1;
+  states[0] = yanghui_data[0][0];
+  int i, j, k, min_sum = INT_MAX;
+  for (i = 1; i < n; i++) {
+    for (j = 0; j < i + 1; j++) {
+      if (j == 0) {
+        temp_states[0] = states[0] + yanghui_data[i][j];
+      } else if (j == i) {
+        temp_states[j] = states[j - 1] + yanghui_data[i][j];
+      } else {
+        temp_states[j] =
+            std::min(states[j - 1], states[j]) + yanghui_data[i][j];
+      }
+    }
+
+    for (k = 0; k < i + 1; k++) {
+      states[k] = temp_states[k];
+    }
+  }
+
+  for (j = 0; j < n; j++) {
+    if (states[j] < min_sum) min_sum = states[j];
+  }
+
+  free(temp_states);
+  free(states);
+  return min_sum;
+}
 void caf_main(caf::actor_system& system, const config& cfg) {
   auto yanghui_job_actor1 =
       system.middleman().remote_actor(cfg.root_host, yanghui_job_port1);
@@ -87,15 +120,24 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   yanghui_jobs.push_back(*yanghui_job_actor3);
   yanghui_jobs.push_back(*yanghui_job_actor4);
 
-  while (true) {
-    for (const auto& yanghui_job : yanghui_jobs) {
-      self->request(yanghui_job, std::chrono::seconds(1), kYanghuiData2)
+  int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
+  bool running_status_normal = true;
+  while (running_status_normal) {
+    for (int i = 0; i < yanghui_jobs.size(); i++) {
+      self->request(yanghui_jobs[i], std::chrono::seconds(1), kYanghuiData2)
           .receive(
               [&](bool status, int result) {
                 aout(self) << "status: " << status << " -> " << result
                            << std::endl;
+                if (!status || result != yanghui_job_result) {
+                  aout(self) << "inconsistent job " << i << std::endl;
+                  running_status_normal = false;
+                }
               },
-              [&](caf::error& err) { aout(self) << "cell #" << std::endl; });
+              [&](caf::error& err) {
+                aout(self) << "failed job " << i << std::endl;
+                running_status_normal = false;
+              });
       ;
     }
   }
