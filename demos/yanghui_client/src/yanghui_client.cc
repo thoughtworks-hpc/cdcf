@@ -49,9 +49,6 @@ class config : public actor_system::Config {
         .add(worker_load, "load, l", "load balance worker sleep second")
         .add(node_keeper_port, "node_port", "set node keeper port");
   }
-
-  const std::string kResultGroupName = "result";
-  const std::string kCompareGroupName = "compare";
 };
 
 int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
@@ -61,7 +58,7 @@ int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
 
   states[0] = 1;
   states[0] = yanghui_data[0][0];
-  int i, j, k, min_sum = INT_MAX;
+  int i, j, k, min_sum = std::numeric_limits<int>::max();
   for (i = 1; i < n; i++) {
     for (j = 0; j < i + 1; j++) {
       if (j == 0) {
@@ -87,7 +84,12 @@ int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
   free(states);
   return min_sum;
 }
+
 void caf_main(caf::actor_system& system, const config& cfg) {
+  std::cout << "waiting 10 seconds" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::cout << "waiting finished" << std::endl;
+
   auto yanghui_job_actor1 =
       system.middleman().remote_actor(cfg.root_host, yanghui_job_port1);
   if (!yanghui_job_actor1)
@@ -124,7 +126,7 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   bool running_status_normal = true;
   while (running_status_normal) {
     for (int i = 0; i < yanghui_jobs.size(); i++) {
-      self->request(yanghui_jobs[i], std::chrono::seconds(1), kYanghuiData2)
+      self->request(yanghui_jobs[i], std::chrono::seconds(120), kYanghuiData2)
           .receive(
               [&](bool status, int result) {
                 aout(self) << "status: " << status << " -> " << result
@@ -138,7 +140,6 @@ void caf_main(caf::actor_system& system, const config& cfg) {
                 aout(self) << "failed job " << i << std::endl;
                 running_status_normal = false;
               });
-      ;
     }
   }
 }
