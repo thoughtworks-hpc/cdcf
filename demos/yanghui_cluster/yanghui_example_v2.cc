@@ -311,10 +311,13 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto yanghui_standard_job_actor =
       system.spawn(yanghui_standard_job_actor_fun, &actor_guard);
 
-  auto yanghui_compare_job_actor = system.spawn(yanghui_compare_job_actor_fun);
-
   auto yanghui_router_pool_job_actor =
       system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
+
+  system.middleman().publish(yanghui_load_balance_job_actor, yanghui_job_port1);
+  system.middleman().publish(yanghui_priority_job_actor, yanghui_job_port2);
+  system.middleman().publish(yanghui_standard_job_actor, yanghui_job_port3);
+  system.middleman().publish(yanghui_router_pool_job_actor, yanghui_job_port4);
 
   // start compute
   while (true) {

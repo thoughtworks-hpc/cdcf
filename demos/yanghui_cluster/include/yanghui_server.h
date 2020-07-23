@@ -10,6 +10,11 @@
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "./yanghui_with_priority.h"
 
+const uint16_t yanghui_job_port1 = 55011;
+const uint16_t yanghui_job_port2 = 55012;
+const uint16_t yanghui_job_port3 = 55013;
+const uint16_t yanghui_job_port4 = 55014;
+
 struct yanghui_job_state {
   caf::strong_actor_ptr message_sender;
 };
