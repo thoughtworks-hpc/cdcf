@@ -25,7 +25,10 @@ void BalanceCountCluster::AddWorkerNodeWithPort(const std::string& host,
   auto worker_actor = caf::openssl::remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
-              << ", port:" << port << std::endl;
+              << ", port:" << port
+              << ", error:" << system_.render(worker_actor.error())
+              << std::endl;
+    return;
   }
 
   caf::anon_send(counter_, caf::sys_atom::value, caf::put_atom::value,

@@ -39,6 +39,7 @@ RUN apt-get clean \
         && apt-get install procps -y
 
 COPY docker/script.sh /bin/script.sh
+COPY docker/openssl /openssl
 ENV APP=/bin/cluster
 #ENTRYPOINT ["/bin/script.sh"]
 CMD ["/bin/script.sh"]
