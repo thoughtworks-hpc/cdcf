@@ -55,40 +55,21 @@ yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
               }
               std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-            //    caf::scoped_actor self{system};
-            self->state.referer = self->current_sender();
+            self->state.message_sender = self->current_sender();
             anon_send(dispatcher, yanghui_data);
-            //            self->receive(
-            //                [=](std::vector<std::pair<bool, int>> result) {
-            //                  for (const auto& pair : result) {
-            //                    if (pair.first) {
-            //                      std::cout
-            //                          << "high priority with final result: "
-            //                          << pair.second
-            //                          << std::endl;
-            //                    } else {
-            //                      std::cout << "normal priority with final
-            //                      result: "
-            //                                << pair.second << std::endl;
-            //                    }
-            //                  }
-            //                },
-            //                [&](caf::error error) {
-            //                  std::cout << "Receive yanghui priority result
-            //                  error: "
-            //                            << system.render(error) << std::endl;
-            //                });
           },
-          [=](std::vector<std::pair<bool, int>> result) -> bool {
+          [=](std::vector<std::pair<bool, int>> result) {
             auto result_pair_1 = result[0];
             auto result_pair_2 = result[1];
 
-            if (result_pair_1.first != true) {
-              return false;
+            if (result.size() != 2 || !result_pair_1.first ||
+                (result_pair_1.first != result_pair_2.first)) {
+              anon_send(caf::actor_cast<caf::actor>(self->state.message_sender),
+                        false, 0);
             }
 
-            // TODO: add compare function and return
-            return false;
+            anon_send(caf::actor_cast<caf::actor>(self->state.message_sender),
+                      true, result_pair_1.second);
           }};
 }
 
@@ -105,14 +86,13 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
     yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             caf::aout(self) << "start count." << std::endl;
-            //      actor_guard.SendAndReceive(printRet, dealSendErr,
-            //      yanghui_data);
+            caf::strong_actor_ptr message_sender = self->current_sender();
             actor_guard->SendAndReceive(
-                [&](int return_value) { self->send(self, return_value); },
+                [&](int result) { self->send(self, message_sender, result); },
                 ErrorHandler, yanghui_data);
           },
-          [=](int return_value) {
-            // TODO: add compare function and return
-            //            return false;
+          [=](caf::strong_actor_ptr message_sender, int result) {
+            anon_send(caf::actor_cast<caf::actor>(message_sender), true,
+                      result);
           }};
 }
