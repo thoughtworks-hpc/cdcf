@@ -33,6 +33,10 @@ yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
 using yanghui_load_balance_job_actor =
     caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>>;
 
+yanghui_load_balance_job_actor::behavior_type
+yanghui_load_balance_job_actor_fun(yanghui_load_balance_job_actor::pointer self,
+                                   caf::actor yanghui_load_balance_count_path);
+
 using yanghui_compare_job_actor =
     caf::typed_actor<caf::replies_to<std::vector<std::vector<int>>>::with<int>>;
 

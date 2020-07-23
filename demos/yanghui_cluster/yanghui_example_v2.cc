@@ -143,7 +143,16 @@ void printRet(int return_value) {
 }
 
 caf::behavior result_print_actor(caf::event_based_actor* self) {
-  return {[](int result) {
+  return {[=](int result) {
+    std::cout << "load balance count yanghui complete, get result:" << result
+              << std::endl;
+  }};
+}
+
+caf::behavior load_balance_result_print_actor(
+    caf::event_based_actor* self, const caf::strong_actor_ptr& destination) {
+  return {[=](int result) {
+    self->send(caf::actor_cast<caf::actor>(destination), result);
     std::cout << "load balance count yanghui complete, get result:" << result
               << std::endl;
   }};
@@ -274,6 +283,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       },
       system);
 
+  //  auto yanghui_load_balance_job_actor =
+  //      system.spawn(yanghui_load_balance_job_actor_fun);
   auto yanghui_load_balance_result = system.spawn(result_print_actor);
   auto yanghui_load_balance_get_min =
       system.spawn(yanghui_get_final_result, actor_cluster->load_balance_,

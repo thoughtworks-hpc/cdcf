@@ -97,7 +97,10 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
           }};
 }
 
-// yanghui_load_balance_job_actor::behavior_type
-// yanghui_load_balance_job_actor_fun(
-//    yanghui_load_balance_job_actor::pointer self, caf::actor
-//    yanghui_load_balance_count_path) {}
+yanghui_load_balance_job_actor::behavior_type
+yanghui_load_balance_job_actor_fun(yanghui_load_balance_job_actor::pointer self,
+                                   caf::actor yanghui_load_balance_count_path) {
+  return {[&](const std::vector<std::vector<int>>& yanghui_data) {
+    caf::anon_send(yanghui_load_balance_count_path, yanghui_data);
+  }};
+}
