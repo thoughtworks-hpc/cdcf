@@ -10,4 +10,5 @@ add_subdirectory(actor_fault_tolerance)
 add_subdirectory(additional_allownance)
 add_subdirectory(load_balancer)
 add_subdirectory(actor_status)
+add_subdirectory(yanghui_client)
 
