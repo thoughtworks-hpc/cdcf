@@ -10,6 +10,13 @@
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "./yanghui_with_priority.h"
 
+struct yanghui_job_state {
+  caf::strong_actor_ptr message_sender;
+};
+
+/**
+ *  yanghui_standard_job_actor
+ */
 using yanghui_standard_job_actor =
     caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
                      caf::reacts_to<caf::strong_actor_ptr, int>>;
@@ -17,25 +24,35 @@ using yanghui_standard_job_actor =
 yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
     yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard);
 
+/**
+ *  yanghui_priority_job_actor
+ */
+
 using yanghui_priority_job_actor =
     caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
                      caf::reacts_to<std::vector<std::pair<bool, int>>>>;
 
-struct yanghui_priority_job_state {
-  caf::strong_actor_ptr message_sender;
-};
-
 yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_priority_job_actor::stateful_pointer<yanghui_priority_job_state>
-        self,
+    yanghui_priority_job_actor::stateful_pointer<yanghui_job_state> self,
     WorkerPool* worker_pool, caf::actor dispatcher);
 
+/**
+ *  yanghui_load_balance_job_actor
+ */
+
 using yanghui_load_balance_job_actor =
-    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>>;
+    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
+                     caf::reacts_to<std::vector<int>>, caf::reacts_to<int>>;
 
 yanghui_load_balance_job_actor::behavior_type
-yanghui_load_balance_job_actor_fun(yanghui_load_balance_job_actor::pointer self,
-                                   caf::actor yanghui_load_balance_count_path);
+yanghui_load_balance_job_actor_fun(
+    yanghui_load_balance_job_actor::stateful_pointer<yanghui_job_state> self,
+    caf::actor yanghui_load_balance_count_path,
+    caf::actor yanghui_load_balance_get_min);
+
+/**
+ *  yanghui_compare_job_actor
+ */
 
 using yanghui_compare_job_actor =
     caf::typed_actor<caf::replies_to<std::vector<std::vector<int>>>::with<int>>;

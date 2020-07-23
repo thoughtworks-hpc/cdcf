@@ -283,8 +283,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       },
       system);
 
-  //  auto yanghui_load_balance_job_actor =
-  //      system.spawn(yanghui_load_balance_job_actor_fun);
   auto yanghui_load_balance_result = system.spawn(result_print_actor);
   auto yanghui_load_balance_get_min =
       system.spawn(yanghui_get_final_result, actor_cluster->load_balance_,
@@ -293,6 +291,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto yanghui_load_balance_count_path =
       system.spawn(yanghui_count_path, actor_cluster->load_balance_,
                    yanghui_load_balance_get_min);
+
+  auto yanghui_load_balance_job_actor = system.spawn(
+      yanghui_load_balance_job_actor_fun, yanghui_load_balance_count_path,
+      yanghui_load_balance_get_min);
 
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();

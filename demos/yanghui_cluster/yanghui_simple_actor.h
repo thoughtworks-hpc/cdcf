@@ -14,11 +14,13 @@ struct YanghuiState {
   int index = 0;
   std::map<int, int> current_result;
   std::vector<std::vector<int> > data;
+  caf::strong_actor_ptr message_sender;
 };
 
 struct GetMinState {
   int count = 0;
   std::map<int, int> current_result;
+  caf::strong_actor_ptr message_sender;
 };
 
 caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,

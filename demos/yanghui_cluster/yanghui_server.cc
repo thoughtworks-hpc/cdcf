@@ -42,8 +42,7 @@ yanghui_compare_job_actor::behavior_type yanghui_compare_job_actor_fun(
 }
 
 yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_priority_job_actor::stateful_pointer<yanghui_priority_job_state>
-        self,
+    yanghui_priority_job_actor::stateful_pointer<yanghui_job_state> self,
     WorkerPool* worker_pool, caf::actor dispatcher) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             std::cout << "start yanghui calculation with priority."
@@ -98,9 +97,20 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
 }
 
 yanghui_load_balance_job_actor::behavior_type
-yanghui_load_balance_job_actor_fun(yanghui_load_balance_job_actor::pointer self,
-                                   caf::actor yanghui_load_balance_count_path) {
+yanghui_load_balance_job_actor_fun(
+    yanghui_load_balance_job_actor::stateful_pointer<yanghui_job_state> self,
+    caf::actor yanghui_load_balance_count_path,
+    caf::actor yanghui_load_balance_get_min) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
-    caf::anon_send(yanghui_load_balance_count_path, yanghui_data);
-  }};
+            self->state.message_sender = self->current_sender();
+            caf::anon_send(yanghui_load_balance_count_path, yanghui_data);
+          },
+          [=](const std::vector<int>& count_path_result) {
+            caf::anon_send(yanghui_load_balance_get_min, count_path_result);
+          },
+          [=](int final_result) {
+            caf::anon_send(
+                caf::actor_cast<caf::actor>(self->state.message_sender), true,
+                final_result);
+          }};
 }
