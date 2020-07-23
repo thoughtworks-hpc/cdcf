@@ -22,56 +22,45 @@ struct yanghui_job_state {
 /**
  *  yanghui_standard_job_actor
  */
-using yanghui_standard_job_actor =
-    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-                     caf::reacts_to<caf::strong_actor_ptr, int>>;
+// using yanghui_standard_job_actor =
+//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
+//                     caf::reacts_to<caf::strong_actor_ptr, int>>;
 
-yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
-    yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard);
+caf::behavior yanghui_standard_job_actor_fun(caf::event_based_actor* self,
+                                             ActorGuard* actor_guard);
 
 /**
  *  yanghui_priority_job_actor
  */
 
-using yanghui_priority_job_actor =
-    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-                     caf::reacts_to<std::vector<std::pair<bool, int>>>>;
+// using yanghui_priority_job_actor =
+//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
+//                     caf::reacts_to<std::vector<std::pair<bool, int>>>>;
 
-yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_priority_job_actor::stateful_pointer<yanghui_job_state> self,
-    WorkerPool* worker_pool, caf::actor dispatcher);
+caf::behavior yanghui_priority_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self, WorkerPool* worker_pool,
+    caf::actor dispatcher);
 
 /**
  *  yanghui_load_balance_job_actor
  */
 
-using yanghui_load_balance_job_actor =
-    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-                     caf::reacts_to<std::vector<int>>, caf::reacts_to<int>>;
+// using yanghui_load_balance_job_actor =
+//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
+//                     caf::reacts_to<std::vector<int>>, caf::reacts_to<int>>;
 
-yanghui_load_balance_job_actor::behavior_type
-yanghui_load_balance_job_actor_fun(
-    yanghui_load_balance_job_actor::stateful_pointer<yanghui_job_state> self,
+caf::behavior yanghui_load_balance_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self,
     caf::actor yanghui_load_balance_count_path,
     caf::actor yanghui_load_balance_get_min);
 /**
  *  yanghui_router_pool_job_actor
  */
-using yanghui_router_pool_job_actor =
-    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-                     caf::reacts_to<caf::strong_actor_ptr, int>>;
+// using yanghui_router_pool_job_actor =
+//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
+//                     caf::reacts_to<caf::strong_actor_ptr, int>>;
 
-yanghui_router_pool_job_actor::behavior_type yanghui_router_pool_job_actor_fun(
-    yanghui_router_pool_job_actor::pointer self, ActorGuard* pool_guard);
-
-/**
- *  yanghui_compare_job_actor
- */
-
-using yanghui_compare_job_actor =
-    caf::typed_actor<caf::replies_to<std::vector<std::vector<int>>>::with<int>>;
-
-yanghui_compare_job_actor::behavior_type yanghui_compare_job_actor_fun(
-    yanghui_compare_job_actor::pointer self);
+caf::behavior yanghui_router_pool_job_actor_fun(caf::event_based_actor* self,
+                                                ActorGuard* pool_guard);
 
 #endif  // CDCF_YANGHUI_SERVER_H

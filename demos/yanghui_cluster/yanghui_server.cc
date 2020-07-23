@@ -43,9 +43,9 @@
 //  }};
 //}
 
-yanghui_priority_job_actor::behavior_type yanghui_priority_job_actor_fun(
-    yanghui_priority_job_actor::stateful_pointer<yanghui_job_state> self,
-    WorkerPool* worker_pool, caf::actor dispatcher) {
+caf::behavior yanghui_priority_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self, WorkerPool* worker_pool,
+    caf::actor dispatcher) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             std::cout << "start yanghui calculation with priority."
                       << std::endl;
@@ -83,8 +83,8 @@ void ErrorHandler(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
-yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
-    yanghui_standard_job_actor::pointer self, ActorGuard* actor_guard) {
+caf::behavior yanghui_standard_job_actor_fun(caf::event_based_actor* self,
+                                             ActorGuard* actor_guard) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             caf::aout(self) << "start count." << std::endl;
             caf::strong_actor_ptr message_sender = self->current_sender();
@@ -98,9 +98,8 @@ yanghui_standard_job_actor::behavior_type yanghui_standard_job_actor_fun(
           }};
 }
 
-yanghui_load_balance_job_actor::behavior_type
-yanghui_load_balance_job_actor_fun(
-    yanghui_load_balance_job_actor::stateful_pointer<yanghui_job_state> self,
+caf::behavior yanghui_load_balance_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self,
     caf::actor yanghui_load_balance_count_path,
     caf::actor yanghui_load_balance_get_min) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
@@ -117,8 +116,8 @@ yanghui_load_balance_job_actor_fun(
           }};
 }
 
-yanghui_router_pool_job_actor::behavior_type yanghui_router_pool_job_actor_fun(
-    yanghui_router_pool_job_actor::pointer self, ActorGuard* pool_guard) {
+caf::behavior yanghui_router_pool_job_actor_fun(caf::event_based_actor* self,
+                                                ActorGuard* pool_guard) {
   return {[&](const std::vector<std::vector<int>>& yanghui_data) {
             caf::aout(self) << "start count." << std::endl;
             caf::strong_actor_ptr message_sender = self->current_sender();
