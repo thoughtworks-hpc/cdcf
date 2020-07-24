@@ -79,4 +79,3 @@ void CountCluster::Update(const actor_system::cluster::Event& event) {
     }
   }
 }
-

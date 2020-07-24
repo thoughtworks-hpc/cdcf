@@ -20,7 +20,7 @@ class Config : public CDCFConfig {
   std::string seeds_ = "";
   std::string app_;
   std::string app_args_;
-  bool single_run_;
+  bool single_run_ = false;
 
   Config() {
     opt_group{custom_options_, "global"}
@@ -32,7 +32,7 @@ class Config : public CDCFConfig {
         .add(app_args_, "app-args", "set application arguments");
   }
 
-  std::vector<gossip::Address> GetSeeds() const {
+  [[nodiscard]] std::vector<gossip::Address> GetSeeds() const {
     const auto addresses = split(seeds_, ',');
     std::vector<gossip::Address> result;
     for (auto& address_string : addresses) {
