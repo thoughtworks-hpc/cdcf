@@ -39,10 +39,19 @@ typename Inspector::result_type inspect(Inspector& f,
   return f(caf::meta::type_name("ResultWithPosition"), x.result, x.position);
 }
 
+struct YanghuiData {
+  std::vector<std::vector<int>> data;
+};
+
+template <class Inspector>
+typename Inspector::result_type inspect(Inspector& f, const YanghuiData& x) {
+  return f(caf::meta::type_name("YanghuiData"), x.data);
+}
+
 using calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<int>,
                      caf::replies_to<NumberCompareData>::with<int>,
-                     caf::replies_to<int, int, int>::with<ResultWithPosition> >;
+                     caf::replies_to<int, int, int>::with<ResultWithPosition>>;
 
 calculator::behavior_type calculator_fun(calculator::pointer self);
 
@@ -101,6 +110,7 @@ class config : public actor_system::Config {
         .add(node_keeper_port, "node_port", "set node keeper port");
     add_message_type<NumberCompareData>("NumberCompareData");
     add_message_type<ResultWithPosition>("ResultWithPosition");
+    add_message_type<YanghuiData>("YanghuiData");
   }
 
   const std::string kResultGroupName = "result";

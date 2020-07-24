@@ -31,6 +31,15 @@ std::vector<std::vector<int>> kYanghuiData2 = {
     {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7},
     {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6}};
 
+struct YanghuiData {
+  std::vector<std::vector<int>> data;
+};
+
+template <class Inspector>
+typename Inspector::result_type inspect(Inspector& f, const YanghuiData& x) {
+  return f(caf::meta::type_name("YanghuiData"), x.data);
+}
+
 class config : public actor_system::Config {
  public:
   uint16_t root_port = 0;
@@ -48,6 +57,7 @@ class config : public actor_system::Config {
         .add(root, "root, r", "set current node be root")
         .add(worker_load, "load, l", "load balance worker sleep second")
         .add(node_keeper_port, "node_port", "set node keeper port");
+    add_message_type<YanghuiData>("YanghuiData");
   }
 };
 
@@ -123,10 +133,12 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   yanghui_jobs.push_back(*yanghui_job_actor4);
 
   int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
+  YanghuiData yanghui_data;
+  yanghui_data.data = kYanghuiData2;
   bool running_status_normal = true;
   while (running_status_normal) {
     for (int i = 0; i < yanghui_jobs.size(); i++) {
-      self->request(yanghui_jobs[i], std::chrono::seconds(120), kYanghuiData2)
+      self->request(yanghui_jobs[i], std::chrono::seconds(120), yanghui_data)
           .receive(
               [&](bool status, int result) {
                 aout(self) << "status: " << status << " -> " << result
