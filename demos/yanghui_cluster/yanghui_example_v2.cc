@@ -10,6 +10,7 @@
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
+#include <caf/openssl/all.hpp>
 
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../actor_fault_tolerance/include/actor_union.h"
@@ -50,19 +51,37 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   system.middleman().open(cfg.worker_port, nullptr, true);
 
   auto actor1 = system.spawn<typed_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
-                             k_yanghui_work_port1);
-  std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
+  auto actor_port = caf::openssl::publish(caf::actor_cast<caf::actor>(actor1),
+                                          k_yanghui_work_port1);
+  if (!actor_port) {
+    std::cout << "publish actor1 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
+  std::cout << "worker start at port:" << k_yanghui_work_port1 << " using ssl"
+            << std::endl;
 
   auto actor2 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
-                             k_yanghui_work_port2);
-  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+  actor_port = caf::openssl::publish(caf::actor_cast<caf::actor>(actor2),
+                                     k_yanghui_work_port2);
+  if (!actor_port) {
+    std::cout << "publish actor2 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
+  std::cout << "worker start at port:" << k_yanghui_work_port2 << " using ssl"
+            << std::endl;
 
   auto actor3 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
-                             k_yanghui_work_port3);
-  std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
+  actor_port = caf::openssl::publish(caf::actor_cast<caf::actor>(actor3),
+                                     k_yanghui_work_port3);
+  if (!actor_port) {
+    std::cout << "publish actor3 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
+  std::cout << "worker start at port:" << k_yanghui_work_port3 << " using ssl"
+            << std::endl;
 
   auto actor_for_load_balance_demo =
       system.spawn(simple_counter_add_load, cfg.worker_load);
@@ -408,4 +427,4 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   }
 }
 
-CAF_MAIN(caf::io::middleman)
+CAF_MAIN(caf::io::middleman, caf::openssl::manager)

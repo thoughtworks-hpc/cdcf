@@ -2,12 +2,18 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 #include "include/actor_union_count_cluster.h"
+
+#include <caf/openssl/all.hpp>
+
 void ActorUnionCountCluster::AddWorkerNodeWithPort(const std::string& host,
                                                    uint16_t port) {
-  auto worker_actor = system_.middleman().remote_actor(host, port);
+  auto worker_actor = caf::openssl::remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
-              << ", port:" << port << std::endl;
+              << ", port:" << port
+              << ", error:" << system_.render(worker_actor.error())
+              << std::endl;
+    return;
   }
 
   counter_.AddActor(*worker_actor);
