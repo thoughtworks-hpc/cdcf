@@ -6,15 +6,13 @@
 #include <math.h>
 
 TEST(TestScheduler, threads_proportion) {
-  char argv[][64] = {"scheduler_test", "--threads_proportion=0.52"};
-  int argc = sizeof(argv) / sizeof(argv[0]);
-  char *argv_ptr[argc];
-
-  for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
+  std::vector<char*> argv{ (char*)("scheduler_test"), (char*)("--threads_proportion=0.52")};
+  int argc = argv.size();
+  for (int i = 0; i < argc; i++) argv[i] = argv[i];
 
   CDCFConfig config;
   CDCFConfig::RetValue ret =
-      config.parse_config(argc, argv_ptr, "cdcf-application.ini");
+      config.parse_config(argc, argv.data(), "cdcf-application.ini");
 
   size_t thread_num =
       floor(std::thread::hardware_concurrency() * config.threads_proportion);
@@ -29,15 +27,15 @@ TEST(TestScheduler, threads_proportion) {
 }
 
 TEST(TestScheduler, load_from_file) {
-  char argv[][64] = {"scheduler_test"};
-  int argc = sizeof(argv) / sizeof(argv[0]);
-  char *argv_ptr[argc];
-
-  for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
+  std::vector<char*> argv{ (char*)("scheduler_test")};
+  int argc = argv.size();
+  for (int i = 0; i < argc; i++) {
+    argv[i] = argv[i];
+  }
 
   CDCFConfig config;
   CDCFConfig::RetValue ret =
-      config.parse_config(argc, argv_ptr, "cdcf-application.ini");
+      config.parse_config(argc, argv.data(), "cdcf-application.ini");
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
@@ -49,14 +47,12 @@ TEST(TestScheduler, load_from_file) {
 }
 
 TEST(TestScheduler, load_default) {
-  char argv[][64] = {"scheduler_test"};
-  int argc = sizeof(argv) / sizeof(argv[0]);
-  char *argv_ptr[argc];
-
-  for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
+  std::vector<char*> argv{ (char*)("scheduler_test")};
+  int argc = argv.size();
+  for (int i = 0; i < argc; i++) argv[i] = argv[i];
 
   CDCFConfig config;
-  CDCFConfig::RetValue ret = config.parse_config(argc, argv_ptr);
+  CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
@@ -67,16 +63,12 @@ TEST(TestScheduler, load_default) {
 }
 
 TEST(TestScheduler, load_option) {
-  char argv[][64] = {"scheduler_test", "--scheduler.max-threads=7",
-                     "--scheduler.policy=stealing",
-                     "--scheduler.profiling-output-file=/home"};
-  int argc = sizeof(argv) / sizeof(argv[0]);
-  char *argv_ptr[argc];
-
-  for (int i = 0; i < argc; i++) argv_ptr[i] = argv[i];
+  std::vector<char*> argv{ (char*)("scheduler_test"), (char*)("--scheduler.max-threads=7"),
+                           (char*)("--scheduler.policy=stealing"), (char*)("--scheduler.profiling-output-file=/home"),};
+  int argc = argv.size();
 
   CDCFConfig config;
-  CDCFConfig::RetValue ret = config.parse_config(argc, argv_ptr);
+  CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();

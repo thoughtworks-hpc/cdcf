@@ -33,7 +33,7 @@ void GetActorSystemStatus(const std::string& host, uint16_t port) {
       actor_system_client.GetNodeActorStatus(&query_context, {}, &actor_status);
 
   if (!status.ok()) {
-    std::cout << "get actor system status from（" << host << ":" << port
+    std::cout << "get actor system status from (" << host << ":" << port
               << ") status failed, error message: " << status.error_message()
               << std::endl;
     return;
@@ -66,7 +66,7 @@ int GetNodeStatus(const std::string& host) {
       client.GetAllNodeStatus(&query_context, {}, &all_node_status);
 
   if (!status.ok()) {
-    std::cout << "Get cluster node ip:port=（" << host
+    std::cout << "Get cluster node ip:port= (" << host
               << ") status failed, error message:" << status.error_message()
               << std::endl;
     return 1;

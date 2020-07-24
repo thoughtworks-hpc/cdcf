@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(cdcf)
 
+if(WIN32)
+    add_definitions(-D _WIN32_WINNT=0x600)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 if("${CONAN_COMPILER}" STREQUAL "gcc")
     set(CMAKE_C_FLAGS ${CONAN_C_FLAGS})

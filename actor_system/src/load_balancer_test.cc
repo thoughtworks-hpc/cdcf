@@ -235,7 +235,7 @@ TEST_F(LoadBalancerTest, should_roughly_route_even_under_throughput_load) {
   constexpr size_t load_threshold = 5;
   Prepare(concurrent, load_threshold);
 
-  auto async = [x](caf::event_based_actor* self, caf::actor balancer) {
+  auto async = [=](caf::event_based_actor* self, caf::actor balancer) {
     auto dummy = [](size_t) {};
     for (size_t i = 0; i < times; ++i) {
       self->request(balancer, caf::infinite, factorial_atom::value, x)

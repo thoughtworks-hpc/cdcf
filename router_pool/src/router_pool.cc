@@ -312,7 +312,8 @@ std::vector<caf::actor> RouterPool::GetActors(const std::string& host,
 RouterPool::~RouterPool() {
   caf::scoped_actor self{system()};
   self->send(pool_, caf::infinite, caf::exit_reason::kill);
-  self->wait_for();
+  //TODO: Make sure delete this line is safe
+  //self->wait_for();
 }
 
 }  // namespace cdcf::router_pool

@@ -20,6 +20,7 @@ Testing
 cmake_install.cmake
 Makefile
 cmake-build-debug
+cmake-build-release
 .idea
 compile_commands.json
 DartConfiguration.tcl
