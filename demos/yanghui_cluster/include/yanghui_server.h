@@ -26,8 +26,8 @@ struct yanghui_job_state {
 //    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
 //                     caf::reacts_to<caf::strong_actor_ptr, int>>;
 
-caf::behavior yanghui_standard_job_actor_fun(caf::event_based_actor* self,
-                                             ActorGuard* actor_guard);
+caf::behavior yanghui_standard_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard);
 
 /**
  *  yanghui_priority_job_actor
@@ -60,7 +60,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 //    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
 //                     caf::reacts_to<caf::strong_actor_ptr, int>>;
 
-caf::behavior yanghui_router_pool_job_actor_fun(caf::event_based_actor* self,
-                                                ActorGuard* pool_guard);
+caf::behavior yanghui_router_pool_job_actor_fun(
+    caf::stateful_actor<yanghui_job_state>* self, ActorGuard* pool_guard);
 
 #endif  // CDCF_YANGHUI_SERVER_H
