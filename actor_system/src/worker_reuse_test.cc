@@ -7,8 +7,8 @@
 #include <cmath>
 
 TEST(TestScheduler, threads_proportion) {
-  std::vector<char *> argv{(char *)("scheduler_test"),
-                           (char *)("--threads_proportion=0.52")};
+  std::vector<char *> argv{const_cast<char *>("scheduler_test"),
+                           const_cast<char *>("--threads_proportion=0.52")};
   int argc = static_cast<int>(argv.size());
   for (int i = 0; i < argc; i++) {
     argv[i] = argv[i];
@@ -31,7 +31,7 @@ TEST(TestScheduler, threads_proportion) {
 }
 
 TEST(TestScheduler, load_from_file) {
-  std::vector<char *> argv{(char *)("scheduler_test")};
+  std::vector<char *> argv{const_cast<char *>("scheduler_test")};
   int argc = static_cast<int>((argv.size()));
   for (int i = 0; i < argc; i++) {
     argv[i] = argv[i];
@@ -51,7 +51,7 @@ TEST(TestScheduler, load_from_file) {
 }
 
 TEST(TestScheduler, load_default) {
-  std::vector<char *> argv{(char *)("scheduler_test")};
+  std::vector<char *> argv{const_cast<char *>("scheduler_test")};
   int argc = static_cast<int>(argv.size());
   for (int i = 0; i < argc; i++) argv[i] = argv[i];
 
@@ -68,10 +68,10 @@ TEST(TestScheduler, load_default) {
 
 TEST(TestScheduler, load_option) {
   std::vector<char *> argv{
-      (char *)("scheduler_test"),
-      (char *)("--scheduler.max-threads=7"),
-      (char *)("--scheduler.policy=stealing"),
-      (char *)("--scheduler.profiling-output-file=/home"),
+      const_cast<char *>("scheduler_test"),
+      const_cast<char *>("--scheduler.max-threads=7"),
+      const_cast<char *>("--scheduler.policy=stealing"),
+      const_cast<char *>("--scheduler.profiling-output-file=/home"),
   };
   int argc = static_cast<int>(argv.size());
 
