@@ -38,7 +38,7 @@ CDCFConfig::RetValue CDCFConfig::parse_config(int argc, char** argv,
   }
 
   size_t thread_num =
-      floor(std::thread::hardware_concurrency() * threads_proportion);
+     static_cast<size_t>(floor(std::thread::hardware_concurrency() * threads_proportion));
   const size_t min_thread_num = 4;
   set("scheduler.max-threads", std::max(thread_num, min_thread_num));
 
@@ -58,7 +58,7 @@ CDCFConfig::RetValue CDCFConfig::parse_config(
   }
 
   size_t thread_num =
-      floor(std::thread::hardware_concurrency() * threads_proportion);
+      static_cast<size_t>(floor(std::thread::hardware_concurrency() * threads_proportion));
 
   const size_t min_thread_size = 4;
   set("scheduler.max-threads", std::max(thread_num, min_thread_size));

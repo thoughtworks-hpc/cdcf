@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(cdcf)
 
+# ignore asio template compile warning
+add_definitions(-D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+
 if(WIN32)
     add_definitions(-D _WIN32_WINNT=0x600)
 endif()
@@ -27,4 +30,3 @@ if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
     add_subdirectory(node_keeper)
     add_subdirectory(daemon)
 endif ()
-

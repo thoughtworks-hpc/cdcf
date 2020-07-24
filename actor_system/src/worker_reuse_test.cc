@@ -3,19 +3,21 @@
  */
 #include <cdcf_config.h>
 #include <gmock/gmock.h>
-#include <math.h>
+#include <cmath>
 
 TEST(TestScheduler, threads_proportion) {
   std::vector<char*> argv{ (char*)("scheduler_test"), (char*)("--threads_proportion=0.52")};
-  int argc = argv.size();
-  for (int i = 0; i < argc; i++) argv[i] = argv[i];
+  int argc = static_cast<int>(argv.size());
+  for (int i = 0; i < argc; i++) {
+    argv[i] = argv[i];
+  }
 
   CDCFConfig config;
   CDCFConfig::RetValue ret =
       config.parse_config(argc, argv.data(), "cdcf-application.ini");
 
-  size_t thread_num =
-      floor(std::thread::hardware_concurrency() * config.threads_proportion);
+  auto thread_num =
+      static_cast<size_t>(std::thread::hardware_concurrency() * config.threads_proportion);
   config.set("scheduler.max-threads", thread_num);
 
   caf::actor_system system{config};
@@ -28,7 +30,7 @@ TEST(TestScheduler, threads_proportion) {
 
 TEST(TestScheduler, load_from_file) {
   std::vector<char*> argv{ (char*)("scheduler_test")};
-  int argc = argv.size();
+  int argc = static_cast<int>((argv.size()));
   for (int i = 0; i < argc; i++) {
     argv[i] = argv[i];
   }
@@ -48,7 +50,7 @@ TEST(TestScheduler, load_from_file) {
 
 TEST(TestScheduler, load_default) {
   std::vector<char*> argv{ (char*)("scheduler_test")};
-  int argc = argv.size();
+  int argc = static_cast<int>(argv.size());
   for (int i = 0; i < argc; i++) argv[i] = argv[i];
 
   CDCFConfig config;
@@ -65,7 +67,7 @@ TEST(TestScheduler, load_default) {
 TEST(TestScheduler, load_option) {
   std::vector<char*> argv{ (char*)("scheduler_test"), (char*)("--scheduler.max-threads=7"),
                            (char*)("--scheduler.policy=stealing"), (char*)("--scheduler.profiling-output-file=/home"),};
-  int argc = argv.size();
+  int argc = static_cast<int>(argv.size());
 
   CDCFConfig config;
   CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
