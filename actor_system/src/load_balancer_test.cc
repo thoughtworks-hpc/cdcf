@@ -71,7 +71,8 @@ MATCHER_P2(AllExecutedTimesNear, times, error,
   *result_listener << "they're executed {" << ss.str() << "} time(s)";
   auto every_as_expected =
       std::all_of(counts.begin(), counts.end(), [=](auto& i) {
-        return static_cast<uint64_t>(std::abs(static_cast<intmax_t>(times - i))) <= error;
+        return static_cast<uint64_t>(
+                   std::abs(static_cast<intmax_t>(times - i))) <= error;
       });
   size_t init_sum = 0;
   auto total = std::accumulate(counts.begin(), counts.end(), init_sum);
