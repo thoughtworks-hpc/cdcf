@@ -138,20 +138,21 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   bool running_status_normal = true;
   while (running_status_normal) {
     for (int i = 0; i < yanghui_jobs.size(); i++) {
-      self->request(yanghui_jobs[i], std::chrono::seconds(120), yanghui_data)
-          .receive(
-              [&](bool status, int result) {
-                aout(self) << "status: " << status << " -> " << result
-                           << std::endl;
-                if (!status || result != yanghui_job_result) {
-                  aout(self) << "inconsistent job " << i << std::endl;
-                  running_status_normal = false;
-                }
-              },
-              [&](caf::error& err) {
-                aout(self) << "failed job " << i << std::endl;
-                running_status_normal = false;
-              });
+      std::cout << "sending job to yanghui_job " << i << std::endl;
+      self->send(yanghui_jobs[i], yanghui_data);
+      self->receive(
+          [&](bool status, int result) {
+            aout(self) << "status: " << status << " -> " << result << std::endl;
+            if (!status || result != yanghui_job_result) {
+              aout(self) << "inconsistent job " << i << std::endl;
+              running_status_normal = false;
+            }
+          },
+          [&](caf::error& err) {
+            aout(self) << "failed job " << i << " : " << system.render(err)
+                       << std::endl;
+            running_status_normal = false;
+          });
     }
   }
 }

@@ -47,9 +47,9 @@ caf::behavior yanghui_priority_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, WorkerPool* worker_pool,
     caf::actor dispatcher) {
   return {[&](const YanghuiData& data) {
-            auto& yanghui_data = data.data;
             std::cout << "start yanghui calculation with priority."
                       << std::endl;
+            auto& yanghui_data = data.data;
             while (true) {
               std::cout << "waiting for worker" << std::endl;
               if (!worker_pool->IsEmpty()) {
@@ -87,8 +87,8 @@ void ErrorHandler(const caf::error& err) {
 caf::behavior yanghui_standard_job_actor_fun(caf::event_based_actor* self,
                                              ActorGuard* actor_guard) {
   return {[&](const YanghuiData& data) {
+            caf::aout(self) << "start standard job counting." << std::endl;
             auto& yanghui_data = data.data;
-            caf::aout(self) << "start count." << std::endl;
             caf::strong_actor_ptr message_sender = self->current_sender();
             actor_guard->SendAndReceive(
                 [&](int result) { self->send(self, message_sender, result); },
@@ -105,6 +105,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
     caf::actor yanghui_load_balance_count_path,
     caf::actor yanghui_load_balance_get_min) {
   return {[&](const YanghuiData& data) {
+            caf::aout(self) << "start load balance job counting." << std::endl;
             auto& yanghui_data = data.data;
             self->state.message_sender = self->current_sender();
             caf::anon_send(yanghui_load_balance_count_path, yanghui_data);
@@ -122,8 +123,8 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 caf::behavior yanghui_router_pool_job_actor_fun(caf::event_based_actor* self,
                                                 ActorGuard* pool_guard) {
   return {[&](const YanghuiData& data) {
+            caf::aout(self) << "start router pool job counting." << std::endl;
             auto& yanghui_data = data.data;
-            caf::aout(self) << "start count." << std::endl;
             caf::strong_actor_ptr message_sender = self->current_sender();
             pool_guard->SendAndReceive(
                 [&](int result) { self->send(self, message_sender, result); },
