@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   }
   node_keeper::NodeKeeper keeper(config);
 
-  if (!config.single_run_) {
+  if ("" != config.app_args_) {
     PosixProcessManager process_manager;
     auto args = ConstructAppArgs(config);
     Daemon daemon(

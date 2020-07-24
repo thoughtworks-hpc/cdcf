@@ -20,14 +20,12 @@ class Config : public CDCFConfig {
   std::string seeds_ = "";
   std::string app_;
   std::string app_args_;
-  bool single_run_ = false;
 
   Config() {
     opt_group{custom_options_, "global"}
         .add(port_, "port,p", "set port")
         .add(seeds_, "seeds,s",
              "seeds of cluster, format in: `host:port,host:port`")
-        .add(single_run_, "single_run", "run node keeper without actor system")
         .add(app_, "app", "set application path")
         .add(app_args_, "app-args", "set application arguments");
   }
