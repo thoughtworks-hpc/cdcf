@@ -204,6 +204,8 @@ size_t InputSize() {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+  system.middleman().open(cfg.yanghui_job_port, nullptr, true);
+
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
@@ -427,11 +429,52 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   }
 }
 
+void SillyClientStart(caf::actor_system& system, const config& cfg) {
+  auto node = system.middleman().connect(cfg.root_host, cfg.yanghui_job_port);
+  if (!node) {
+    std::cerr << "*** connect failed: " << to_string(node.error()) << std::endl;
+    return;
+  }
+  auto type =
+      "yanghui_standard_job_actor";      // type of the actor we wish to spawn
+  auto args = caf::make_message();       // arguments to construct the actor
+  auto tout = std::chrono::seconds(30);  // wait no longer than 30s
+  auto worker1 =
+      system.middleman().remote_spawn<caf::actor>(*node, type, args, tout);
+  if (!worker1) {
+    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
+              << std::endl;
+    return;
+  }
+  std::cout << "add worker for calculator with priority on host: "
+            << cfg.root_host << std::endl;
+
+  caf::scoped_actor self{system};
+  YanghuiData yanghui_data;
+  yanghui_data.data = kYanghuiData2;
+
+  std::cout << "sending job to yanghui_job " << std::endl;
+  self->send(*worker1, yanghui_data);
+  self->receive(
+      [&](bool status, int result) {
+        aout(self) << "status: " << status << " -> " << result << std::endl;
+        if (!status) {
+          aout(self) << "inconsistent job " << std::endl;
+        }
+      },
+      [&](caf::error& err) {
+        aout(self) << "failed job " << system.render(err) << std::endl;
+      });
+}
+
 void caf_main(caf::actor_system& system, const config& cfg) {
   cdcf::Logger::Init(cfg);
+  std::cout << "role: " << cfg.role_ << std::endl;
   CDCF_LOGGER_DEBUG("I am {}", cfg.role_);
   if (cfg.role_ == "root") {
     SmartRootStart(system, cfg);
+  } else if (cfg.role_ == "client") {
+    SillyClientStart(system, cfg);
   } else {
     SmartWorkerStart(system, cfg);
   }

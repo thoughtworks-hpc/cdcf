@@ -127,7 +127,7 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   caf::scoped_actor self{system};
 
   std::vector<caf::actor> yanghui_jobs;
-  //  yanghui_jobs.push_back(*yanghui_job_actor1);
+  yanghui_jobs.push_back(*yanghui_job_actor1);
   yanghui_jobs.push_back(*yanghui_job_actor2);
   yanghui_jobs.push_back(*yanghui_job_actor3);
   yanghui_jobs.push_back(*yanghui_job_actor4);
