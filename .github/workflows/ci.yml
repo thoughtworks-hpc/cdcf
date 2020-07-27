@@ -33,7 +33,7 @@ jobs:
       - name: cmake
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
-          PATH: {$env:GITHUB_WORKSPACE}
+          PATH: ${env:GITHUB_WORKSPACE}
         run: |
           ls
           echo "---------------------------"
