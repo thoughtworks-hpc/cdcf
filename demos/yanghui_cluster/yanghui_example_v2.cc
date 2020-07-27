@@ -48,7 +48,7 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  system.middleman().open(cfg.worker_port, nullptr, true);
+  system.middleman().open(cfg.remote_spawn_port, nullptr, true);
 
   auto actor1 = system.spawn<typed_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
@@ -301,7 +301,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
-  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
+  WorkerPool worker_pool(system, cfg.root_host, cfg.remote_spawn_port);
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
@@ -316,10 +316,14 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto yanghui_router_pool_job_actor =
       system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
 
+  auto mirror_actor = system.spawn(mirror);
+
   system.middleman().publish(yanghui_standard_job_actor, yanghui_job_port1);
   system.middleman().publish(yanghui_priority_job_actor, yanghui_job_port2);
   system.middleman().publish(yanghui_load_balance_job_actor, yanghui_job_port3);
-  system.middleman().publish(yanghui_router_pool_job_actor, yanghui_job_port4);
+  //  system.middleman().publish(yanghui_router_pool_job_actor,
+  //  yanghui_job_port4);
+  system.middleman().publish(mirror_actor, yanghui_job_port4);
 
   // start compute
   while (true) {
@@ -434,31 +438,38 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   std::this_thread::sleep_for(std::chrono::seconds(10));
   std::cout << "waiting finished" << std::endl;
 
-  auto node = system.middleman().connect(cfg.root_host, cfg.yanghui_job_port);
-  if (!node) {
-    std::cerr << "*** connect failed: " << to_string(node.error()) << std::endl;
-    return;
-  }
-  auto type =
-      "yanghui_standard_job_actor";      // type of the actor we wish to spawn
-  auto args = caf::make_message();       // arguments to construct the actor
-  auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-  auto worker1 =
-      system.middleman().remote_spawn<caf::actor>(*node, type, args, tout);
-  if (!worker1) {
-    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
-              << std::endl;
-    return;
-  }
-  std::cout << "add worker for calculator with priority on host: "
-            << cfg.root_host << std::endl;
+  //  auto node = system.middleman().connect(cfg.root_host,
+  //  cfg.yanghui_job_port); if (!node) {
+  //    std::cerr << "*** connect failed: " << to_string(node.error()) <<
+  //    std::endl; return;
+  //  }
+  //  auto type =
+  //      "yanghui_standard_job_actor";      // type of the actor we wish to
+  //      spawn
+  //  auto args = caf::make_message();       // arguments to construct the actor
+  //  auto tout = std::chrono::seconds(30);  // wait no longer than 30s
+  //  auto worker1 =
+  //      system.middleman().remote_spawn<caf::actor>(*node, type, args, tout);
+  //  if (!worker1) {
+  //    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
+  //              << std::endl;
+  //    return;
+  //  }
+  //  std::cout << "add worker for calculator with priority on host: "
+  //            << cfg.root_host << std::endl;
+
+  auto yanghui_job_actor1 =
+      system.middleman().remote_actor(cfg.root_host, yanghui_job_port4);
+  if (!yanghui_job_actor1)
+    std::cerr << "unable to connect to yanghui_job_actor1: "
+              << to_string(yanghui_job_actor1.error()) << '\n';
 
   caf::scoped_actor self{system};
   YanghuiData yanghui_data;
   yanghui_data.data = kYanghuiData2;
 
   std::cout << "sending job to yanghui_job " << std::endl;
-  self->send(*worker1, yanghui_data);
+  self->send(*yanghui_job_actor1, "Hello World!");
   self->receive(
       [&](bool status, int result) {
         aout(self) << "status: " << status << " -> " << result << std::endl;

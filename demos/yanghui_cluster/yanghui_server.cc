@@ -48,6 +48,25 @@
 //  // std::cout << "call actor return value:" << return_value << std::endl;
 //}
 
+caf::behavior mirror(caf::event_based_actor* self) {
+  // return the (initial) actor behavior
+  return {// a handler for messages containing a single string
+          // that replies with a string
+          [=](const std::string& what) -> std::string {
+            std::cout << "start mirror 1." << std::endl;
+            auto sender = self->current_sender();
+            std::cout << "start mirror 2." << std::endl;
+            std::cout << "start mirror 3： "
+                      << caf::to_string(sender->address()) << std::endl;
+            std::cout << "start mirror 4." << std::endl;
+            // prints "Hello World!" via aout (thread-safe cout wrapper)
+            aout(self) << what << std::endl;
+            std::cout << "start mirror 5." << std::endl;
+            // reply "!dlroW olleH"
+            return std::string(what.rbegin(), what.rend());
+          }};
+}
+
 void ErrorHandler(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }

@@ -28,6 +28,8 @@ typename Inspector::result_type inspect(Inspector& f, const YanghuiData& x) {
   return f(caf::meta::type_name("YanghuiData"), x.data);
 }
 
+caf::behavior mirror(caf::event_based_actor* self);
+
 /**
  *  yanghui_standard_job_actor
  */
