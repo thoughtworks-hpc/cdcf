@@ -33,16 +33,15 @@ jobs:
       - name: cmake
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
-          PATH: $env:GITHUB_WORKSPACE
+          PATH: {$env:GITHUB_WORKSPACE}
         run: |
           ls
           echo "---------------------------"
           cd build
           ls
           echo "@@@@@@@@@@@@@@1"
-          echo "$env:GITHUB_WORKSPACE"
-          echo $GITHUB_RUN_ID
-          cmake ..  -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=$PATH/build/conan_paths.cmake
+          echo ${env:GITHUB_WORKSPACE}
+          cmake ..  -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=$PATH\build\conan_paths.cmake
           echo "@@@@@@@@@@@@@@2"
           ls
           echo "@@@@@@@@@@@@@@3"
