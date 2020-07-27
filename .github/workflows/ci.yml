@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir build && cd build
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-          conan install .. -s compiler.cppstd=${{ matrix.libcxx }} -s build_type=Debug --build missing
+          conan install .. --build missing
       - name: cmake
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
@@ -39,10 +39,10 @@ jobs:
           cd build
           ls
           echo "@@@@@@@@@@@@@@1"
-          cmake .. -DCMAKE_BUILD_TYPE=Debug -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=D:\a\cdcf\cdcf\build\conan_paths.cmake
+          echo "$GITHUB_WORKSPACE"
+          cmake ..  -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE\build\conan_paths.cmake
           echo "@@@@@@@@@@@@@@2"
           ls
           echo "@@@@@@@@@@@@@@3"
-          cmake --build .
-          ctest --output-on-failure
+          cmake --build . --config Release
 
