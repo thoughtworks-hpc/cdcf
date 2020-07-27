@@ -9,13 +9,22 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15]
+        os: [ubuntu-latest, macos-10.15, windows-latest]
         libcxx: [libc++, libstdc++11]
+        env: [ACTOR_SYS_ONLY: 1, ACTOR_SYS_ONLY: 0]
         exclude:
-        - os: macos-10.15
-          libcxx: libstdc++11
-        - os: ubuntu-latest
-          libcxx: libc++
+          - os: macos-10.15
+            libcxx: libstdc++11
+            env:
+              ACTOR_SYS_ONLY: 1
+          - os: ubuntu-latest
+            libcxx: libc++
+            env:
+              ACTOR_SYS_ONLY: 1
+          - os: windows-latest
+            libcxx: libc++
+            env:
+              ACTOR_SYS_ONLY: 0
 
     steps:
     - uses: actions/setup-python@v1
