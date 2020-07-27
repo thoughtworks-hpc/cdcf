@@ -5,16 +5,7 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: []
-        include:
-          - os: windows-latest
-            actor_only: 1
-
-
+    runs-on: windows-latest
     steps:
       - uses: actions/setup-python@v1
       - name: Install conan && conan package tools
