@@ -39,7 +39,7 @@ jobs:
           cd build
           ls
           echo "@@@@@@@@@@@@@@1"
-          cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - NMake Makefiles" -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake D:\a\cdcf\cdcf
+          cmake -DCMAKE_BUILD_TYPE=Debug -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake D:\a\cdcf\cdcf
           echo "@@@@@@@@@@@@@@2"
           cmake --build .
           echo "@@@@@@@@@@@@@@3"
