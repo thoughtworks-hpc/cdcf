@@ -17,10 +17,10 @@ jobs:
       - name: conan
         run: |
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-          conan install . ${{ matrix.libcxx }} --build missing
+          conan install .  --build missing
       - name: cmake
         env:
-          ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
+          ACTOR_SYS_ONLY: 1
         run: |
           cmake --help
           cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -G "CodeBlocks - NMake Makefiles" .
