@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [windows-latest]
         #libcxx: [libc++, libstdc++11]
-        libcxx: [17]
+        libcxx: [14]
         actor_only: [1, 0]
         exclude:
           - os: windows-latest

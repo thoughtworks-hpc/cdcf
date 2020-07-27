@@ -26,7 +26,7 @@ add_subdirectory(demos)
 add_subdirectory(router_pool)
 add_subdirectory(message_priority_actor)
 
-if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
+if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "123")
     add_subdirectory(node_keeper)
     add_subdirectory(daemon)
 endif ()
