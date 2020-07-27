@@ -40,7 +40,7 @@ jobs:
           ls
           echo "@@@@@@@@@@@@@@1"
           echo "$GITHUB_WORKSPACE"
-          echo "${GITHUB_WORKSPACE"}
+          echo "${GITHUB_WORKSPACE}"
           echo "${{GITHUB_WORKSPACE}}"
           cmake ..  -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE\build\conan_paths.cmake
           echo "@@@@@@@@@@@@@@2"
