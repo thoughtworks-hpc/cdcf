@@ -16,15 +16,19 @@ jobs:
       - uses: actions/checkout@v1
       - name: conan
         run: |
-          pwd
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
           conan install .  --build missing
+          echo "---------------------------pwd"
+          pwd
+          echo "---------------------------ls"
           ls
       - name: cmake
         env:
           ACTOR_SYS_ONLY: 1
         run: |
+          echo "---------------------------pwd"
           pwd
+          echo "---------------------------ls"
           ls
           cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -G "Visual Studio 16 2019" .
 
