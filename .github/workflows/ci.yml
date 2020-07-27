@@ -11,6 +11,7 @@ jobs:
       matrix:
         os: [windows-latest]
         #libcxx: [libc++, libstdc++11]
+        libcxx: [libstdc++11]
         actor_only: [1, 0]
         exclude:
           - os: windows-latest
@@ -27,7 +28,8 @@ jobs:
       - name: conan
         run: |
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-          conan install .  --build missing
+#          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
+          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
       - name: cmake
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
