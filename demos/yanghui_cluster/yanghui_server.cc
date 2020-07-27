@@ -4,50 +4,6 @@
 
 #include "./include/yanghui_server.h"
 
-#include <limits>
-
-// yanghui_compare_job_actor::behavior_type yanghui_compare_job_actor_fun(
-//    yanghui_compare_job_actor::pointer self) {
-//  return {[=](const std::vector<std::vector<int>>& yanghui_data) {
-//    int n = yanghui_data.size();
-//    int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-//    int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
-//
-//    states[0] = 1;
-//    states[0] = yanghui_data[0][0];
-//    int i, j, k, min_sum = std::numeric_limits<int>::max();
-//    for (i = 1; i < n; i++) {
-//      for (j = 0; j < i + 1; j++) {
-//        if (j == 0) {
-//          temp_states[0] = states[0] + yanghui_data[i][j];
-//        } else if (j == i) {
-//          temp_states[j] = states[j - 1] + yanghui_data[i][j];
-//        } else {
-//          temp_states[j] =
-//              std::min(states[j - 1], states[j]) + yanghui_data[i][j];
-//        }
-//      }
-//
-//      for (k = 0; k < i + 1; k++) {
-//        states[k] = temp_states[k];
-//      }
-//    }
-//
-//    for (j = 0; j < n; j++) {
-//      if (states[j] < min_sum) min_sum = states[j];
-//    }
-//
-//    free(temp_states);
-//    free(states);
-//    return min_sum;
-//  }};
-//}
-
-// void printRet(int return_value) {
-//  printf("call actor return value: %d\n", return_value);
-//  // std::cout << "call actor return value:" << return_value << std::endl;
-//}
-
 caf::behavior mirror(caf::event_based_actor* self) {
   // return the (initial) actor behavior
   return {// a handler for messages containing a single string
@@ -114,7 +70,7 @@ caf::behavior yanghui_priority_job_actor_fun(
         auto result_pair_2 = result[1];
 
         if (result.size() != 2 || !result_pair_1.first ||
-            (result_pair_1.first != result_pair_2.first)) {
+            (result_pair_1.second != result_pair_2.second)) {
           self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
                      false, 0);
         } else {
@@ -154,11 +110,14 @@ caf::behavior yanghui_router_pool_job_actor_fun(
     //            caf::strong_actor_ptr message_sender =
     //            self->current_sender();
     auto sender = self->current_sender();
+    std::cout << "yanghui_router_pool_job_actor_sender: "
+              << caf::to_string(sender->address()) << std::endl;
     pool_guard->SendAndReceive(
         [&](int result) {
-          std::cout << "yanghui_router_pool_job_actor_fun 1" << std::endl;
+          std::cout << "yanghui_router_pool_job_actor_fun 1: " << result
+                    << std::endl;
           caf::aout(self) << "yanghui_router_pool_job_actor_fun 1" << std::endl;
-          self->send(caf::actor_cast<caf::actor>(sender), result);
+          self->send(caf::actor_cast<caf::actor>(sender), true, result);
           std::cout << "yanghui_router_pool_job_actor_fun 2" << std::endl;
           caf::aout(self) << "yanghui_router_pool_job_actor_fun 2" << std::endl;
         },

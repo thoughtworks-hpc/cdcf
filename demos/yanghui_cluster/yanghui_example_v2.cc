@@ -254,6 +254,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       routee_args, routee_ifs, default_size, policy);
   pool_cluster->InitWorkerNodes();
   auto pool_actor = system.spawn(yanghui, pool_cluster);
+  std::cout << "pool_actor for router pool job spawned with id: "
+            << pool_actor.id() << std::endl;
   actor_status_monitor.RegisterActor(pool_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
@@ -265,8 +267,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       [&](std::atomic<bool>& active) {
         active = true;
         auto new_yanghui = system.spawn(yanghui, pool_cluster);
-        std::cout << "new_yanghui for router pool job spawned with id: "
-                  << new_yanghui.id() << std::endl;
         actor_status_monitor.RegisterActor(
             pool_actor, "Yanghui", "a actor can count yanghui triangle.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");

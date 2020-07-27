@@ -10,8 +10,7 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
   return {
       [self, &deal_msg_count, sleep_micro](int a, int b) -> int {
         ++deal_msg_count;
-        caf::aout(self) << self->current_mailbox_element()->is_high_priority()
-                        << " slow calculator received add task. input a:" << a
+        caf::aout(self) << " slow calculator received add task. input a:" << a
                         << " b:" << b
                         << ", ************* calculator sleep microseconds:"
                         << sleep_micro << " msg count:" << deal_msg_count
