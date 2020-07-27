@@ -16,6 +16,8 @@ jobs:
             libcxx: libstdc++11
           - os: ubuntu-latest
             libcxx: libc++
+          - os: windows-latest
+            libcxx: libstdc++11
 
     steps:
     - uses: actions/setup-python@v1
