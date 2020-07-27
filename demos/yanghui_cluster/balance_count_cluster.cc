@@ -10,19 +10,26 @@
 
 #include <caf/openssl/all.hpp>
 BalanceCountCluster::BalanceCountCluster(std::string host,
-                                         caf::actor_system& system)
+                                         caf::actor_system& system,
+                                         bool enable_ssl)
     : CountCluster(host),
       system_(system),
       context_(&system_),
       host_(std::move(host)),
-      sender_actor_(system_) {
+      sender_actor_(system_),
+      enable_ssl_(enable_ssl) {
   auto policy = cdcf::load_balancer::policy::MinLoad(1);
   counter_ = cdcf::load_balancer::Router::Make(&context_, std::move(policy));
 }
 
 void BalanceCountCluster::AddWorkerNodeWithPort(const std::string& host,
                                                 uint16_t port) {
-  auto worker_actor = caf::openssl::remote_actor(system_, host, port);
+  auto remote_actor = caf::io::remote_actor<>;
+  if (enable_ssl_) {
+    remote_actor = caf::openssl::remote_actor<>;
+  }
+
+  auto worker_actor = remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
               << ", port:" << port

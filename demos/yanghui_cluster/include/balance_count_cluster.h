@@ -20,7 +20,8 @@ class BalanceCountCluster : public CountCluster {
   std::string host_;
   caf::actor counter_;
   caf::scoped_actor sender_actor_;
-  BalanceCountCluster(std::string host, caf::actor_system& system);
+  bool enable_ssl_;
+  BalanceCountCluster(std::string host, caf::actor_system& system, bool enable_ssl);
   ~BalanceCountCluster() override = default;
 
   void AddWorkerNodeWithPort(const std::string& host, uint16_t port);
