@@ -20,7 +20,6 @@
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
-#include "include/balance_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"
 #include "include/simple_counter.h"
@@ -263,8 +262,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
-
-  //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
 
   CountCluster* count_cluster;
 
