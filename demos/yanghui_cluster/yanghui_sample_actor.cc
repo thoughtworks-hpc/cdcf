@@ -18,10 +18,11 @@ caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,
         }
         int len = data.size();
         if (1 == len) {
-          // std::cout << "final result:" << data[0] << std::endl;
+          std::cout << "final result:" << data[0] << std::endl;
           self->send(out_data, data[0]);
           self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
                      data[0]);
+          std::cout << "final send finish" << std::endl;
           return;
         }
 

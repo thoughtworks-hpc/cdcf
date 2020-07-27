@@ -132,7 +132,7 @@ caf::behavior CalculatorWithPriority::make_behavior() {
             std::chrono::duration<double> elapsed_seconds =
                 std::chrono::milliseconds(0);
             std::chrono::duration<double> time_limit =
-                std::chrono::milliseconds(300);
+                std::chrono::milliseconds(100);
             while (elapsed_seconds < time_limit) {
               auto end = std::chrono::steady_clock::now();
               elapsed_seconds = end - start;
