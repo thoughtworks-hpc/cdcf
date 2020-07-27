@@ -44,4 +44,5 @@ jobs:
           ls
           echo "@@@@@@@@@@@@@@3"
           cmake --build .
+          ctest --output-on-failure
 
