@@ -9,20 +9,12 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15, windows-latest]
-        libcxx: [libc++, libstdc++11]
+        os: [windows-latest]
+        #libcxx: [libc++, libstdc++11]
         actor_only: [1, 0]
         exclude:
-          - os: macos-10.15
-            libcxx: libstdc++11
-            actor_only: 1
-          - os: ubuntu-latest
-            libcxx: libc++
-            actor_only: 1
           - os: windows-latest
             actor_only: 0
-
-
 
     steps:
       - uses: actions/setup-python@v1
@@ -35,7 +27,7 @@ jobs:
       - name: conan
         run: |
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
+          conan install .  --build missing
       - name: cmake
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
