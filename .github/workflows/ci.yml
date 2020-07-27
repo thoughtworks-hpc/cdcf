@@ -28,7 +28,6 @@ jobs:
       - name: conan
         run: |
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-#          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
           conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
       - name: cmake
         env:
