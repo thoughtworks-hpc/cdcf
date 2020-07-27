@@ -203,6 +203,40 @@ size_t InputSize() {
   return (size_t)std::stoi(dummy);
 }
 
+int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
+  int n = yanghui_data.size();
+  int* temp_states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+  int* states = reinterpret_cast<int*>(malloc(sizeof(int) * n));
+
+  states[0] = 1;
+  states[0] = yanghui_data[0][0];
+  int i, j, k, min_sum = std::numeric_limits<int>::max();
+  for (i = 1; i < n; i++) {
+    for (j = 0; j < i + 1; j++) {
+      if (j == 0) {
+        temp_states[0] = states[0] + yanghui_data[i][j];
+      } else if (j == i) {
+        temp_states[j] = states[j - 1] + yanghui_data[i][j];
+      } else {
+        temp_states[j] =
+            std::min(states[j - 1], states[j]) + yanghui_data[i][j];
+      }
+    }
+
+    for (k = 0; k < i + 1; k++) {
+      states[k] = temp_states[k];
+    }
+  }
+
+  for (j = 0; j < n; j++) {
+    if (states[j] < min_sum) min_sum = states[j];
+  }
+
+  free(temp_states);
+  free(states);
+  return min_sum;
+}
+
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   system.middleman().open(cfg.yanghui_job_port, nullptr, true);
 
@@ -263,6 +297,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   // count_cluster->AddWorkerNode("localhost");
 
   auto yanghui_actor = system.spawn(yanghui, count_cluster);
+  std::cout << "yanghui actor id: " << yanghui_actor.id() << std::endl;
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
@@ -438,48 +473,61 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   std::this_thread::sleep_for(std::chrono::seconds(10));
   std::cout << "waiting finished" << std::endl;
 
-  //  auto node = system.middleman().connect(cfg.root_host,
-  //  cfg.yanghui_job_port); if (!node) {
-  //    std::cerr << "*** connect failed: " << to_string(node.error()) <<
-  //    std::endl; return;
-  //  }
-  //  auto type =
-  //      "yanghui_standard_job_actor";      // type of the actor we wish to
-  //      spawn
-  //  auto args = caf::make_message();       // arguments to construct the actor
-  //  auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-  //  auto worker1 =
-  //      system.middleman().remote_spawn<caf::actor>(*node, type, args, tout);
-  //  if (!worker1) {
-  //    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
-  //              << std::endl;
-  //    return;
-  //  }
-  //  std::cout << "add worker for calculator with priority on host: "
-  //            << cfg.root_host << std::endl;
-
   auto yanghui_job_actor1 =
-      system.middleman().remote_actor(cfg.root_host, yanghui_job_port4);
+      system.middleman().remote_actor(cfg.root_host, yanghui_job_port1);
   if (!yanghui_job_actor1)
     std::cerr << "unable to connect to yanghui_job_actor1: "
               << to_string(yanghui_job_actor1.error()) << '\n';
 
+  auto yanghui_job_actor2 =
+      system.middleman().remote_actor(cfg.root_host, yanghui_job_port2);
+  if (!yanghui_job_actor2)
+    std::cerr << "unable to connect to yanghui_job_actor2: "
+              << to_string(yanghui_job_actor2.error()) << '\n';
+
+  auto yanghui_job_actor3 =
+      system.middleman().remote_actor(cfg.root_host, yanghui_job_port3);
+  if (!yanghui_job_actor3)
+    std::cerr << "unable to connect to yanghui_job_actor3: "
+              << to_string(yanghui_job_actor3.error()) << '\n';
+
+  auto yanghui_job_actor4 =
+      system.middleman().remote_actor(cfg.root_host, yanghui_job_port4);
+  if (!yanghui_job_actor4)
+    std::cerr << "unable to connect to yanghui_job_actor4: "
+              << to_string(yanghui_job_actor4.error()) << '\n';
+
   caf::scoped_actor self{system};
+
+  std::vector<caf::actor> yanghui_jobs;
+  yanghui_jobs.push_back(*yanghui_job_actor1);
+  yanghui_jobs.push_back(*yanghui_job_actor2);
+  yanghui_jobs.push_back(*yanghui_job_actor3);
+  yanghui_jobs.push_back(*yanghui_job_actor4);
+
+  int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
   YanghuiData yanghui_data;
   yanghui_data.data = kYanghuiData2;
-
-  std::cout << "sending job to yanghui_job " << std::endl;
-  self->send(*yanghui_job_actor1, "Hello World!");
-  self->receive(
-      [&](bool status, int result) {
-        aout(self) << "status: " << status << " -> " << result << std::endl;
-        if (!status) {
-          aout(self) << "inconsistent job " << std::endl;
-        }
-      },
-      [&](caf::error& err) {
-        aout(self) << "failed job " << system.render(err) << std::endl;
-      });
+  bool running_status_normal = true;
+  while (running_status_normal) {
+    for (int i = 0; i < yanghui_jobs.size(); i++) {
+      std::cout << "sending job to yanghui_job " << i << std::endl;
+      self->send(yanghui_jobs[i], yanghui_data);
+      self->receive(
+          [&](bool status, int result) {
+            aout(self) << "status: " << status << " -> " << result << std::endl;
+            if (!status || result != yanghui_job_result) {
+              aout(self) << "inconsistent job " << i << std::endl;
+              running_status_normal = false;
+            }
+          },
+          [&](caf::error& err) {
+            aout(self) << "failed job " << i << " : " << system.render(err)
+                       << std::endl;
+            running_status_normal = false;
+          });
+    }
+  }
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {

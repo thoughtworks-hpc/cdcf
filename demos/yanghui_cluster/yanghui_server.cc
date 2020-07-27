@@ -73,7 +73,7 @@ void ErrorHandler(const caf::error& err) {
 
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard) {
-  return {[&](const YanghuiData& data) {
+  return {[=](const YanghuiData& data) {
             std::cout << "start standard job counting." << std::endl;
             auto yanghui_data = data.data;
             std::cout << "yanghui_standard_job_actor_fun 0" << std::endl;
@@ -95,7 +95,7 @@ caf::behavior yanghui_standard_job_actor_fun(
 caf::behavior yanghui_priority_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, WorkerPool* worker_pool,
     caf::actor dispatcher) {
-  return {[&](const YanghuiData& data) {
+  return {[=](const YanghuiData& data) {
             std::cout << "start yanghui calculation with priority."
                       << std::endl;
             auto yanghui_data = data.data;
@@ -131,7 +131,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
     caf::actor yanghui_load_balance_count_path,
     caf::actor yanghui_load_balance_get_min) {
-  return {[&](const YanghuiData& data) {
+  return {[=](const YanghuiData& data) {
             std::cout << "start load balance job counting." << std::endl;
             auto yanghui_data = data.data;
             self->state.message_sender = self->current_sender();
@@ -149,7 +149,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 
 caf::behavior yanghui_router_pool_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* pool_guard) {
-  return {[&](const YanghuiData& data) {
+  return {[=](const YanghuiData& data) {
             std::cout << "start router pool job counting." << std::endl;
             auto yanghui_data = data.data;
             //            caf::strong_actor_ptr message_sender =
