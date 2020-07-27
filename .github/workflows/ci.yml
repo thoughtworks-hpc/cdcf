@@ -26,7 +26,6 @@ jobs:
             actor_only: 1
 
 
-
     steps:
       - uses: actions/setup-python@v1
       - name: Install conan && conan package tools
@@ -43,6 +42,7 @@ jobs:
         env:
           ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
         run: |
+          cmake --help
           cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
           cmake --build .
           ctest --output-on-failure
