@@ -52,7 +52,7 @@ caf::behavior simple_counter_add_load(caf::event_based_actor* self,
   return {[=](int a, int b, int id, caf::actor result_actor) {
             //            message_count++;
             std::cout << "receive:" << a << " " << b << " " << id << " "
-                      << "message_count:" << message_count++ << std::endl;
+                      << "message_count: " << message_count++ << std::endl;
             caf::message_builder msg_builder;
             msg_builder.append_all(a + b, id);
 
@@ -66,7 +66,7 @@ caf::behavior simple_counter_add_load(caf::event_based_actor* self,
           [=](int a, int b, int c, int id, caf::actor result_actor) {
             //            message_count++;
             std::cout << "receive:" << a << " " << b << " " << c << " " << id
-                      << "message_count:" << message_count++ << std::endl;
+                      << " message_count: " << message_count++ << std::endl;
 
             caf::message_builder msg_builder;
             msg_builder.append_all(a < b ? a + c : b + c, id);
