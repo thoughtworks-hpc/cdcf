@@ -11,28 +11,35 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-10.15, windows-latest]
         libcxx: [libc++, libstdc++11]
+        actor_only: [1, 0]
         exclude:
           - os: macos-10.15
             libcxx: libstdc++11
+            actor_only: 1
           - os: ubuntu-latest
             libcxx: libc++
+            actor_only: 1
           - os: windows-latest
-            libcxx: libstdc++11
+            actor_only: 0
+
+
 
     steps:
-    - uses: actions/setup-python@v1
-    - name: Install conan && conan package tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install conan
-        pip install conan_package_tools
-    - uses: actions/checkout@v1
-    - name: conan
-      run: |
-        conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-        conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
-    - name: cmake
-      run: |
-        cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
-        cmake --build .
-        ctest --output-on-failure
+      - uses: actions/setup-python@v1
+      - name: Install conan && conan package tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install conan
+          pip install conan_package_tools
+      - uses: actions/checkout@v1
+      - name: conan
+        run: |
+          conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
+          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
+      - name: cmake
+        env:
+          ACTOR_SYS_ONLY: ${{ matrix.actor_only }}
+        run: |
+          cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
+          cmake --build .
+          ctest --output-on-failure
