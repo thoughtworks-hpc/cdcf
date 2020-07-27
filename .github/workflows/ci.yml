@@ -23,5 +23,5 @@ jobs:
           ACTOR_SYS_ONLY: 1
         run: |
           cmake --help
-          cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -G "CodeBlocks - NMake Makefiles" .
+          cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -G "Visual Studio 16 2019" .
 
