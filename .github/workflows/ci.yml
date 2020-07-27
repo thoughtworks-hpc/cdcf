@@ -42,4 +42,4 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE=D:\a\cdcf\cdcf\build\conan_paths.cmake ..
           echo "@@@@@@@@@@@@@@2"
           cmake --build .
-          echo "@@@@@@@@@@@@@@3"
+          echo "@@@@@@@@@@@@@@"
