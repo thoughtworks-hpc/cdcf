@@ -430,6 +430,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 }
 
 void SillyClientStart(caf::actor_system& system, const config& cfg) {
+  std::cout << "waiting 10 seconds" << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::cout << "waiting finished" << std::endl;
+
   auto node = system.middleman().connect(cfg.root_host, cfg.yanghui_job_port);
   if (!node) {
     std::cerr << "*** connect failed: " << to_string(node.error()) << std::endl;
