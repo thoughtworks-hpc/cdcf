@@ -44,5 +44,4 @@ jobs:
         run: |
           cmake --help
           cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
-          cmake --build .
           ctest --output-on-failure
