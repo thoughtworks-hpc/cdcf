@@ -265,6 +265,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       [&](std::atomic<bool>& active) {
         active = true;
         auto new_yanghui = system.spawn(yanghui, pool_cluster);
+        std::cout << "new_yanghui for router pool job spawned with id: "
+                  << new_yanghui.id() << std::endl;
         actor_status_monitor.RegisterActor(
             pool_actor, "Yanghui", "a actor can count yanghui triangle.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
@@ -297,7 +299,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   // count_cluster->AddWorkerNode("localhost");
 
   auto yanghui_actor = system.spawn(yanghui, count_cluster);
-  std::cout << "yanghui actor id: " << yanghui_actor.id() << std::endl;
+  std::cout << "yanghui_actor for standard job spawned with id: "
+            << yanghui_actor.id() << std::endl;
+
   actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
                                      "a actor can count yanghui triangle.");
 
@@ -340,25 +344,32 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
+  std::cout << "yanghui_job_dispatcher_actor spawned with id: "
+            << yanghui_job_dispatcher_actor.id() << std::endl;
 
   auto yanghui_priority_job_actor =
       system.spawn(yanghui_priority_job_actor_fun, &worker_pool,
                    yanghui_job_dispatcher_actor);
+  std::cout << "yanghui_priority_job_actor spawned with id: "
+            << yanghui_priority_job_actor.id() << std::endl;
 
   auto yanghui_standard_job_actor =
       system.spawn(yanghui_standard_job_actor_fun, &actor_guard);
+  std::cout << "yanghui_standard_job_actor spawned with id: "
+            << yanghui_standard_job_actor.id() << std::endl;
 
   auto yanghui_router_pool_job_actor =
       system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
+  std::cout << "yanghui_router_pool_job_actor spawned with id: "
+            << yanghui_job_dispatcher_actor.id() << std::endl;
 
-  auto mirror_actor = system.spawn(mirror);
+  //  auto mirror_actor = system.spawn(mirror);
 
   system.middleman().publish(yanghui_standard_job_actor, yanghui_job_port1);
   system.middleman().publish(yanghui_priority_job_actor, yanghui_job_port2);
   system.middleman().publish(yanghui_load_balance_job_actor, yanghui_job_port3);
-  //  system.middleman().publish(yanghui_router_pool_job_actor,
-  //  yanghui_job_port4);
-  system.middleman().publish(mirror_actor, yanghui_job_port4);
+  system.middleman().publish(yanghui_router_pool_job_actor, yanghui_job_port4);
+  //  system.middleman().publish(mirror_actor, yanghui_job_port4);
 
   // start compute
   while (true) {
