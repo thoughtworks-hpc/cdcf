@@ -5,7 +5,18 @@ on: [push]
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-10.15]
+        libcxx: [libc++, libstdc++11]
+        exclude:
+          - os: macos-10.15
+            libcxx: libstdc++11
+          - os: ubuntu-latest
+            libcxx: libc++
+
     steps:
       - uses: actions/setup-python@v1
       - name: Install conan && conan package tools
@@ -17,18 +28,9 @@ jobs:
       - name: conan
         run: |
           conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
-          conan install .  --build missing
-          echo "---------------------------pwd"
-          pwd
-          echo "---------------------------ls"
-          ls
+          conan install . -s compiler.libcxx=${{ matrix.libcxx }} --build missing
       - name: cmake
-        env:
-          ACTOR_SYS_ONLY: 1
         run: |
-          echo "---------------------------pwd"
-          pwd
-          echo "---------------------------ls"
-          ls
-          cmake -DCMAKE_TOOLCHAIN_FILE=.\conan_paths.cmake -G "Visual Studio 16 2019" .
-
+          cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
+          cmake --build .
+          ctest --output-on-failure

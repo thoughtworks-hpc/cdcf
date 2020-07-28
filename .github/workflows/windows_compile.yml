@@ -1,0 +1,29 @@
+name: windows compile
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/setup-python@v1
+      - name: Install conan && conan package tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install conan==1.24.1
+          pip install conan_package_tools
+      - uses: actions/checkout@v1
+      - name: conan
+        run: |
+          mkdir build && cd build
+          conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
+          conan install .. -s build_type=Release --build missing
+      - name: cmake
+        env:
+          ACTOR_SYS_ONLY: 1
+        run: |
+          cd build
+          cmake .. -G "Visual Studio 16 2019" -DCMAKE_TOOLCHAIN_FILE="${env:GITHUB_WORKSPACE}\build\conan_paths.cmake"
+          cmake --build . --config Release
+
