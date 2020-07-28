@@ -10,6 +10,7 @@
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
+#include <caf/openssl/all.hpp>
 
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../actor_fault_tolerance/include/actor_union.h"
@@ -48,18 +49,45 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   system.middleman().open(cfg.worker_port, nullptr, true);
 
   auto actor1 = system.spawn<typed_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
-                             k_yanghui_work_port1);
+
+  bool enable_ssl = !cfg.openssl_cafile.empty() ||
+                    !cfg.openssl_certificate.empty() ||
+                    !cfg.openssl_key.empty();
+
+  CDCF_LOGGER_INFO("enable ssl: {}", enable_ssl);
+
+  auto publish = caf::io::publish<caf::actor>;
+  if (enable_ssl) {
+    publish = caf::openssl::publish<caf::actor>;
+  }
+
+  auto actor_port = publish(caf::actor_cast<caf::actor>(actor1),
+                            k_yanghui_work_port1, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor1 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
   auto actor2 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
-                             k_yanghui_work_port2);
+  actor_port = publish(caf::actor_cast<caf::actor>(actor2),
+                       k_yanghui_work_port2, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor2 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
   auto actor3 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
-                             k_yanghui_work_port3);
+  actor_port = publish(caf::actor_cast<caf::actor>(actor3),
+                       k_yanghui_work_port3, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor3 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
 
   auto actor_for_load_balance_demo =
@@ -195,6 +223,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
+  bool enable_ssl = !cfg.openssl_cafile.empty() ||
+                    !cfg.openssl_certificate.empty() ||
+                    !cfg.openssl_key.empty();
+
+  CDCF_LOGGER_INFO("enable ssl: {}", enable_ssl);
+
   // router pool
   std::string routee_name = "calculator";
   auto routee_args = caf::make_message();
@@ -229,15 +263,15 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
 
-  //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
-
   CountCluster* count_cluster;
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
+
   auto* actor_cluster =
       new ActorUnionCountCluster(cfg.root_host, system, cfg.node_keeper_host,
-                                 cfg.node_keeper_port, cfg.worker_port);
+                                 cfg.node_keeper_port, cfg.worker_port, enable_ssl);
+
   count_cluster = actor_cluster;
 
   count_cluster->InitWorkerNodes();
@@ -408,4 +442,4 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   }
 }
 
-CAF_MAIN(caf::io::middleman)
+CAF_MAIN(caf::io::middleman, caf::openssl::manager)

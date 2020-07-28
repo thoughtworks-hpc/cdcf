@@ -17,13 +17,15 @@ class ActorUnionCountCluster : public CountCluster {
   explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
                                   const std::string& node_keeper_host,
                                   uint16_t node_keeper_port,
-                                  uint16_t worker_port)
+                                  uint16_t worker_port, bool enable_ssl)
       : CountCluster(host, node_keeper_host, node_keeper_port),
+
         host_(std::move(host)),
         system_(system),
         context_(&system_),
         worker_port_(worker_port),
-        counter_(system, caf::actor_pool::round_robin()) {
+        counter_(system, caf::actor_pool::round_robin()),
+        enable_ssl_(enable_ssl) {
     auto policy = cdcf::load_balancer::policy::MinLoad(1);
     load_balance_ =
         cdcf::load_balancer::Router::Make(&context_, std::move(policy));
@@ -42,6 +44,7 @@ class ActorUnionCountCluster : public CountCluster {
   ActorUnion counter_;
   caf::scoped_execution_unit context_;
   caf::actor load_balance_;
+  bool enable_ssl_;
 };
 
 #endif  //  DEMOS_YANGHUI_CLUSTER_INCLUDE_ACTOR_UNION_COUNT_CLUSTER_H_
