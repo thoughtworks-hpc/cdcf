@@ -267,10 +267,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
-
-  auto* actor_cluster =
-      new ActorUnionCountCluster(cfg.root_host, system, cfg.node_keeper_host,
-                                 cfg.node_keeper_port, cfg.worker_port, enable_ssl);
+  auto* actor_cluster = new ActorUnionCountCluster(
+      cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
+      cfg.worker_port, enable_ssl);
 
   count_cluster = actor_cluster;
 
