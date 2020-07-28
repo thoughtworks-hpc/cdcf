@@ -13,7 +13,7 @@ services:
       - cdcf
     volumes:
       - /tmp/log:/tmp/log
-    command: /bin/bash -c "sleep 1000000000"
+  #    command: /bin/bash -c "sleep 1000000000"
   yanghui_worker1_v2:
     image: cdcf:latest
     environment:
@@ -45,6 +45,19 @@ services:
     networks:
       - cdcf
     command: /bin/bash -c "sleep 1000000000"
+  yanghui_client:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_client
+      ROLE: client
+      SEEDS: yanghui_root_v2:4445
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_client.log --log_level=debug --log_file_size=2048
+      APP: /bin/yanghui_cluster_root_v2
+      APP_ARGS: --role=client --root_host=yanghui_root_v2 -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_client.log --log_level=debug --log_file_size=2048
+    networks:
+      - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
 networks:
   cdcf:
     driver: bridge
