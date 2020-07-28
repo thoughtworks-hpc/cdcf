@@ -12,12 +12,9 @@
 #include "../yanghui_config.h"
 #include "./count_cluster.h"
 
-
 calculator::behavior_type calculator_fun(calculator::pointer self);
 calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
                                                std::atomic_int& deal_msg_count,
                                                int sleep_micro);
 
 #endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_DEMO_CALCULATOR_H_
-
-
