@@ -48,7 +48,13 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  system.middleman().open(cfg.remote_spawn_port, nullptr, true);
+  auto actual_port =
+      system.middleman().open(cfg.remote_spawn_port, nullptr, true);
+  if (!actual_port) {
+    std::cerr << "open remote spawn port failed: " << cfg.remote_spawn_port
+              << ", error: " << caf::to_string(actual_port.error())
+              << std::endl;
+  }
 
   auto actor1 = system.spawn<typed_calculator>();
   system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
@@ -237,9 +243,16 @@ int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
   return min_sum;
 }
 
-void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  system.middleman().open(cfg.yanghui_job_port, nullptr, true);
+void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
+  auto actual_port = system.middleman().publish(actor, port);
+  if (!actual_port) {
+    std::cerr << "publish port failed: " << port
+              << ", error: " << caf::to_string(actual_port.error())
+              << std::endl;
+  }
+}
 
+void SmartRootStart(caf::actor_system& system, const config& cfg) {
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
@@ -333,10 +346,6 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       system.spawn(yanghui_count_path, actor_cluster->load_balance_,
                    yanghui_load_balance_get_min);
 
-  auto yanghui_load_balance_job_actor = system.spawn(
-      yanghui_load_balance_job_actor_fun, yanghui_load_balance_count_path,
-      yanghui_load_balance_get_min);
-
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
@@ -346,6 +355,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       InitHighPriorityYanghuiActors(system, worker_pool);
   std::cout << "yanghui_job_dispatcher_actor spawned with id: "
             << yanghui_job_dispatcher_actor.id() << std::endl;
+
+  auto yanghui_load_balance_job_actor = system.spawn(
+      yanghui_load_balance_job_actor_fun, yanghui_load_balance_count_path,
+      yanghui_load_balance_get_min);
 
   auto yanghui_priority_job_actor =
       system.spawn(yanghui_priority_job_actor_fun, &worker_pool,
@@ -363,13 +376,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui_router_pool_job_actor spawned with id: "
             << yanghui_job_dispatcher_actor.id() << std::endl;
 
-  //  auto mirror_actor = system.spawn(mirror);
-
-  system.middleman().publish(yanghui_standard_job_actor, yanghui_job_port1);
-  system.middleman().publish(yanghui_priority_job_actor, yanghui_job_port2);
-  system.middleman().publish(yanghui_load_balance_job_actor, yanghui_job_port3);
-  system.middleman().publish(yanghui_router_pool_job_actor, yanghui_job_port4);
-  //  system.middleman().publish(mirror_actor, yanghui_job_port4);
+  PublishActor(system, yanghui_standard_job_actor, yanghui_job_port1);
+  PublishActor(system, yanghui_priority_job_actor, yanghui_job_port2);
+  PublishActor(system, yanghui_load_balance_job_actor, yanghui_job_port3);
+  PublishActor(system, yanghui_router_pool_job_actor, yanghui_job_port4);
 
   // start compute
   while (true) {

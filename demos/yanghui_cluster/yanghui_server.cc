@@ -32,15 +32,12 @@ caf::behavior yanghui_standard_job_actor_fun(
   return {[=](const YanghuiData& data) {
             std::cout << "start standard job counting." << std::endl;
             auto yanghui_data = data.data;
-            std::cout << "yanghui_standard_job_actor_fun 0" << std::endl;
             //            caf::strong_actor_ptr message_sender =
             //            self->current_sender();
             self->state.message_sender = self->current_sender();
-            std::cout << "yanghui_standard_job_actor_fun 1" << std::endl;
             actor_guard->SendAndReceive(
                 [&](int result) { self->send(self, result); }, ErrorHandler,
                 yanghui_data);
-            std::cout << "yanghui_standard_job_actor_fun 2" << std::endl;
           },
           [=](int result) {
             self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
@@ -94,11 +91,8 @@ caf::behavior yanghui_load_balance_job_actor_fun(
             self->send(yanghui_load_balance_get_min, count_path_result);
           },
           [=](int final_result) {
-            std::cout << "load balance job result: " << final_result
-                      << std::endl;
             self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
                        true, final_result);
-            std::cout << "load balance job 0 " << std::endl;
           }};
 }
 
@@ -110,16 +104,9 @@ caf::behavior yanghui_router_pool_job_actor_fun(
     //            caf::strong_actor_ptr message_sender =
     //            self->current_sender();
     auto sender = self->current_sender();
-    std::cout << "yanghui_router_pool_job_actor_sender: "
-              << caf::to_string(sender->address()) << std::endl;
     pool_guard->SendAndReceive(
         [&](int result) {
-          std::cout << "yanghui_router_pool_job_actor_fun 1: " << result
-                    << std::endl;
-          caf::aout(self) << "yanghui_router_pool_job_actor_fun 1" << std::endl;
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
-          std::cout << "yanghui_router_pool_job_actor_fun 2" << std::endl;
-          caf::aout(self) << "yanghui_router_pool_job_actor_fun 2" << std::endl;
         },
         ErrorHandler, yanghui_data);
   }};
