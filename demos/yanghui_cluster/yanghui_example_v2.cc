@@ -389,8 +389,17 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
     if (dummy == "b") {
       std::cout << "start load balance count." << std::endl;
-      caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
-
+      //      caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
+      caf::scoped_actor self{system};
+      YanghuiData yanghui_data;
+      yanghui_data.data = kYanghuiData2;
+      self->send(yanghui_load_balance_job_actor, yanghui_data);
+      self->receive(
+          [&self](bool status, int result) {
+            caf::aout(self)
+                << "load balance count yanghui complete, get final result:"
+                << result << std::endl;
+          });
       continue;
     }
 
