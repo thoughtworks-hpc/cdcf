@@ -498,42 +498,60 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   }
 }
 
+int AddYanghuiJob(caf::actor_system& system, std::string host,
+                  std::vector<caf::actor>& yanghui_jobs) {
+  auto yanghui_job_actor1 =
+      system.middleman().remote_actor(host, yanghui_job_port1);
+  if (!yanghui_job_actor1) {
+    std::cerr << "unable to connect to yanghui_job_actor1: "
+              << to_string(yanghui_job_actor1.error()) << '\n';
+    return 1;
+  }
+
+  auto yanghui_job_actor2 =
+      system.middleman().remote_actor(host, yanghui_job_port2);
+  if (!yanghui_job_actor2) {
+    std::cerr << "unable to connect to yanghui_job_actor2: "
+              << to_string(yanghui_job_actor2.error()) << '\n';
+    return 1;
+  }
+
+  auto yanghui_job_actor3 =
+      system.middleman().remote_actor(host, yanghui_job_port3);
+  if (!yanghui_job_actor3) {
+    std::cerr << "unable to connect to yanghui_job_actor3: "
+              << to_string(yanghui_job_actor3.error()) << '\n';
+    return 1;
+  }
+
+  auto yanghui_job_actor4 =
+      system.middleman().remote_actor(host, yanghui_job_port4);
+  if (!yanghui_job_actor4) {
+    std::cerr << "unable to connect to yanghui_job_actor4: "
+              << to_string(yanghui_job_actor4.error()) << '\n';
+    return 1;
+  }
+
+  yanghui_jobs.push_back(*yanghui_job_actor1);
+  yanghui_jobs.push_back(*yanghui_job_actor2);
+  yanghui_jobs.push_back(*yanghui_job_actor3);
+  yanghui_jobs.push_back(*yanghui_job_actor4);
+
+  return 0;
+}
+
 void SillyClientStart(caf::actor_system& system, const config& cfg) {
   std::cout << "waiting 10 seconds" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(10));
   std::cout << "waiting finished" << std::endl;
 
-  auto yanghui_job_actor1 =
-      system.middleman().remote_actor(cfg.root_host, yanghui_job_port1);
-  if (!yanghui_job_actor1)
-    std::cerr << "unable to connect to yanghui_job_actor1: "
-              << to_string(yanghui_job_actor1.error()) << '\n';
-
-  auto yanghui_job_actor2 =
-      system.middleman().remote_actor(cfg.root_host, yanghui_job_port2);
-  if (!yanghui_job_actor2)
-    std::cerr << "unable to connect to yanghui_job_actor2: "
-              << to_string(yanghui_job_actor2.error()) << '\n';
-
-  auto yanghui_job_actor3 =
-      system.middleman().remote_actor(cfg.root_host, yanghui_job_port3);
-  if (!yanghui_job_actor3)
-    std::cerr << "unable to connect to yanghui_job_actor3: "
-              << to_string(yanghui_job_actor3.error()) << '\n';
-
-  auto yanghui_job_actor4 =
-      system.middleman().remote_actor(cfg.root_host, yanghui_job_port4);
-  if (!yanghui_job_actor4)
-    std::cerr << "unable to connect to yanghui_job_actor4: "
-              << to_string(yanghui_job_actor4.error()) << '\n';
+  std::vector<caf::actor> yanghui_jobs;
+  auto error = AddYanghuiJob(system, cfg.root_host, yanghui_jobs);
+  if (error) {
+    return;
+  }
 
   caf::scoped_actor self{system};
-
-  std::vector<caf::actor> yanghui_jobs;
-  yanghui_jobs.push_back(*yanghui_job_actor1);
-  yanghui_jobs.push_back(*yanghui_job_actor2);
-  yanghui_jobs.push_back(*yanghui_job_actor3);
-  yanghui_jobs.push_back(*yanghui_job_actor4);
 
   int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
   YanghuiData yanghui_data;
