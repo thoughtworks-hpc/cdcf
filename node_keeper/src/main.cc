@@ -5,6 +5,7 @@
 
 #include <vector>
 
+#include "../logger/include/logger.h"
 #include "src/node_keeper.h"
 
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config);
@@ -27,13 +28,14 @@ int main(int argc, char* argv[]) {
   }
   node_keeper::NodeKeeper keeper(config);
 
+  PosixProcessManager process_manager;
+  auto args = ConstructAppArgs(config);
+  Daemon daemon(
+      process_manager, config.app_, args,
+      [&keeper]() { keeper.NotifyActorSystemDown(); },
+      [&keeper]() { keeper.NotifyLeave(); });
+
   if ("" != config.app_args_) {
-    PosixProcessManager process_manager;
-    auto args = ConstructAppArgs(config);
-    Daemon daemon(
-        process_manager, config.app_, args,
-        [&keeper]() { keeper.NotifyActorSystemDown(); },
-        [&keeper]() { keeper.NotifyLeave(); });
     daemon.Start();
   }
 

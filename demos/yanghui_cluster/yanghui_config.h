@@ -85,8 +85,8 @@ class config : public actor_system::Config {
   uint16_t root_port = 0;
   std::string root_host = "localhost";
   uint16_t worker_port = 0;
-  std::string node_keeper_host = "";
-  uint16_t node_keeper_port = 4445;
+  std::string node_keeper_host = "127.0.0.1";
+  uint16_t node_keeper_port = 50051;
   bool root = false;
   int worker_load = 0;
 
