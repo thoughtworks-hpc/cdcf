@@ -537,6 +537,11 @@ int AddYanghuiJob(caf::actor_system& system, std::string host,
   yanghui_jobs.push_back(*yanghui_job_actor3);
   yanghui_jobs.push_back(*yanghui_job_actor4);
 
+  std::cout << "yanghui_job_actor1: " << yanghui_job_actor1->id() << std::endl;
+  std::cout << "yanghui_job_actor2: " << yanghui_job_actor2->id() << std::endl;
+  std::cout << "yanghui_job_actor3: " << yanghui_job_actor3->id() << std::endl;
+  std::cout << "yanghui_job_actor4: " << yanghui_job_actor4->id() << std::endl;
+
   return 0;
 }
 
@@ -545,29 +550,28 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
                            int result_to_check) {
   bool running_status_normal = true;
 
-  self->request(job_actor, std::chrono::seconds(180), yanghui_data)
-      .receive(
-          [&](bool status, int result) {
-            if (!status) {
-              aout(self) << "failed job: " << job_actor.id()
-                         << " : calculation error" << std::endl;
-              running_status_normal = false;
-            } else {
-              if (result != result_to_check) {
-                aout(self) << "inconsistent job: " << job_actor.id()
-                           << std::endl;
-                running_status_normal = false;
-              } else {
-                aout(self) << "succeeded job: " << job_actor.id()
-                           << ", with result: " << result << std::endl;
-              }
-            }
-          },
-          [&](caf::error& err) {
-            aout(self) << "failed job: " << job_actor.id() << " : "
-                       << system.render(err) << std::endl;
+  self->send(job_actor, yanghui_data);
+  self->receive(
+      [&](bool status, int result) {
+        if (!status) {
+          aout(self) << "failed job: " << job_actor.id()
+                     << " : calculation error" << std::endl;
+          running_status_normal = false;
+        } else {
+          if (result != result_to_check) {
+            aout(self) << "inconsistent job: " << job_actor.id() << std::endl;
             running_status_normal = false;
-          });
+          } else {
+            aout(self) << "succeeded job: " << job_actor.id()
+                       << ", with result: " << result << std::endl;
+          }
+        }
+      },
+      [&](caf::error& err) {
+        aout(self) << "failed job: " << job_actor.id() << " : "
+                   << system.render(err) << std::endl;
+        running_status_normal = false;
+      });
 
   return running_status_normal;
 }
@@ -594,7 +598,7 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
       std::cout << "sending job to yanghui_job " << i << std::endl;
       running_status_normal = SendJobAndCheckResult(
           system, self, yanghui_jobs[i], yanghui_data, yanghui_job_result);
-      std::this_thread::sleep_for(std::chrono::seconds(2));
+      std::this_thread::sleep_for(std::chrono::seconds(5));
     }
   }
 }
