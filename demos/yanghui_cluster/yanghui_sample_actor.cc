@@ -13,7 +13,7 @@ caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,
   const int batch = 3;
   return {
       [=](const std::vector<int>& data) {
-        int len = data.size();
+        int len = static_cast<int>(data.size());
         if (1 == len) {
           // std::cout << "final result:" << data[0] << std::endl;
           self->send(out_data, data[0]);

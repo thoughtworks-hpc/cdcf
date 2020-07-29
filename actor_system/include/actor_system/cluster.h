@@ -97,6 +97,7 @@ class Cluster : public Subject {
 
  public:
   static Cluster* GetInstance();
+  static Cluster* GetInstance(const std::string& host_ip, uint16_t port);
 
   ~Cluster();
 
@@ -106,6 +107,7 @@ class Cluster : public Subject {
 
  private:
   Cluster();
+  Cluster(const std::string& host_ip, uint16_t port);
 
   std::unique_ptr<ClusterImpl> impl_;
 };

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(cluster_monitor)
 
-
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
 find_package(grpc REQUIRED)
@@ -15,7 +14,13 @@ set(NODE_MONITOR_PROTO_SRCS "${PB_DIR}/node_monitor.pb.cc")
 set(NODE_MONITOR_PROTO_HDRS "${PB_DIR}/node_monitor.pb.h")
 set(NODE_MONITOR_GRPC_SRCS "${PB_DIR}/node_monitor.grpc.pb.cc")
 set(NODE_MONITOR_GRPC_HDRS "${PB_DIR}/node_monitor.grpc.pb.h")
-set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
+
+if (WIN32)
+    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
+else()
+    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
+endif()
+
 add_custom_command(
         OUTPUT "${NODE_MONITOR_PROTO_SRCS}" "${NODE_MONITOR_PROTO_HDRS}" "${NODE_MONITOR_GRPC_SRCS}" "${NODE_MONITOR_GRPC_HDRS}"
         COMMAND $<TARGET_FILE:protobuf::protoc>

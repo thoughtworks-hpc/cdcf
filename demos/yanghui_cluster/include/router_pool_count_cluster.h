@@ -13,11 +13,13 @@
 class RouterPoolCountCluster : public CountCluster {
  public:
   RouterPoolCountCluster(std::string host, caf::actor_system& system,
-                         uint16_t port, uint16_t worker_port,
+                         const std::string& node_keeper_host,
+                         uint16_t node_keeper_port, uint16_t worker_port,
                          std::string& routee_name, caf::message& routee_args,
                          caf::actor_system::mpi& routee_ifs,
                          size_t& default_actor_num,
                          caf::actor_pool::policy& policy);
+  virtual ~RouterPoolCountCluster();
 
   void Update(const actor_system::cluster::Event& event) override;
 
@@ -36,7 +38,6 @@ class RouterPoolCountCluster : public CountCluster {
  private:
   caf::actor_system& system_;
   std::string host_;
-  uint16_t port_;
   uint16_t worker_port_;
   caf::actor pool_;
 };

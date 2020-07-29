@@ -20,7 +20,8 @@
   }
 
   caf::scheduler::abstract_coordinator &sch = actor_system_.scheduler();
-  response->set_actor_worker(sch.num_workers());
+  response->set_actor_worker(
+      static_cast<google::protobuf::int32>(sch.num_workers()));
 
   return ::grpc::Status::OK;
 }

@@ -37,9 +37,10 @@ CDCFConfig::RetValue CDCFConfig::parse_config(int argc, char** argv,
     return RetValue::kFailure;
   }
 
-  size_t thread_num =
-      floor(std::thread::hardware_concurrency() * threads_proportion);
-  set("scheduler.max-threads", std::max(thread_num, 4ul));
+  size_t thread_num = static_cast<size_t>(
+      floor(std::thread::hardware_concurrency() * threads_proportion));
+  const size_t min_thread_num = 4;
+  set("scheduler.max-threads", std::max(thread_num, min_thread_num));
 
   return RetValue::kSuccess;
 }
@@ -56,9 +57,11 @@ CDCFConfig::RetValue CDCFConfig::parse_config(
     return RetValue::kFailure;
   }
 
-  size_t thread_num =
-      floor(std::thread::hardware_concurrency() * threads_proportion);
-  set("scheduler.max-threads", std::max(thread_num, 4ul));
+  size_t thread_num = static_cast<size_t>(
+      floor(std::thread::hardware_concurrency() * threads_proportion));
+
+  const size_t min_thread_size = 4;
+  set("scheduler.max-threads", std::max(thread_num, min_thread_size));
 
   return RetValue::kSuccess;
 }

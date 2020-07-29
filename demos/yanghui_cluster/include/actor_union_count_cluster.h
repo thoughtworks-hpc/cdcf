@@ -15,13 +15,14 @@
 class ActorUnionCountCluster : public CountCluster {
  public:
   explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
-                                  uint16_t port, uint16_t worker_port,
-                                  bool enable_ssl)
-      : CountCluster(host),
+                                  const std::string& node_keeper_host,
+                                  uint16_t node_keeper_port,
+                                  uint16_t worker_port, bool enable_ssl)
+      : CountCluster(host, node_keeper_host, node_keeper_port),
+
         host_(std::move(host)),
         system_(system),
         context_(&system_),
-        port_(port),
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()),
         enable_ssl_(enable_ssl) {
@@ -39,7 +40,6 @@ class ActorUnionCountCluster : public CountCluster {
 
   caf::actor_system& system_;
   std::string host_;
-  uint16_t port_;
   uint16_t worker_port_;
   ActorUnion counter_;
   caf::scoped_execution_unit context_;
