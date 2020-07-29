@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  yanghui_root_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_root_v2
+      ROLE: root
+      SEEDS: yanghui_root_v2:4445
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
+    networks:
+      - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
+  yanghui_root_v2_actor_system:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_root_v2_actor_system
+      APP: ""
+      APP_ARGS:  --role=root --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --node_keeper_host=yanghui_root_v2 --node_port=50051 --log_file_size=2048 --openssl.cafile=/openssl/ca-noenc.crt --openssl.certificate=/openssl/node1.cert.pem --openssl.key=/openssl/node1.key.pem
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2_actor_system.log --log_level=debug --log_file_size=2048
+
+    networks:
+      - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
+    command: /bin/bash -c "sleep 1000000000"
+  yanghui_worker1_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_worker1_v2
+      ROLE: worker
+      SEEDS: yanghui_root_v2:4445
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
+      APP: /bin/yanghui_cluster_root_v2
+      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=2048 --openssl.cafile=/openssl/ca-noenc.crt --openssl.certificate=/openssl/node2.cert.pem --openssl.key=/openssl/node2.key.pem
+    networks:
+      - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
+  yanghui_worker2_v2:
+    image: cdcf:latest
+    environment:
+      HOST: yanghui_worker2_v2
+      ROLE: worker
+      SEEDS: yanghui_root_v2:4445
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
+      APP: /bin/yanghui_cluster_root_v2
+      APP_ARGS: --root_host=yanghui_root_v2 -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker2_v2.log --log_level=debug --log_file_size=2048 --openssl.cafile=/openssl/ca-noenc.crt --openssl.certificate=/openssl/node3.cert.pem --openssl.key=/openssl/node3.key.pem
+    networks:
+      - cdcf
+    volumes:
+      - /tmp/log:/tmp/log
+  yanghui_monitor:
+    image: cdcf:latest
+    networks:
+      - cdcf
+    command: /bin/bash -c "sleep 1000000000"
+networks:
+  cdcf:
+    driver: bridge
