@@ -20,6 +20,8 @@ class ClusterImpl {
     const std::string& host{"127.0.0.1"};
     const uint16_t port = 50051;
     auto address = host + ":" + std::to_string(port);
+    std::cout << "ClusterImpl connect to node keeper address:" << address
+              << std::endl;
     auto channel =
         grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
     auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);
@@ -32,6 +34,8 @@ class ClusterImpl {
   ClusterImpl(const std::string& host_ip, uint16_t port) {
     const std::string& host{host_ip};
     auto address = host + ":" + std::to_string(port);
+    std::cout << "ClusterImpl connect to node keeper with parameter address:"
+              << address << std::endl;
     auto channel =
         grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
     auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);

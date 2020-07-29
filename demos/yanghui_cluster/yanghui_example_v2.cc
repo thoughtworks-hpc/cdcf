@@ -70,7 +70,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   }
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
-  auto actor2 = system.spawn<typed_slow_calculator>();
+  auto actor2 = system.spawn<typed_calculator>();
   actor_port = publish(caf::actor_cast<caf::actor>(actor2),
                        k_yanghui_work_port2, nullptr, true);
   if (!actor_port) {
@@ -80,7 +80,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   }
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
-  auto actor3 = system.spawn<typed_slow_calculator>();
+  auto actor3 = system.spawn<typed_calculator>();
   actor_port = publish(caf::actor_cast<caf::actor>(actor3),
                        k_yanghui_work_port3, nullptr, true);
   if (!actor_port) {
