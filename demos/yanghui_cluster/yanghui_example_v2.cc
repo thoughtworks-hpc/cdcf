@@ -47,7 +47,7 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  YanghuiIO yanghui_io(cfg, system);
+  YanghuiIO yanghui_io(cfg);
   auto actor1 = system.spawn<typed_calculator>();
 
   auto actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor1),
@@ -216,7 +216,7 @@ size_t InputSize() {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  YanghuiIO yanghui_io(cfg, system);
+  YanghuiIO yanghui_io(cfg);
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
