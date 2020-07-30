@@ -25,6 +25,7 @@
 #include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_with_priority.h"
+#include "include/yanghui_io.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
