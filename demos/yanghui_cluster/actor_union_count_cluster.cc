@@ -7,12 +7,7 @@
 
 void ActorUnionCountCluster::AddWorkerNodeWithPort(const std::string& host,
                                                    uint16_t port) {
-  auto remote_actor = caf::io::remote_actor<>;
-  if (enable_ssl_) {
-    remote_actor = caf::openssl::remote_actor<>;
-  }
-
-  auto worker_actor = remote_actor(system_, host, port);
+  auto worker_actor = yanghui_io_.remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
               << ", port:" << port
@@ -32,7 +27,7 @@ void ActorUnionCountCluster::AddWorkerNode(const std::string& host) {
   AddWorkerNodeWithPort(host, k_yanghui_work_port3);
 
   auto worker_actor =
-      system_.middleman().remote_actor(host, k_yanghui_work_port4);
+      yanghui_io_.remote_actor(system_, host, k_yanghui_work_port4);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
               << ", port:" << k_yanghui_work_port4 << std::endl;

@@ -42,7 +42,7 @@ caf::strong_actor_ptr WorkerPool::GetWorker() {
 }
 
 int WorkerPool::AddWorker(const std::string& host) {
-  auto actor = system_.middleman().remote_actor(host, worker_port_);
+  auto actor = yanghui_io_.remote_actor(system_, host, worker_port_);
   if (!actor) {
     CDCF_LOGGER_ERROR("connect failed. host: {}, port: {}, error: {}", host,
                       worker_port_, system_.render(actor.error()));

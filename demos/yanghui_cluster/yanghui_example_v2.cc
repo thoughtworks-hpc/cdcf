@@ -24,8 +24,8 @@
 #include "include/router_pool_count_cluster.h"
 #include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
-#include "include/yanghui_with_priority.h"
 #include "include/yanghui_io.h"
+#include "include/yanghui_with_priority.h"
 
 caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
                        const std::string& name, caf::message args,
@@ -47,21 +47,11 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
+  YanghuiIO yanghui_io(cfg, system);
   auto actor1 = system.spawn<typed_calculator>();
 
-  bool enable_ssl = !cfg.openssl_cafile.empty() ||
-                    !cfg.openssl_certificate.empty() ||
-                    !cfg.openssl_key.empty();
-
-  CDCF_LOGGER_INFO("enable ssl: {}", enable_ssl);
-
-  auto publish = caf::io::publish<caf::actor>;
-  if (enable_ssl) {
-    publish = caf::openssl::publish<caf::actor>;
-  }
-
-  auto actor_port = publish(caf::actor_cast<caf::actor>(actor1),
-                            k_yanghui_work_port1, nullptr, true);
+  auto actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor1),
+                                       k_yanghui_work_port1, nullptr, true);
   if (!actor_port) {
     std::cout << "publish actor1 failed, error: "
               << system.render(actor_port.error()) << std::endl;
@@ -70,8 +60,8 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
   auto actor2 = system.spawn<typed_calculator>();
-  actor_port = publish(caf::actor_cast<caf::actor>(actor2),
-                       k_yanghui_work_port2, nullptr, true);
+  actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor2),
+                                  k_yanghui_work_port2, nullptr, true);
   if (!actor_port) {
     std::cout << "publish actor2 failed, error: "
               << system.render(actor_port.error()) << std::endl;
@@ -80,8 +70,8 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
   auto actor3 = system.spawn<typed_calculator>();
-  actor_port = publish(caf::actor_cast<caf::actor>(actor3),
-                       k_yanghui_work_port3, nullptr, true);
+  actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor3),
+                                  k_yanghui_work_port3, nullptr, true);
   if (!actor_port) {
     std::cout << "publish actor3 failed, error: "
               << system.render(actor_port.error()) << std::endl;
@@ -91,9 +81,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   auto actor_for_load_balance_demo =
       system.spawn(simple_counter_add_load, cfg.worker_load);
-  system.middleman().publish(
-      caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
-      k_yanghui_work_port4);
+  // Todo: 错误处理
+  yanghui_io.publish(caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
+                     k_yanghui_work_port4);
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
             << ", worker_load:" << cfg.worker_load << std::endl;
 
@@ -102,8 +92,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
 
-  actor_port =
-      system.middleman().publish(cdcf_spawn, cfg.worker_port, nullptr, true);
+  actor_port = yanghui_io.publish(cdcf_spawn, cfg.worker_port, nullptr, true);
 
   if (!actor_port) {
     std::cout << "publish cdcf_spawn failed, error: "
@@ -227,14 +216,9 @@ size_t InputSize() {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+  YanghuiIO yanghui_io(cfg, system);
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
-
-  bool enable_ssl = !cfg.openssl_cafile.empty() ||
-                    !cfg.openssl_certificate.empty() ||
-                    !cfg.openssl_key.empty();
-
-  CDCF_LOGGER_INFO("enable ssl: {}", enable_ssl);
 
   // router pool
   std::string routee_name = "calculator";
@@ -276,7 +260,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
   auto* actor_cluster = new ActorUnionCountCluster(
       cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
-      cfg.worker_port, enable_ssl);
+      cfg.worker_port, yanghui_io);
 
   count_cluster = actor_cluster;
 
@@ -325,7 +309,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
-  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port);
+  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port, yanghui_io);
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
