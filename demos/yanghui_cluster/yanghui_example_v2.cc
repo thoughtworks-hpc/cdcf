@@ -46,8 +46,6 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  system.middleman().open(cfg.worker_port, nullptr, true);
-
   auto actor1 = system.spawn<typed_calculator>();
 
   bool enable_ssl = !cfg.openssl_cafile.empty() ||
@@ -102,7 +100,15 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
-  system.middleman().publish(cdcf_spawn, cfg.worker_port);
+
+  actor_port =
+      system.middleman().publish(cdcf_spawn, cfg.worker_port, nullptr, true);
+
+  if (!actor_port) {
+    std::cout << "publish cdcf_spawn failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
 
   auto form_actor1 = caf::actor_cast<caf::actor>(actor1);
   auto form_actor2 = caf::actor_cast<caf::actor>(actor2);
