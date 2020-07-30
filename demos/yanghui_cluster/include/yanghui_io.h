@@ -38,6 +38,8 @@ class YanghuiIO {
     return use_ssl_ ? caf::openssl::remote_actor(system, host, port)
                     : caf::io::remote_actor(system, host, port);
   }
+
+  bool IsUseSSL() const { return use_ssl_; }
 };
 
 #endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_IO_H_

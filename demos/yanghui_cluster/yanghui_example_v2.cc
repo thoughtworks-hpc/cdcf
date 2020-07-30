@@ -229,7 +229,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto pool_cluster = new RouterPoolCountCluster(
       cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
       cfg.worker_port, routee_name, routee_args, routee_ifs, default_size,
-      policy);
+      policy, yanghui_io.IsUseSSL());
   pool_cluster->InitWorkerNodes();
   auto pool_actor = system.spawn(yanghui, pool_cluster);
   actor_status_monitor.RegisterActor(pool_actor, "Yanghui",

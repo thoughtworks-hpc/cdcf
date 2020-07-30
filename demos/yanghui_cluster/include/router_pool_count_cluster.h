@@ -18,7 +18,7 @@ class RouterPoolCountCluster : public CountCluster {
                          std::string& routee_name, caf::message& routee_args,
                          caf::actor_system::mpi& routee_ifs,
                          size_t& default_actor_num,
-                         caf::actor_pool::policy& policy);
+                         caf::actor_pool::policy& policy, bool use_ssl);
   virtual ~RouterPoolCountCluster();
 
   void Update(const actor_system::cluster::Event& event) override;

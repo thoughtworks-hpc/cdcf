@@ -24,10 +24,11 @@ using actor_atom = caf::atom_constant<caf::atom("actor")>;
 
 class RouterPool : public caf::event_based_actor {
  public:
-  RouterPool(caf::actor_config& cfg, std::string& name,
-             std::string& description, std::string& routee_name,
-             caf::message& routee_args, std::set<std::string>& routee_mpi,
-             size_t& default_actor_num, caf::actor_pool::policy& policy);
+  RouterPool(caf::actor_config& cfg, caf::actor_system& system,
+             std::string& name, std::string& description,
+             std::string& routee_name, caf::message& routee_args,
+             std::set<std::string>& routee_mpi, size_t& default_actor_num,
+             caf::actor_pool::policy& policy, bool use_ssl);
   ~RouterPool() override;
   void enqueue(caf::mailbox_element_ptr, caf::execution_unit*) override;
 
@@ -56,6 +57,8 @@ class RouterPool : public caf::event_based_actor {
   caf::message factory_args_;
   std::set<std::string> mpi_;
   caf::actor pool_;
+  const bool use_ssl_;
+  caf::actor_system& system_;
   // mutx
   std::mutex actor_lock_;
   // name(host:port) -- actors
