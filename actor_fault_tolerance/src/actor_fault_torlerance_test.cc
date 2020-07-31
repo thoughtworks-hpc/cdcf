@@ -11,18 +11,18 @@ using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;
 
 caf::behavior calculator_fun(caf::event_based_actor* self) {
-  return {[=](add_atom, int a, int b) -> int {
-            caf::aout(self)
-                << "received add_atom task from remote node. input a:" << a
-                << " b:" << b << std::endl;
-            return a + b;
-          },
-          [=](sub_atom, int a, int b) -> int {
-            caf::aout(self)
-                << "received sub_atom task from a remote node. input a:" << a
-                << " b:" << b << std::endl;
-            return a - b;
-          }};
+  return {
+      [=](add_atom, int a, int b) -> int {
+        CDCF_LOGGER_INFO(
+            "received add_atom task from remote node. input a:{} b:{}", a, b);
+        return a + b;
+      },
+      [=](sub_atom, int a, int b) -> int {
+        CDCF_LOGGER_INFO(
+            "received sub_atom task from remote node. input a:{} b:{}", a, b);
+
+        return a - b;
+      }};
 }
 
 caf::behavior calculator_error(caf::event_based_actor* self) {
