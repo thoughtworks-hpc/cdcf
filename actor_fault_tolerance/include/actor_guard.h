@@ -57,6 +57,7 @@ class ActorGuard {
     } else {
       std::cout << "restart actor failed. message:" << caf::to_string(message)
                 << " will not deliver." << std::endl;
+      error_deal_function(err);
     }
   }
 

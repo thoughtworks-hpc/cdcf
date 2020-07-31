@@ -239,3 +239,32 @@ TEST_F(ActorGuardTest, actor_exit) {
   EXPECT_EQ(result, 8);
   EXPECT_EQ(false, error);
 }
+
+TEST_F(ActorGuardTest, actor_restart_failed) {
+  std::promise<int> promise;
+  int result = 0;
+  bool error = false;
+
+  ActorGuard actor_guard(
+      calculator1_,
+      [=](std::atomic<bool>& active) -> caf::actor {
+        active = false;
+        return system_.spawn(calculator_fun);
+      },
+      system_);
+
+  caf::anon_send_exit(calculator1_, caf::exit_reason::kill);
+
+  actor_guard.SendAndReceive(
+      [&](int return_vale) { promise.set_value(return_vale); },
+      [&](const caf::error&) {
+        error = true;
+        promise.set_value(0);
+      },
+      add_atom::value, 3, 5);
+
+  result = promise.get_future().get();
+
+  EXPECT_EQ(result, 0);
+  EXPECT_EQ(true, error);
+}
