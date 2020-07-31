@@ -1,22 +1,24 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 #include "caf/openssl/all.hpp"
 
-using namespace caf;
-
-behavior make_pong_behavior() {
+caf::behavior make_pong_behavior() {
   return {[](std::string str) {
     std::cout << "receive msg: " << str << std::endl;
   }};
 }
 
-behavior make_pong_ssl_behavior() {
+caf::behavior make_pong_ssl_behavior() {
   return {[](std::string str) {
     std::cout << "ssl receive msg: " << str << std::endl;
   }};
 }
 
-void caf_main(actor_system& system, const actor_system_config& cfg) {
+void caf_main(caf::actor_system& system, const caf::actor_system_config& cfg) {
   std::cout << "cafile: " << cfg.openssl_cafile << std::endl;
   std::cout << "certificate: " << cfg.openssl_certificate << std::endl;
   std::cout << "key: " << cfg.openssl_key << std::endl;

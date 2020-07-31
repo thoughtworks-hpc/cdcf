@@ -1,11 +1,13 @@
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+
 #include <iostream>
 #include <string>
 
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 #include "caf/openssl/all.hpp"
-
-using namespace caf;
 
 caf::actor connect_tcp_worker(caf::actor_system &system,
                               const std::string &host) {
@@ -32,7 +34,7 @@ caf::actor connect_ssl_worker(caf::actor_system &system,
   return *result_ssl;
 }
 
-[[noreturn]] void caf_main(actor_system &system) {
+[[noreturn]] void caf_main(caf::actor_system &system) {
   std::string dummy;
   //    std::cout << "Please input remote host: ";
   //    std::getline(std::cin, dummy);

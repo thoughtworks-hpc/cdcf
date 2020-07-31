@@ -11,7 +11,7 @@
 
 #include "../../../actor_fault_tolerance/include/actor_union.h"
 #include "./count_cluster.h"
-#include "yanghui_io.h"
+#include "./yanghui_io.h"
 
 class ActorUnionCountCluster : public CountCluster {
  public:
