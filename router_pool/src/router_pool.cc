@@ -6,20 +6,21 @@
 
 #include <unordered_set>
 
+#include <caf/openssl/all.hpp>
+
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
 namespace cdcf::router_pool {
 
-RouterPool::RouterPool(caf::actor_config& cfg, std::string& name,
-                       std::string& description, std::string& factory_name,
-                       caf::message& factory_msg, std::set<std::string>& mpi,
-                       size_t& default_actor_num,
-                       caf::actor_pool::policy& policy)
-    : event_based_actor(cfg) {
-  caf::actor_system& system_1 = system();
-  caf::scoped_actor self{system_1};
-  caf::scoped_execution_unit context{&system_1};
+RouterPool::RouterPool(caf::actor_config& cfg, caf::actor_system& system,
+                       std::string& name, std::string& description,
+                       std::string& factory_name, caf::message& factory_msg,
+                       std::set<std::string>& mpi, size_t& default_actor_num,
+                       caf::actor_pool::policy& policy, bool use_ssl)
+    : event_based_actor(cfg), use_ssl_(use_ssl), system_(system) {
+  caf::scoped_actor self{system};
+  caf::scoped_execution_unit context{&system};
   pool_ = caf::actor_pool::make(&context, std::move(policy));
   name_ = name;
   description_ = description;
@@ -272,7 +273,12 @@ caf::actor RouterPool::GetSpawnActor(const std::string& host, uint16_t port) {
   if (host.empty()) {
     return nullptr;
   }
-  auto gateway = system().middleman().remote_actor(host, port);
+  auto remote_actor = caf::io::remote_actor<>;
+  if (use_ssl_) {
+    remote_actor = caf::openssl::remote_actor<>;
+  }
+
+  auto gateway = remote_actor(system_, host, port);
   if (!gateway) {
     std::cerr << "*** connect failed: " << to_string(gateway.error())
               << std::endl;

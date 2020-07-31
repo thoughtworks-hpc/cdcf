@@ -11,13 +11,14 @@
 
 #include "../../../actor_fault_tolerance/include/actor_union.h"
 #include "./count_cluster.h"
+#include "./yanghui_io.h"
 
 class ActorUnionCountCluster : public CountCluster {
  public:
   explicit ActorUnionCountCluster(std::string host, caf::actor_system& system,
                                   const std::string& node_keeper_host,
                                   uint16_t node_keeper_port,
-                                  uint16_t worker_port, bool enable_ssl)
+                                  uint16_t worker_port, YanghuiIO& yanghui_io)
       : CountCluster(host, node_keeper_host, node_keeper_port),
 
         host_(std::move(host)),
@@ -25,7 +26,7 @@ class ActorUnionCountCluster : public CountCluster {
         context_(&system_),
         worker_port_(worker_port),
         counter_(system, caf::actor_pool::round_robin()),
-        enable_ssl_(enable_ssl) {
+        yanghui_io_(yanghui_io) {
     auto policy = cdcf::load_balancer::policy::MinLoad(1);
     load_balance_ =
         cdcf::load_balancer::Router::Make(&context_, std::move(policy));
@@ -44,7 +45,7 @@ class ActorUnionCountCluster : public CountCluster {
   ActorUnion counter_;
   caf::scoped_execution_unit context_;
   caf::actor load_balance_;
-  bool enable_ssl_;
+  YanghuiIO& yanghui_io_;
 };
 
 #endif  //  DEMOS_YANGHUI_CLUSTER_INCLUDE_ACTOR_UNION_COUNT_CLUSTER_H_

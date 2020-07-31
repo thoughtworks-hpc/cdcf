@@ -37,7 +37,7 @@ COPY --from=builder /cdcf/cluster_monitor/cluster_monitor_client /bin/cluster_mo
 
 RUN apt-get clean \
         && apt-get update \
-        && apt-get install procps -y
+        && apt-get install procps tcpdump -y
 
 COPY docker/script.sh /bin/script.sh
 COPY docker/openssl /openssl
