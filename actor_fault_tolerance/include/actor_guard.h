@@ -51,6 +51,8 @@ class ActorGuard {
     std::cout << "send msg failed, try restart dest actor." << std::endl;
     keep_actor_ = restart_fun_(active_);
 
+    std::string error_info = caf::to_string(err);
+
     if (active_) {
       std::cout << "restart actor success." << std::endl;
       (void)SendAndReceive(return_function, error_deal_function, message);

@@ -55,6 +55,7 @@ class ActorUnion {
                         std::function<void(caf::error)> handle_error_function,
                         caf::error err, uint16_t has_try_time) {
     if ("system" != caf::to_string(err.category())) {
+      auto error_category = caf::to_string(err.category());
       // not system error, mean actor not down, this is a business error.
       handle_error_function(err);
       return;
