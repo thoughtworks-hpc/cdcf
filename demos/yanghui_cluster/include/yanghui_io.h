@@ -8,6 +8,7 @@
 
 #include "../../../logger/include/logger.h"
 #include "../yanghui_config.h"
+#include <string>
 
 class YanghuiIO {
   const bool use_ssl_;
