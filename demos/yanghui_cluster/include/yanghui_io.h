@@ -4,11 +4,12 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_IO_H_
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_IO_H_
+#include <string>
+
 #include <caf/openssl/all.hpp>
 
 #include "../../../logger/include/logger.h"
 #include "../yanghui_config.h"
-#include <string>
 
 class YanghuiIO {
   const bool use_ssl_;
