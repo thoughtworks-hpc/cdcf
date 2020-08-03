@@ -1,4 +1,4 @@
-name: Ubuntu MacOS Build
+name: 'Ubuntu MacOS Build'
 
 on: [push]
 
