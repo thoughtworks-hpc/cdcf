@@ -1,4 +1,4 @@
-name: windows compile
+name: 'Windows Build'
 
 on: [push]
 

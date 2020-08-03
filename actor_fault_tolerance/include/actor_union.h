@@ -9,6 +9,8 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
+#include "../../logger/include/logger.h"
+
 enum class actor_union_error : uint8_t { all_actor_out_of_work = 1 };
 
 caf::error make_error(actor_union_error x);
@@ -63,13 +65,14 @@ class ActorUnion {
     has_try_time++;
 
     if (has_try_time <= actor_count_) {
-      std::cout << "send msg failed, try send to another actor. try_time:"
-                << has_try_time << std::endl;
+      CDCF_LOGGER_ERROR(
+          "send msg failed, try send to another actor. try_time:{}",
+          has_try_time);
       SendAndReceiveWithTryTime(return_function, handle_error_function,
                                 has_try_time, msg);
     } else {
-      std::cout << "send msg failed, return error. try_time:" << has_try_time
-                << std::endl;
+      CDCF_LOGGER_ERROR("send msg failed, return error. try_time:{}",
+                        has_try_time);
       caf::error ret_error =
           make_error(actor_union_error::all_actor_out_of_work);
       handle_error_function(ret_error);
