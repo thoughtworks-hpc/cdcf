@@ -561,9 +561,13 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
           if (result != result_to_check) {
             aout(self) << "inconsistent job: " << job_actor.id() << std::endl;
             running_status_normal = false;
+            CDCF_LOGGER_INFO("Yanghui Test: job id {} result inconsistent",
+                             job_actor.id());
           } else {
             aout(self) << "succeeded job: " << job_actor.id()
                        << ", with result: " << result << std::endl;
+            CDCF_LOGGER_INFO("Yanghui Test: job id {} succeeded with result {}",
+                             job_actor.id(), result);
           }
         }
       },
@@ -571,12 +575,14 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
         aout(self) << "failed job: " << job_actor.id() << " : "
                    << system.render(err) << std::endl;
         running_status_normal = false;
+        CDCF_LOGGER_INFO("Yanghui Test: job id {} failed", job_actor.id());
       });
 
   return running_status_normal;
 }
 
 void SillyClientStart(caf::actor_system& system, const config& cfg) {
+  CDCF_LOGGER_DEBUG("Yanghui Test: Start");
   std::cout << "waiting 10 seconds" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(10));
   std::cout << "waiting finished" << std::endl;
