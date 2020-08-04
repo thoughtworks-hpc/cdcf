@@ -7,10 +7,12 @@ CDCFConfig::CDCFConfig() {
   opt_group{custom_options_, "global"}
       .add(threads_proportion, "threads_proportion", "set threads proportion")
       .add(log_file_, "log_file",
-           "set log file name, default: cdcf.log,"
+           "set log file name,"
            " format in: /user/cdcf/cdcf.log")
       .add(log_level_, "log_level",
            "set log level, default: info, format in: info")
+      .add(log_to_console_, "log_to_console",
+           "set whether to print log to console, default: true")
       .add(log_file_size_in_bytes_, "log_file_size",
            "set maximum rotating log file size in bytes,"
            " default: unlimited, format in: 1024")
