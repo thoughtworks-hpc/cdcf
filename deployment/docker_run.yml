@@ -1,0 +1,31 @@
+---
+- name: Run docker compose
+  hosts: server
+  become: true
+  tasks:
+    - name: Run docker compose on server
+      docker_compose:
+        project_src: /home/twer/cdcf/docker/
+        files: yanghui_cluster_test_env.yml
+        services: yanghui_root_v2
+        state: present
+- name: Run docker compose
+  hosts: worker
+  become: true
+  tasks:
+    - name: Run docker compose on worker
+      docker_compose:
+        project_src: /home/twer/cdcf/docker/
+        files: yanghui_cluster_test_env.yml
+        services: yanghui_worker1_v2
+        state: present
+- name: Run docker compose
+  hosts: client
+  become: true
+  tasks:
+    - name: Run docker compose on client
+      docker_compose:
+        project_src: /home/twer/cdcf/docker/
+        files: yanghui_cluster_test_env.yml
+        services: yanghui_client
+        state: present
