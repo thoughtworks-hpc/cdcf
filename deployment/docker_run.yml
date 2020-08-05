@@ -1,4 +1,20 @@
 ---
+- name: Update git
+  tasks:
+    - git:
+      repo: 'https://github.com/thoughtworks-hpc/cdcf.git'
+      dest: /home/twer/
+      update: yes
+      version: yanghui_cluster_mod
+
+- name: Copy docker compose file to nodes
+  hosts: all
+  tasks:
+    - name: actual copying
+      copy:
+        src: /home/twer/cdcf/docker/yanghui_cluster_test_env.yml
+        dest: /home/twer/cdcf/docker/yanghui_cluster_test_env.yml
+
 - name: Run docker compose
   hosts: server
   become: true

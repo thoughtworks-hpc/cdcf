@@ -1,4 +1,12 @@
 ---
+- name: Update git
+  tasks:
+    - git:
+      repo: 'https://github.com/thoughtworks-hpc/cdcf.git'
+      dest: /home/twer/
+      update: yes
+      version: yanghui_cluster_mod
+
 - name: Run docker compose
   hosts: server
   become: true
