@@ -17,12 +17,6 @@ jobs:
           repository: highperformancecomputing/cdcf
           tag_with_ref: true
           
-      - name: Stop all running containers
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: docker_stop.yml
-          directory: ./deployment/
-          
       - name: Start containers using new image
         uses: dawidd6/action-ansible-playbook@v2
         with:
