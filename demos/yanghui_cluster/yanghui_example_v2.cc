@@ -582,7 +582,6 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
 }
 
 void SillyClientStart(caf::actor_system& system, const config& cfg) {
-  CDCF_LOGGER_DEBUG("Yanghui Test: Start");
   std::cout << "waiting 10 seconds" << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(10));
   std::cout << "waiting finished" << std::endl;
@@ -600,6 +599,7 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
 
   bool running_status_normal = true;
   while (running_status_normal) {
+    CDCF_LOGGER_INFO("Yanghui Test: start");
     for (int i = 0; i < yanghui_jobs.size(); i++) {
       std::cout << "sending job to yanghui_job " << i << std::endl;
       running_status_normal = SendJobAndCheckResult(
