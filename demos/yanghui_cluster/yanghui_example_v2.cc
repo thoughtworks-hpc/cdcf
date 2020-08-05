@@ -172,14 +172,19 @@ caf::behavior result_print_actor(caf::event_based_actor* self) {
 
 void downMsgHandle(const caf::down_msg& downMsg,
                    const std::string& actor_description) {
-  std::cout << std::endl;
-  std::cout << "=============actor monitor call===============" << std::endl;
-  std::cout << "down actor address:" << caf::to_string(downMsg.source)
-            << std::endl;
-  std::cout << "down actor description:" << actor_description << std::endl;
-  std::cout << "down reason:" << caf::to_string(downMsg.reason) << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
+  CDCF_LOGGER_WARN("=============actor monitor call===============");
+  CDCF_LOGGER_WARN("down actor address:{}", caf::to_string(downMsg.source));
+  CDCF_LOGGER_WARN("down actor description:", actor_description);
+  CDCF_LOGGER_WARN("down reason:", caf::to_string(downMsg.reason));
+
+  //  std::cout << std::endl;
+  //  std::cout << "=============actor monitor call===============" <<
+  //  std::endl; std::cout << "down actor address:" <<
+  //  caf::to_string(downMsg.source)
+  //            << std::endl;
+  //  std::cout << "down actor description:" << actor_description << std::endl;
+  //  std::cout << "down reason:" << caf::to_string(downMsg.reason) <<
+  //  std::endl; std::cout << std::endl; std::cout << std::endl;
 }
 
 void dealSendErr(const caf::error& err) {

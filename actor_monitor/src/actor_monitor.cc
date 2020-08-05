@@ -4,6 +4,8 @@
 
 #include "../include/actor_monitor.h"
 
+#include <logger.h>
+
 #include "../../actor_system/include/actor_system/cluster.h"
 
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
@@ -36,9 +38,9 @@ caf::behavior ActorMonitor::make_behavior() {
           actor_map_[caf::to_string(actor_addr)] = description;
         }
 
-        aout(this) << "monitor new actor, actor addr:"
-                   << caf::to_string(actor_addr)
-                   << "actor description:" << description << std::endl;
+        CDCF_LOGGER_INFO(
+            "monitor new actor, actor addr:{} actor description:{}",
+            caf::to_string(actor_addr), description);
       },
       [=](demonitor_atom, const std::string& actor_addr) {
         std::string description;
@@ -47,8 +49,9 @@ caf::behavior ActorMonitor::make_behavior() {
           description = actor_map_[actor_addr];
           actor_map_.erase(actor_addr);
         }
-        aout(this) << "stop monitor actor, actor addr:" << actor_addr
-                   << "actor description:" << description << std::endl;
+        CDCF_LOGGER_INFO(
+            "stop monitor actor, actor addr:{} actor description:{}",
+            actor_addr, description);
       }};
 }
 
