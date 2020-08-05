@@ -30,7 +30,6 @@ class ActorMonitorTest : public ::testing::Test {
   void SetUp() override {
     test_init_ = system_.spawn(test_init_actor);
     calculator_ = system_.spawn(calculator_with_error);
-    error_message_ = "";
   }
 
   void TearDown() override {}
@@ -41,13 +40,12 @@ class ActorMonitorTest : public ::testing::Test {
   caf::actor test_init_;
   caf::actor supervisor_;
   caf::actor calculator_;
-  std::string error_message_;
   std::promise<std::string> promise_;
 };
 
 TEST_F(ActorMonitorTest, happy_path) {
   caf::scoped_actor scoped_sender(system_);
-
+  std::string error_message_ = "";
   supervisor_ =
       system_.spawn<ActorMonitor>([&](const caf::down_msg& downMsg,
                                       const std::string& actor_description) {});
@@ -61,6 +59,7 @@ TEST_F(ActorMonitorTest, happy_path) {
 }
 
 TEST_F(ActorMonitorTest, should_report_down_msg_when_down_event_happen) {
+  std::string error_message_ = "";
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
@@ -76,6 +75,7 @@ TEST_F(ActorMonitorTest, should_report_down_msg_when_down_event_happen) {
 }
 
 TEST_F(ActorMonitorTest, should_report_exit_msg_when_exit_event_happen) {
+  std::string error_message_ = "";
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
@@ -92,6 +92,7 @@ TEST_F(ActorMonitorTest, should_report_exit_msg_when_exit_event_happen) {
 }
 
 TEST_F(ActorMonitorTest, should_report_error_msg_when_error_event_message) {
+  std::string error_message_ = "";
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
@@ -108,6 +109,7 @@ TEST_F(ActorMonitorTest, should_report_error_msg_when_error_event_message) {
 }
 
 TEST_F(ActorMonitorTest, should_report_default_msg_when_send_unknown_message) {
+  std::string error_message_ = "";
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
