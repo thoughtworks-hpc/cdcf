@@ -21,10 +21,10 @@ jobs:
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: docker_stop.yml
-          directory: /home/twer/cdcf/deployment/
+          directory: ./deployment/
           
       - name: Start containers using new image
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: docker_run.yml
-          directory: /home/twer/cdcf/deployment/
+          directory: ./deployment/
