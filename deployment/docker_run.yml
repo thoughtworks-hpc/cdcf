@@ -1,5 +1,5 @@
 ---
-- name: Run docker compose
+- name: Run yanghui_server container using latest image
   hosts: server
   become: true
   gather_facts: no
@@ -7,12 +7,14 @@
     - docker_compose:
         project_name: Run docker compose on server
         state: present
-        restarted: yes
+        pull: yes
+        recreate: always
         definition:
           version: "2"
           services:
-            yanghui_root_v2:
+            yanghui_server:
               image: highperformancecomputing/cdcf:latest
+              container_name: yanghui_server
               environment:
                 HOST: "{{ server }}"
                 ROLE: root
@@ -23,7 +25,13 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
-- name: Run docker compose
+      register: output
+    - debug:
+        var: output
+    - assert:
+        that:
+          - "yanghui_server.yanghui_server.state.running"
+- name: Run yanghui_worker container using latest image
   hosts: worker
   become: true
   gather_facts: no
@@ -31,12 +39,14 @@
     - docker_compose:
         project_name: Run docker compose on worker
         state: present
-        restarted: yes
+        pull: yes
+        recreate: always
         definition:
           version: "2"
           services:
-            yanghui_worker1_v2:
+            yanghui_worker:
               image: highperformancecomputing/cdcf:latest
+              container_name: yanghui_worker
               environment:
                 HOST: "{{ worker }}"
                 ROLE: worker
@@ -47,7 +57,13 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
-- name: Run docker compose
+      register: output
+    - debug:
+        var: output
+    - assert:
+        that:
+          - "yanghui_worker.yanghui_worker.state.running"
+- name: Run yanghui_client container using latest image
   hosts: client
   become: true
   gather_facts: no
@@ -55,12 +71,14 @@
     - docker_compose:
         project_name: Run docker compose on client
         state: present
-        restarted: yes
+        pull: yes
+        recreate: always
         definition:
           version: "2"
           services:
             yanghui_client:
               image: highperformancecomputing/cdcf:latest
+              container_name: yanghui_client
               environment:
                 HOST: "{{ client }}"
                 ROLE: client
@@ -71,3 +89,9 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
+      register: output
+    - debug:
+        var: output
+    - assert:
+        that:
+          - "yanghui_client.yanghui_client.state.running"

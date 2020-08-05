@@ -16,7 +16,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: highperformancecomputing/cdcf
           tags: latest
-          
+
+      - name: Stop existing running containers
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: docker_stop.yml
+          directory: ./deployment/
+
       - name: Start containers using new image
         uses: dawidd6/action-ansible-playbook@v2
         with:

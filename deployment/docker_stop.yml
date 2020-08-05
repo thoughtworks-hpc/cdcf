@@ -1,42 +1,34 @@
 ---
-- name: Update git
-  tasks:
-    - git:
-      repo: 'https://github.com/thoughtworks-hpc/cdcf.git'
-      dest: /home/twer/
-      update: yes
-      version: yanghui_cluster_mod
-
-- name: Run docker compose
+- name: Stop yanghui_server container
   hosts: server
   become: true
+  gather_facts: no
   tasks:
-    - name: Run docker compose on server
-      docker_compose:
-        project_src: /home/twer/cdcf/docker/
-        files: yanghui_cluster_test_env.yml
-        services: yanghui_root_v2
-        state: present
-        stopped: yes
-- name: Run docker compose
+    - docker_container:
+        name: yanghui_server
+        state: absent
+      register: output
+    - debug:
+        var: output
+- name: Stop yanghui_worker container
   hosts: worker
   become: true
+  gather_facts: no
   tasks:
-    - name: Run docker compose on worker
-      docker_compose:
-        project_src: /home/twer/cdcf/docker/
-        files: yanghui_cluster_test_env.yml
-        services: yanghui_worker1_v2
-        state: present
-        stopped: yes
-- name: Run docker compose
+    - docker_container:
+        name: yanghui_worker
+        state: absent
+      register: output
+    - debug:
+        var: output
+- name: Stop yanghui_client container
   hosts: client
   become: true
+  gather_facts: no
   tasks:
-    - name: Run docker compose on client
-      docker_compose:
-        project_src: /home/twer/cdcf/docker/
-        files: yanghui_cluster_test_env.yml
-        services: yanghui_client
-        state: present
-        stopped: yes
+    - docker_container:
+        name: yanghui_client
+        state: absent
+      register: output
+    - debug:
+        var: output
