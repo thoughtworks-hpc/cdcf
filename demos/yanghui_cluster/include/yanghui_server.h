@@ -2,8 +2,10 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_YANGHUI_SERVER_H
-#define CDCF_YANGHUI_SERVER_H
+#ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_SERVER_H_
+#define DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_SERVER_H_
+
+#include <vector>
 
 #include <caf/all.hpp>
 
@@ -74,4 +76,4 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 caf::behavior yanghui_router_pool_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* pool_guard);
 
-#endif  // CDCF_YANGHUI_SERVER_H
+#endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_SERVER_H_
