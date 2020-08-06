@@ -49,8 +49,6 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  //  YanghuiIO yanghui_io(cfg);
-
   bool if_use_ssl = !cfg.openssl_cafile.empty() ||
                     !cfg.openssl_certificate.empty() ||
                     !cfg.openssl_key.empty();
@@ -61,14 +59,6 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
     CDCF_LOGGER_DEBUG("key: {}", cfg.openssl_key);
   }
   YanghuiIO yanghui_io(if_use_ssl);
-
-  //  auto actual_port =
-  //      system.middleman().open(cfg.remote_spawn_port, nullptr, true);
-  //  if (!actual_port) {
-  //    std::cerr << "open remote spawn port failed: " << cfg.remote_spawn_port
-  //              << ", error: " << caf::to_string(actual_port.error())
-  //              << std::endl;
-  //  }
 
   auto actor1 = system.spawn<typed_calculator>();
 
@@ -295,7 +285,6 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  //  YanghuiIO yanghui_io(cfg);
   bool if_use_ssl = !cfg.openssl_cafile.empty() ||
                     !cfg.openssl_certificate.empty() ||
                     !cfg.openssl_key.empty();
@@ -404,8 +393,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
-  WorkerPool worker_pool(system, cfg.root_host, cfg.remote_spawn_port,
-                         yanghui_io);
+  WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port, yanghui_io);
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
