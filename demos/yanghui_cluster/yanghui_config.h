@@ -90,7 +90,6 @@ class config : public actor_system::Config {
   uint16_t root_port = 0;
   std::string root_host = "localhost";
   uint16_t worker_port = 0;
-  uint16_t remote_spawn_port = 0;
   std::string node_keeper_host = "127.0.0.1";
   uint16_t node_keeper_port = 50051;
   bool root = false;
@@ -111,8 +110,6 @@ class config : public actor_system::Config {
         .add(root_port, "root_port", "set root port")
         .add(root_host, "root_host", "set root node")
         .add(worker_port, "worker_port, w", "set worker port")
-        .add(remote_spawn_port, "remote_spawn_port",
-             "set port for actor remote spawning")
         .add(root, "root, r", "set current node be root")
         .add(worker_load, "load, l", "load balance worker sleep second")
         .add(node_keeper_host, "node_keeper_host",
