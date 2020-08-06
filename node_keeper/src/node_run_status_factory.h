@@ -1,6 +1,6 @@
-//
-// Created by Yuecheng Pei on 2020/8/5.
-//
+/*
+ * Copyright (c) 2019-2020 ThoughtWorks Inc.
+ */
 
 #ifndef CDCF_NODE_RUN_STATUS_FACTORY_H
 #define CDCF_NODE_RUN_STATUS_FACTORY_H
