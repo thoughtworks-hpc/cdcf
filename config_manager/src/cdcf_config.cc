@@ -11,7 +11,7 @@ CDCFConfig::CDCFConfig() {
            " format in: /user/cdcf/cdcf.log")
       .add(log_level_, "log_level",
            "set log level, default: info, format in: info")
-      .add(log_to_console_, "log_to_console",
+      .add(no_log_to_console_, "no_log_to_console",
            "set whether to print log to console, default: true")
       .add(log_file_size_in_bytes_, "log_file_size",
            "set maximum rotating log file size in bytes,"

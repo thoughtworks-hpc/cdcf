@@ -19,7 +19,7 @@ TEST(GenerateSinksTest,
 TEST(GenerateSinksTest,
      should_sinks_have_no_console_sink_given_log_to_config_is_false) {
   CDCFConfig config;
-  config.log_to_console_ = false;
+  config.no_log_to_console_ = true;
 
   auto sinks = GenerateSinks(config);
 
@@ -28,7 +28,7 @@ TEST(GenerateSinksTest,
 
 TEST(GenerateSinksTest, should_sinks_have_file_sink_given_log_file_not_empty) {
   CDCFConfig config;
-  config.log_to_console_ = false;
+  config.no_log_to_console_ = true;
   config.log_file_ = "cdcf.log";
 
   auto sinks = GenerateSinks(config);
@@ -39,7 +39,7 @@ TEST(GenerateSinksTest, should_sinks_have_file_sink_given_log_file_not_empty) {
 TEST(GenerateSinksTest,
      should_sinks_have_rotating_sink_given_log_file_size_in_bytes_not_0) {
   CDCFConfig config;
-  config.log_to_console_ = false;
+  config.no_log_to_console_ = true;
   config.log_file_ = "cdcf.log";
   config.log_file_size_in_bytes_ = 1024;
 

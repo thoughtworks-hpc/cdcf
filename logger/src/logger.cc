@@ -15,7 +15,7 @@ std::once_flag cdcf::Logger::once_flag_;
 
 std::vector<spdlog::sink_ptr> GenerateSinks(const CDCFConfig& config) {
   std::vector<spdlog::sink_ptr> sinks;
-  if (config.log_to_console_) {
+  if (!config.no_log_to_console_) {
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
   }
 
