@@ -2,15 +2,13 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_NODE_RUN_STATUS_FACTORY_H
-#define CDCF_NODE_RUN_STATUS_FACTORY_H
-#include "node_run_status.h"
+#ifndef NODE_KEEPER_SRC_NODE_RUN_STATUS_FACTORY_H_
+#define NODE_KEEPER_SRC_NODE_RUN_STATUS_FACTORY_H_
+#include "./node_run_status.h"
 
 class NodeRunStatusFactory {
  public:
-  virtual NodeRunStatus *GetInstance() {
-    return NodeRunStatus::GetInstance();
-  };
+  virtual NodeRunStatus *GetInstance() { return NodeRunStatus::GetInstance(); }
 };
 
-#endif  // CDCF_NODE_RUN_STATUS_FACTORY_H
+#endif  // NODE_KEEPER_SRC_NODE_RUN_STATUS_FACTORY_H_

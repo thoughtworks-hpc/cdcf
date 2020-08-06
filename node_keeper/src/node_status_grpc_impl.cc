@@ -27,7 +27,6 @@ node_keeper::NodeStatusGRPCImpl::NodeStatusGRPCImpl(
 grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
     ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
     ::NodeStatus* response) {
-  // TODO::  factory_class.getInstance();
   // NodeRunStatus* node_run_status = NodeRunStatus::GetInstance();
   NodeRunStatus* node_run_status = node_run_status_factory_.GetInstance();
   if (nullptr == node_run_status) {

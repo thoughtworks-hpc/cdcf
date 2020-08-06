@@ -1,20 +1,22 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "node_status_grpc_impl.h"
+#include "./node_status_grpc_impl.h"
 
 #include <gmock/gmock.h>
 #include <grpcpp/create_channel.h>
 
-#include "grpc.h"
-#include "node_keeper.h"
-#include "node_run_status.h"
+#include <string>
+#include <vector>
+
+#include "./grpc.h"
+#include "./node_keeper.h"
 
 using testing::Eq;
 class MockNodeRunStatus : public NodeRunStatus {
  public:
   MockNodeRunStatus(FILE* memoryFile, FILE* cpuFile)
-      : NodeRunStatus(memoryFile, cpuFile){};
+      : NodeRunStatus(memoryFile, cpuFile) {}
   MOCK_METHOD(double, GetCpuRate, ());
   MOCK_METHOD(int, GetMemoryState, (MemoryStatus&));
 };

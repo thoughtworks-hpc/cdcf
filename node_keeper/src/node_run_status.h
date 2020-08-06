@@ -34,7 +34,6 @@ class NodeRunStatus {
     uint64_t soft_irq;
   };
 
-
   void GetCpuInfo(CpuInfo &cpu_info);
 
   FILE *memory_file;
