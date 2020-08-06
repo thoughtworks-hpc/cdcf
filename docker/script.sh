@@ -3,10 +3,26 @@ echo "running on host: $HOST"
 echo "seeds: $SEEDS"
 NAME=${NAME:-$HOST}
 echo "name: ${NAME}"
-if [ -n "$APP_ARGS" ]; then
-  echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP --app-args="${APP_ARGS}"
-  /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP --app-args="${APP_ARGS}"
+
+
+
+if [ -n "$APP_ARGS" ] && [ -n "$APP" ]; then
+    echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP --app-args="${APP_ARGS}"
+    /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP --app-args="${APP_ARGS}"
+    exit 0
+fi
+
+if [ -n "$APP" ]; then
+  echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP
+  /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP
   exit 0
 fi
-echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP
-/bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE --app=$APP
+
+if [ -z "$APP_ARGS" ] && [ -z "$APP" ]; then
+  echo /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE
+  /bin/node_keeper --name=$NAME --seeds=$SEEDS --host=$HOST --port=4445 $LOG_COMMANDS --role=$ROLE
+  exit 0
+fi
+
+echo /bin/yanghui_cluster_root_v2 ${APP_ARGS}
+/bin/yanghui_cluster_root_v2 ${APP_ARGS}

@@ -25,7 +25,8 @@ COPY cluster_monitor cluster_monitor
 COPY daemon daemon
 COPY message_priority_actor message_priority_actor
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build . -j 4
+    && cmake --build . -j 3 \
+    && ctest --output-on-failure
 
 FROM debian
 COPY --from=builder /cdcf/node_keeper/node_keeper /bin/node_keeper
@@ -36,9 +37,10 @@ COPY --from=builder /cdcf/cluster_monitor/cluster_monitor_client /bin/cluster_mo
 
 RUN apt-get clean \
         && apt-get update \
-        && apt-get install procps -y
+        && apt-get install procps tcpdump -y
 
 COPY docker/script.sh /bin/script.sh
+COPY docker/openssl /openssl
 ENV APP=/bin/cluster
 #ENTRYPOINT ["/bin/script.sh"]
 CMD ["/bin/script.sh"]

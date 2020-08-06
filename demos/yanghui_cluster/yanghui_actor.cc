@@ -13,7 +13,7 @@ caf::behavior yanghui(caf::event_based_actor* self,
                       counter_interface* counter) {
   return {
       [=](const std::vector<std::vector<int>>& data) {
-        int n = data.size();
+        int n = static_cast<int>(data.size());
         std::vector<int> temp_states;
         temp_states.resize(n);
         std::vector<int> states;
@@ -75,7 +75,7 @@ caf::behavior yanghui(caf::event_based_actor* self,
         return min_sum;
       },
       [=](std::string&) {
-        caf::aout(self) << "simulate get a critical error， yanghui actor quit."
+        caf::aout(self) << "simulate get a critical error, yanghui actor quit."
                         << std::endl;
         self->quit();
         return 0;

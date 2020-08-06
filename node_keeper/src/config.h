@@ -30,7 +30,7 @@ class Config : public CDCFConfig {
         .add(app_args_, "app-args", "set application arguments");
   }
 
-  std::vector<gossip::Address> GetSeeds() const {
+  [[nodiscard]] std::vector<gossip::Address> GetSeeds() const {
     const auto addresses = split(seeds_, ',');
     std::vector<gossip::Address> result;
     for (auto& address_string : addresses) {

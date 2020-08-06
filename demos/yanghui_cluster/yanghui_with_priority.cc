@@ -42,23 +42,26 @@ caf::strong_actor_ptr WorkerPool::GetWorker() {
 }
 
 int WorkerPool::AddWorker(const std::string& host) {
-  auto node = system_.middleman().connect(host, worker_port_);
-  if (!node) {
-    std::cerr << "*** connect failed: " << to_string(node.error()) << std::endl;
+  auto actor = yanghui_io_.remote_actor(system_, host, worker_port_);
+  if (!actor) {
+    CDCF_LOGGER_ERROR("connect failed. host: {}, port: {}, error: {}", host,
+                      worker_port_, system_.render(actor.error()));
     return 1;
   }
   auto type = "CalculatorWithPriority";  // type of the actor we wish to spawn
   auto args = caf::make_message();       // arguments to construct the actor
   auto tout = std::chrono::seconds(30);  // wait no longer than 30s
-  auto worker1 =
-      system_.middleman().remote_spawn<caf::actor>(*node, type, args, tout);
+  auto worker1 = system_.middleman().remote_spawn<caf::actor>(actor->node(),
+                                                              type, args, tout);
   if (!worker1) {
-    std::cerr << "*** remote spawn failed: " << to_string(worker1.error())
-              << std::endl;
+    CDCF_LOGGER_ERROR("remote spawn failed. error: {}",
+                      system_.render(worker1.error()));
     return 1;
   }
   std::cout << "add worker for calculator with priority on host: " << host
             << std::endl;
+  CDCF_LOGGER_DEBUG("add worker for calculator with priority on host: {}",
+                    host);
 
   std::unique_lock lock(workers_mutex_);
   workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));

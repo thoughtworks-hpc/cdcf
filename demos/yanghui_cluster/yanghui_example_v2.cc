@@ -10,6 +10,7 @@
 
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
+#include <caf/openssl/all.hpp>
 
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../actor_fault_tolerance/include/actor_union.h"
@@ -19,12 +20,12 @@
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
-#include "include/balance_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"
 #include "include/simple_counter.h"
 #include "include/yanghui_actor.h"
 #include "include/yanghui_demo_calculator.h"
+#include "include/yanghui_io.h"
 #include "include/yanghui_server.h"
 #include "include/yanghui_with_priority.h"
 
@@ -48,34 +49,52 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  auto actual_port =
-      system.middleman().open(cfg.remote_spawn_port, nullptr, true);
-  if (!actual_port) {
-    std::cerr << "open remote spawn port failed: " << cfg.remote_spawn_port
-              << ", error: " << caf::to_string(actual_port.error())
-              << std::endl;
-  }
+  YanghuiIO yanghui_io(cfg);
+
+  //  auto actual_port =
+  //      system.middleman().open(cfg.remote_spawn_port, nullptr, true);
+  //  if (!actual_port) {
+  //    std::cerr << "open remote spawn port failed: " << cfg.remote_spawn_port
+  //              << ", error: " << caf::to_string(actual_port.error())
+  //              << std::endl;
+  //  }
 
   auto actor1 = system.spawn<typed_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor1),
-                             k_yanghui_work_port1);
+
+  auto actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor1),
+                                       k_yanghui_work_port1, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor1 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
-  auto actor2 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor2),
-                             k_yanghui_work_port2);
+  auto actor2 = system.spawn<typed_calculator>();
+  actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor2),
+                                  k_yanghui_work_port2, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor2 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
-  auto actor3 = system.spawn<typed_slow_calculator>();
-  system.middleman().publish(caf::actor_cast<caf::actor>(actor3),
-                             k_yanghui_work_port3);
+  auto actor3 = system.spawn<typed_calculator>();
+  actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor3),
+                                  k_yanghui_work_port3, nullptr, true);
+  if (!actor_port) {
+    std::cout << "publish actor3 failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
   std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
 
   auto actor_for_load_balance_demo =
       system.spawn(simple_counter_add_load, cfg.worker_load);
-  system.middleman().publish(
-      caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
-      k_yanghui_work_port4);
+  // Todo: 错误处理
+  yanghui_io.publish(caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
+                     k_yanghui_work_port4);
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
             << ", worker_load:" << cfg.worker_load << std::endl;
 
@@ -83,7 +102,14 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
-  system.middleman().publish(cdcf_spawn, cfg.worker_port);
+
+  actor_port = yanghui_io.publish(cdcf_spawn, cfg.worker_port, nullptr, true);
+
+  if (!actor_port) {
+    std::cout << "publish cdcf_spawn failed, error: "
+              << system.render(actor_port.error()) << std::endl;
+    exit(1);
+  }
 
   auto form_actor1 = caf::actor_cast<caf::actor>(actor1);
   auto form_actor2 = caf::actor_cast<caf::actor>(actor2);
@@ -166,14 +192,19 @@ caf::behavior load_balance_result_print_actor(
 
 void downMsgHandle(const caf::down_msg& downMsg,
                    const std::string& actor_description) {
-  std::cout << std::endl;
-  std::cout << "=============actor monitor call===============" << std::endl;
-  std::cout << "down actor address:" << caf::to_string(downMsg.source)
-            << std::endl;
-  std::cout << "down actor description:" << actor_description << std::endl;
-  std::cout << "down reason:" << caf::to_string(downMsg.reason) << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
+  CDCF_LOGGER_WARN("=============actor monitor call===============");
+  CDCF_LOGGER_WARN("down actor address:{}", caf::to_string(downMsg.source));
+  CDCF_LOGGER_WARN("down actor description:", actor_description);
+  CDCF_LOGGER_WARN("down reason:", caf::to_string(downMsg.reason));
+
+  //  std::cout << std::endl;
+  //  std::cout << "=============actor monitor call===============" <<
+  //  std::endl; std::cout << "down actor address:" <<
+  //  caf::to_string(downMsg.source)
+  //            << std::endl;
+  //  std::cout << "down actor description:" << actor_description << std::endl;
+  //  std::cout << "down reason:" << caf::to_string(downMsg.reason) <<
+  //  std::endl; std::cout << std::endl; std::cout << std::endl;
 }
 
 void dealSendErr(const caf::error& err) {
@@ -253,6 +284,7 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
+  YanghuiIO yanghui_io(cfg);
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
 
@@ -263,8 +295,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto policy = caf::actor_pool::round_robin();
   size_t default_size = 3;
   auto pool_cluster = new RouterPoolCountCluster(
-      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port, routee_name,
-      routee_args, routee_ifs, default_size, policy);
+      cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
+      cfg.worker_port, routee_name, routee_args, routee_ifs, default_size,
+      policy, yanghui_io.IsUseSSL());
   pool_cluster->InitWorkerNodes();
   auto pool_actor = system.spawn(yanghui, pool_cluster);
   std::cout << "pool_actor for router pool job spawned with id: "
@@ -291,14 +324,14 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   //  cfg.node_keeper_port,
   //                                 cfg.worker_port);
 
-  //  balance_count_cluster balance_count_cluster(cfg.root_host, system);
-
   CountCluster* count_cluster;
 
   CDCF_LOGGER_INFO("Actor system log, hello world, I'm root.");
 
   auto* actor_cluster = new ActorUnionCountCluster(
-      cfg.root_host, system, cfg.node_keeper_port, cfg.worker_port);
+      cfg.root_host, system, cfg.node_keeper_host, cfg.node_keeper_port,
+      cfg.worker_port, yanghui_io);
+
   count_cluster = actor_cluster;
 
   count_cluster->InitWorkerNodes();
@@ -349,7 +382,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   actor_status_service.Run();
   actor_system::cluster::Cluster::GetInstance()->NotifyReady();
 
-  WorkerPool worker_pool(system, cfg.root_host, cfg.remote_spawn_port);
+  WorkerPool worker_pool(system, cfg.root_host, cfg.remote_spawn_port,
+                         yanghui_io);
 
   auto yanghui_job_dispatcher_actor =
       InitHighPriorityYanghuiActors(system, worker_pool);
@@ -399,7 +433,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
 
     if (dummy == "b") {
       std::cout << "start load balance count." << std::endl;
-      //      caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
+      //  caf::anon_send(yanghui_load_balance_count_path, kYanghuiData2);
       caf::scoped_actor self{system};
       YanghuiData yanghui_data;
       yanghui_data.data = kYanghuiData2;
@@ -634,4 +668,4 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   }
 }
 
-CAF_MAIN(caf::io::middleman)
+CAF_MAIN(caf::io::middleman, caf::openssl::manager)

@@ -19,7 +19,7 @@ caf::behavior yanghui_get_final_result(caf::stateful_actor<GetMinState>* self,
                     << caf::to_string(self->state.message_sender->address())
                     << std::endl;
         }
-        int len = data.size();
+        int len = static_cast<int>(data.size());
         if (1 == len) {
           std::cout << "final result:" << data[0] << std::endl;
           self->send(out_data, data[0]);
@@ -107,7 +107,7 @@ caf::behavior yanghui_count_path(caf::stateful_actor<YanghuiState>* self,
 
         if (index == self->state.data.size()) {
           std::cout << "count path task finish." << std::endl;
-          //          self->send(out_data, self->state.data[index - 1]);
+          //  self->send(out_data, self->state.data[index - 1]);
           self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
                      self->state.data[index - 1]);
           self->state.index = 0;
@@ -127,8 +127,8 @@ caf::behavior yanghui_count_path(caf::stateful_actor<YanghuiState>* self,
             std::cout << "send add task:" << self->state.data[index - 1][0]
                       << ", " << self->state.data[index][0] << ", " << i
                       << std::endl;
-            //            self->send(worker, self->state.data[index - 1][0],
-            //                       self->state.data[index][0], i, self_actor);
+            //  self->send(worker, self->state.data[index - 1][0],
+            //  self->state.data[index][0], i, self_actor);
 
             self->request(worker, caf::infinite, self->state.data[index - 1][0],
                           self->state.data[index][0], i, self_actor)

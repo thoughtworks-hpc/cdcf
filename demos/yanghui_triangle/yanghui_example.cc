@@ -20,10 +20,10 @@ struct GetMinState {
 };
 
 caf::behavior getMin(caf::stateful_actor<GetMinState>* self,
-                     const caf::actor worker) {
+                     const caf::actor& worker) {
   const int batch = 3;
   return {[=](const std::vector<int>& data) {
-            int len = data.size();
+            int len = static_cast<int>(data.size());
             if (1 == len) {
               std::cout << "final result:" << data[0] << std::endl;
               return;
@@ -76,9 +76,8 @@ caf::behavior getMin(caf::stateful_actor<GetMinState>* self,
 }
 
 caf::behavior yanghui(caf::stateful_actor<YanghuiState>* self,
-                      const caf::actor worker, const caf::actor compare) {
+                      const caf::actor& worker, const caf::actor& compare) {
   return {[=](const std::vector<std::vector<int> >& data) {
-            const int len = data.size();
             self->state.data = data;
             self->state.current_result[0] = data[0][0];
             self->send(self, 1);

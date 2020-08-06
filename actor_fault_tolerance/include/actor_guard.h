@@ -10,6 +10,8 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
+#include "../../logger/include/logger.h"
+
 class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
@@ -48,15 +50,16 @@ class ActorGuard {
       return;
     }
 
-    std::cout << "send msg failed, try restart dest actor." << std::endl;
+    CDCF_LOGGER_ERROR("send msg failed, try restart dest actor.");
     keep_actor_ = restart_fun_(active_);
 
     if (active_) {
-      std::cout << "restart actor success." << std::endl;
+      CDCF_LOGGER_INFO("restart actor success.");
       (void)SendAndReceive(return_function, error_deal_function, message);
     } else {
-      std::cout << "restart actor failed. message:" << caf::to_string(message)
-                << " will not deliver." << std::endl;
+      CDCF_LOGGER_ERROR("restart actor failed. message:{} will not deliver.",
+                        caf::to_string(message));
+      error_deal_function(err);
     }
   }
 

@@ -7,10 +7,24 @@
 #include <utility>
 
 #include "../../logger/include/logger.h"
-CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
-  // auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-  // InitWorkerNodes(members, host_);
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+// CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
+//  // auto members =
+//  actor_system::cluster::Cluster::GetInstance()->GetMembers();
+//  // InitWorkerNodes(members, host_);
+//  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+//}
+
+CountCluster::CountCluster(std::string host,
+                           const std::string& node_keeper_host,
+                           uint16_t node_keeper_port)
+    : host_(std::move(host)) {
+  if (node_keeper_host.empty()) {
+    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+  } else {
+    actor_system::cluster::Cluster::GetInstance(node_keeper_host,
+                                                node_keeper_port)
+        ->AddObserver(this);
+  }
 }
 
 CountCluster::~CountCluster() {

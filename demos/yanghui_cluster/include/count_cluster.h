@@ -24,7 +24,9 @@ class CountCluster : public actor_system::cluster::Observer,
   //  virtual int Compare(std::vector<int> numbers, int& min) = 0;
   std::string host_;
 
-  explicit CountCluster(std::string host);
+  // explicit CountCluster(std::string host);
+  CountCluster(std::string host, const std::string& node_keeper_host,
+               uint16_t node_keeper_port);
   virtual ~CountCluster();
   void InitWorkerNodes();
   void Update(const actor_system::cluster::Event& event) override;

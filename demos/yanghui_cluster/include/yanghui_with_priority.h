@@ -16,12 +16,18 @@
 #include <caf/io/all.hpp>
 
 #include "../../logger/include/logger.h"
+#include "../yanghui_config.h"
+#include "./yanghui_io.h"
 #include "actor_system/cluster.h"
 
 class WorkerPool : public actor_system::cluster::Observer {
  public:
-  WorkerPool(caf::actor_system& system, std::string host, uint16_t worker_port)
-      : system_(system), host_(std::move(host)), worker_port_(worker_port) {}
+  WorkerPool(caf::actor_system& system, std::string host, uint16_t worker_port,
+             YanghuiIO& yanghui_io)
+      : system_(system),
+        host_(std::move(host)),
+        worker_port_(worker_port),
+        yanghui_io_(yanghui_io) {}
 
   int Init();
 
@@ -42,6 +48,7 @@ class WorkerPool : public actor_system::cluster::Observer {
   std::string host_;
   caf::actor_system& system_;
   uint16_t worker_port_;
+  YanghuiIO& yanghui_io_;
 };
 
 struct yanghui_state {

@@ -2,12 +2,20 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 #include "include/actor_union_count_cluster.h"
+
+#include <caf/openssl/all.hpp>
+
 void ActorUnionCountCluster::AddWorkerNodeWithPort(const std::string& host,
                                                    uint16_t port) {
-  auto worker_actor = system_.middleman().remote_actor(host, port);
+  CDCF_LOGGER_DEBUG("try to connect to remote actor, host: {}, port: {}", host,
+                    port);
+  auto worker_actor = yanghui_io_.remote_actor(system_, host, port);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
-              << ", port:" << port << std::endl;
+              << ", port:" << port
+              << ", error:" << system_.render(worker_actor.error())
+              << std::endl;
+    return;
   }
 
   counter_.AddActor(*worker_actor);
@@ -21,7 +29,7 @@ void ActorUnionCountCluster::AddWorkerNode(const std::string& host) {
   AddWorkerNodeWithPort(host, k_yanghui_work_port3);
 
   auto worker_actor =
-      system_.middleman().remote_actor(host, k_yanghui_work_port4);
+      yanghui_io_.remote_actor(system_, host, k_yanghui_work_port4);
   if (!worker_actor) {
     std::cout << "connect remote actor failed. host:" << host
               << ", port:" << k_yanghui_work_port4 << std::endl;
