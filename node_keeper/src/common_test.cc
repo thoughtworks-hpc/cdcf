@@ -2,8 +2,9 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include <gmock/gmock.h>
 #include "src/common.h"
+
+#include <gmock/gmock.h>
 
 TEST(SplitTest, shoud_split_correctly_given_one_space_seprate) {
   auto got = node_keeper::split("a b c", ' ');
