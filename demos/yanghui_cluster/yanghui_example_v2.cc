@@ -551,32 +551,41 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
   bool running_status_normal = true;
 
   self->send(job_actor, yanghui_data);
-  self->receive(
-      [&](bool status, int result) {
-        if (!status) {
-          aout(self) << "failed job: " << job_actor.id()
-                     << " : calculation error" << std::endl;
-          running_status_normal = false;
-        } else {
-          if (result != result_to_check) {
-            aout(self) << "inconsistent job: " << job_actor.id() << std::endl;
+  auto now = std::chrono::high_resolution_clock::now();
+  auto time_out = now + std::chrono::seconds(300);
+  if (self->await_data(time_out)) {
+    self->receive(
+        [&](bool status, int result) {
+          if (!status) {
+            aout(self) << "failed job: " << job_actor.id()
+                       << " : calculation error" << std::endl;
             running_status_normal = false;
-            CDCF_LOGGER_INFO("Yanghui Test: job id {} result inconsistent",
-                             job_actor.id());
           } else {
-            aout(self) << "succeeded job: " << job_actor.id()
-                       << ", with result: " << result << std::endl;
-            CDCF_LOGGER_INFO("Yanghui Test: job id {} succeeded with result {}",
-                             job_actor.id(), result);
+            if (result != result_to_check) {
+              aout(self) << "inconsistent job: " << job_actor.id() << std::endl;
+              running_status_normal = false;
+              CDCF_LOGGER_INFO("Yanghui Test: job id {} result inconsistent",
+                               job_actor.id());
+            } else {
+              aout(self) << "succeeded job: " << job_actor.id()
+                         << ", with result: " << result << std::endl;
+              CDCF_LOGGER_INFO(
+                  "Yanghui Test: job id {} succeeded with result {}",
+                  job_actor.id(), result);
+            }
           }
-        }
-      },
-      [&](caf::error& err) {
-        aout(self) << "failed job: " << job_actor.id() << " : "
-                   << system.render(err) << std::endl;
-        running_status_normal = false;
-        CDCF_LOGGER_INFO("Yanghui Test: job id {} failed", job_actor.id());
-      });
+        },
+        [&](caf::error& err) {
+          aout(self) << "failed job: " << job_actor.id() << " : "
+                     << system.render(err) << std::endl;
+          running_status_normal = false;
+          CDCF_LOGGER_INFO("Yanghui Test: job id {} failed", job_actor.id());
+        });
+  } else {
+    std::cout << "job: " << job_actor.id() << " timeout" << std::endl;
+    CDCF_LOGGER_INFO("Yanghui Test: job id {} timeout", job_actor.id());
+    running_status_normal = false;
+  }
 
   return running_status_normal;
 }
@@ -605,6 +614,9 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
       running_status_normal = SendJobAndCheckResult(
           system, self, yanghui_jobs[i], yanghui_data, yanghui_job_result);
       std::this_thread::sleep_for(std::chrono::seconds(5));
+      if (!running_status_normal) {
+        break;
+      }
     }
   }
 }

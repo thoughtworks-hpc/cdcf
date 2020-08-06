@@ -63,18 +63,18 @@ caf::behavior yanghui_priority_job_actor_fun(
         self->send(dispatcher, yanghui_data);
       },
       [=](std::vector<std::pair<bool, int>> result) {
-        auto result_pair_1 = result[0];
-        auto result_pair_2 = result[1];
+            auto result_pair_1 = result[0];
+            auto result_pair_2 = result[1];
 
-        if (result.size() != 2 || !result_pair_1.first ||
-            (result_pair_1.second != result_pair_2.second)) {
-          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
-                     false, 0);
-        } else {
-          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
-                     true, result_pair_1.second);
-        }
-      }};
+            //        if (result.size() != 2 || !result_pair_1.first ||
+            //            (result_pair_1.second != result_pair_2.second)) {
+            //          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
+            //                     false, 0);
+            //        } else {
+            //          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
+            //                     true, result_pair_1.second);
+            //        }
+          }};
 }
 
 caf::behavior yanghui_load_balance_job_actor_fun(

@@ -7,9 +7,6 @@
     - docker_container:
         name: yanghui_server
         state: absent
-      register: output
-    - debug:
-        var: output
 - name: Stop yanghui_worker container
   hosts: worker
   become: true
@@ -18,9 +15,6 @@
     - docker_container:
         name: yanghui_worker
         state: absent
-      register: output
-    - debug:
-        var: output
 - name: Stop yanghui_client container
   hosts: client
   become: true
@@ -29,6 +23,3 @@
     - docker_container:
         name: yanghui_client
         state: absent
-      register: output
-    - debug:
-        var: output
