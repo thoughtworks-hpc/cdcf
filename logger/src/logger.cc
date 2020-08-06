@@ -39,7 +39,7 @@ void cdcf::Logger::Init(const CDCFConfig& config) {
                                                sinks.end());
 
     std::string log_pattern;
-    if (config.log_display_filename_and_line_number_) {
+    if (!config.log_no_display_filename_and_line_number_) {
       //    [2020-07-09 16:51:29.684] [info]
       //    [/Users/xxx/github_repo/cdcf/logger/src/logger_test.cc:11] hello
       //    word, 1
@@ -59,6 +59,6 @@ void cdcf::Logger::Init(const CDCFConfig& config) {
     CDCF_LOGGER_DEBUG("Log file size is {}", config.log_file_size_in_bytes_);
     CDCF_LOGGER_DEBUG("Log file number is {}", config.log_file_number_);
     CDCF_LOGGER_DEBUG("Log file display filename and line number is {}",
-                      config.log_display_filename_and_line_number_);
+                      !config.log_no_display_filename_and_line_number_);
   });
 }

@@ -25,7 +25,7 @@ class CDCFConfig : public caf::actor_system_config {
   bool no_log_to_console_ = false;
   uint16_t log_file_size_in_bytes_ = 0;
   uint16_t log_file_number_ = 0;
-  bool log_display_filename_and_line_number_ = true;
+  bool log_no_display_filename_and_line_number_ = false;
   std::string name_ = "node";
   std::string host_ = "localhost";
 
