@@ -16,20 +16,20 @@ node_keeper::NodeStatusGRPCImpl::~NodeStatusGRPCImpl() = default;
 node_keeper::NodeStatusGRPCImpl::NodeStatusGRPCImpl(
     membership::Membership& clusterMember)
     : cluster_member_(clusterMember),
-      node_run_statues_factory_(*(new NodeRunStatusFactory())) {}
+      node_run_status_factory_(*(new NodeRunStatusFactory())) {}
 
 node_keeper::NodeStatusGRPCImpl::NodeStatusGRPCImpl(
     membership::Membership& clusterMember,
     NodeRunStatusFactory& nodeRunStatusFactory)
     : cluster_member_(clusterMember),
-      node_run_statues_factory_(nodeRunStatusFactory) {}
+      node_run_status_factory_(nodeRunStatusFactory) {}
 
 grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
     ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
     ::NodeStatus* response) {
   // TODO::  factory_class.getInstance();
   // NodeRunStatus* node_run_status = NodeRunStatus::GetInstance();
-  NodeRunStatus* node_run_status = node_run_statues_factory_.GetInstance();
+  NodeRunStatus* node_run_status = node_run_status_factory_.GetInstance();
   if (nullptr == node_run_status) {
     CDCF_LOGGER_ERROR("Can't get node status, os not match.");
     return ::grpc::Status(grpc::UNAVAILABLE,
@@ -39,7 +39,8 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
   MemoryStatus memory_status{};
   int ret = node_run_status->GetMemoryState(memory_status);
   if (0 != ret) {
-    CDCF_LOGGER_ERROR("Can't get memory status, please connect the administrator.");
+    CDCF_LOGGER_ERROR(
+        "Can't get memory status, please connect the administrator.");
     return ::grpc::Status(
         grpc::UNAVAILABLE,
         "Can't get memory status, please connect the administrator.");

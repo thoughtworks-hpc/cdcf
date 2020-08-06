@@ -24,8 +24,8 @@ class NodeStatusGRPCImpl final : public ::NodeMonitor::Service {
 
  private:
   membership::Membership& cluster_member_;
-  //TODO:: factory_class
-  NodeRunStatusFactory& node_run_statues_factory_;
+  // TODO:: factory_class
+  NodeRunStatusFactory& node_run_status_factory_;
 };
 }  // namespace node_keeper
 
