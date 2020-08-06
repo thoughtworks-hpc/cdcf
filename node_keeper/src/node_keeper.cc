@@ -28,6 +28,10 @@ NodeKeeper::NodeKeeper(const Config& config) : membership_() {
   membership::Config membership_config;
   membership_config.SetHostMember(name, address.host, address.port,
                                   config.role_);
+  CDCF_LOGGER_INFO("print ping log: {}", config.print_ping_log_);
+  if (config.print_ping_log_) {
+    membership_config.EnablePrintPingLog();
+  }
 
   const bool is_primary_seed = seeds.empty() || seeds[0] == address;
   if (!is_primary_seed) {
