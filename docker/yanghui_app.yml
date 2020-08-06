@@ -6,9 +6,10 @@ services:
       HOST: yanghui_root_v2
       ROLE: root
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048 ${LOG_TO_CONSOLE}
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS1}
+      PRINT_PING_LOG:
+      APP_ARGS: -r --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS1} ${LOG_TO_CONSOLE}
     networks:
       - cdcf
     volumes:
@@ -20,9 +21,10 @@ services:
       HOST: yanghui_worker1_v2
       ROLE: worker
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048 ${LOG_TO_CONSOLE}
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS2}
+      PRINT_PING_LOG:
+      APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS2} ${LOG_TO_CONSOLE}
     networks:
       - cdcf
     volumes:
@@ -33,9 +35,10 @@ services:
       HOST: yanghui_worker2_v2
       ROLE: worker
       SEEDS: yanghui_root_v2:4445
-      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
+      LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048 ${LOG_TO_CONSOLE}
       APP: /bin/yanghui_cluster_root_v2
-      APP_ARGS: --root_host=yanghui_root_v2 -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker2_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS3}
+      PRINT_PING_LOG:
+      APP_ARGS: --root_host=yanghui_root_v2 -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker2_v2.log --log_level=debug --log_file_size=2048 ${SSL_ARGS3} ${LOG_TO_CONSOLE}
     networks:
       - cdcf
     volumes:

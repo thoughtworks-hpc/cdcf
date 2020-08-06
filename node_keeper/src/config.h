@@ -20,6 +20,7 @@ class Config : public CDCFConfig {
   std::string seeds_ = "";
   std::string app_;
   std::string app_args_;
+  bool print_ping_log_ = false;
 
   Config() {
     opt_group{custom_options_, "global"}
@@ -27,7 +28,9 @@ class Config : public CDCFConfig {
         .add(seeds_, "seeds,s",
              "seeds of cluster, format in: `host:port,host:port`")
         .add(app_, "app", "set application path")
-        .add(app_args_, "app-args", "set application arguments");
+        .add(app_args_, "app-args", "set application arguments")
+        .add(print_ping_log_, "print-ping-log",
+             "set whether to print ping log");
   }
 
   [[nodiscard]] std::vector<gossip::Address> GetSeeds() const {

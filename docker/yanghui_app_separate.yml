@@ -6,6 +6,7 @@ services:
       HOST: yanghui_root_v2
       ROLE: root
       SEEDS: yanghui_root_v2:4445
+      PRINT_PING_LOG:
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=2048
     networks:
       - cdcf
@@ -32,6 +33,7 @@ services:
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
+      PRINT_PING_LOG:
       APP_ARGS: --root_host=yanghui_root_v2 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=2048 --openssl.cafile=/openssl/ca-noenc.crt --openssl.certificate=/openssl/node2.cert.pem --openssl.key=/openssl/node2.key.pem
     networks:
       - cdcf
@@ -45,6 +47,7 @@ services:
       SEEDS: yanghui_root_v2:4445
       LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker2_v2.log --log_level=debug --log_file_size=2048
       APP: /bin/yanghui_cluster_root_v2
+      PRINT_PING_LOG:
       APP_ARGS: --root_host=yanghui_root_v2 -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --node_port=4445 --log_file=/tmp/log/actorsystem_yanghui_worker2_v2.log --log_level=debug --log_file_size=2048 --openssl.cafile=/openssl/ca-noenc.crt --openssl.certificate=/openssl/node3.cert.pem --openssl.key=/openssl/node3.key.pem
     networks:
       - cdcf
