@@ -26,3 +26,7 @@
     - name: Install Docker Module for Python
       pip:
         name: docker
+
+    - name: Add twer to docker group
+      become: yes
+      command: usermod -aG docker twer
