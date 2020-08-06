@@ -99,14 +99,14 @@ class config : public actor_system::Config {
   config() {
     add_actor_type("calculator", calculator_fun);
     add_actor_type<CalculatorWithPriority>("CalculatorWithPriority");
-    //    add_actor_type("yanghui_standard_job_actor",
-    //                   yanghui_standard_job_actor_fun);
-    //    add_actor_type("yanghui_priority_job_actor",
-    //                   yanghui_priority_job_actor_fun);
-    //    add_actor_type("yanghui_load_balance_job_actor",
-    //                   yanghui_load_balance_job_actor_fun);
-    //    add_actor_type("yanghui_router_pool_job_actor",
-    //                   yanghui_router_pool_job_actor_fun);
+    add_actor_type("yanghui_standard_job_actor",
+                   yanghui_standard_job_actor_fun);
+    add_actor_type("yanghui_priority_job_actor",
+                   yanghui_priority_job_actor_fun);
+    add_actor_type("yanghui_load_balance_job_actor",
+                   yanghui_load_balance_job_actor_fun);
+    add_actor_type("yanghui_router_pool_job_actor",
+                   yanghui_router_pool_job_actor_fun);
     opt_group{custom_options_, "global"}
         .add(root_port, "root_port", "set root port")
         .add(root_host, "root_host", "set root node")

@@ -30,26 +30,15 @@ typename Inspector::result_type inspect(Inspector& f, const YanghuiData& x) {
   return f(caf::meta::type_name("YanghuiData"), x.data);
 }
 
-caf::behavior mirror(caf::event_based_actor* self);
-
 /**
  *  yanghui_standard_job_actor
  */
-// using yanghui_standard_job_actor =
-//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-//                     caf::reacts_to<caf::strong_actor_ptr, int>>;
-
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard);
 
 /**
  *  yanghui_priority_job_actor
  */
-
-// using yanghui_priority_job_actor =
-//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-//                     caf::reacts_to<std::vector<std::pair<bool, int>>>>;
-
 caf::behavior yanghui_priority_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, WorkerPool* worker_pool,
     caf::actor dispatcher);
@@ -57,11 +46,6 @@ caf::behavior yanghui_priority_job_actor_fun(
 /**
  *  yanghui_load_balance_job_actor
  */
-
-// using yanghui_load_balance_job_actor =
-//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-//                     caf::reacts_to<std::vector<int>>, caf::reacts_to<int>>;
-
 caf::behavior yanghui_load_balance_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
     caf::actor yanghui_load_balance_count_path,
@@ -69,10 +53,6 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 /**
  *  yanghui_router_pool_job_actor
  */
-// using yanghui_router_pool_job_actor =
-//    caf::typed_actor<caf::reacts_to<std::vector<std::vector<int>>>,
-//                     caf::reacts_to<caf::strong_actor_ptr, int>>;
-
 caf::behavior yanghui_router_pool_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* pool_guard);
 

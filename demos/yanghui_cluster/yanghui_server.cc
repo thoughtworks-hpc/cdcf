@@ -4,25 +4,6 @@
 
 #include "./include/yanghui_server.h"
 
-// caf::behavior mirror(caf::event_based_actor* self) {
-//  // return the (initial) actor behavior
-//  return {// a handler for messages containing a single string
-//          // that replies with a string
-//          [=](const std::string& what) -> std::string {
-//            std::cout << "start mirror 1." << std::endl;
-//            auto sender = self->current_sender();
-//            std::cout << "start mirror 2." << std::endl;
-//            std::cout << "start mirror 3： "
-//                      << caf::to_string(sender->address()) << std::endl;
-//            std::cout << "start mirror 4." << std::endl;
-//            // prints "Hello World!" via aout (thread-safe cout wrapper)
-//            aout(self) << what << std::endl;
-//            std::cout << "start mirror 5." << std::endl;
-//            // reply "!dlroW olleH"
-//            return std::string(what.rbegin(), what.rend());
-//          }};
-//}
-
 void ErrorHandler(const caf::error& err) {
   std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
@@ -32,8 +13,6 @@ caf::behavior yanghui_standard_job_actor_fun(
   return {[=](const YanghuiData& data) {
             std::cout << "start standard job counting." << std::endl;
             auto yanghui_data = data.data;
-            //            caf::strong_actor_ptr message_sender =
-            //            self->current_sender();
             self->state.message_sender = self->current_sender();
             actor_guard->SendAndReceive(
                 [&](int result) { self->send(self, result); }, ErrorHandler,
@@ -63,18 +42,18 @@ caf::behavior yanghui_priority_job_actor_fun(
         self->send(dispatcher, yanghui_data);
       },
       [=](std::vector<std::pair<bool, int>> result) {
-            auto result_pair_1 = result[0];
-            auto result_pair_2 = result[1];
+        auto result_pair_1 = result[0];
+        auto result_pair_2 = result[1];
 
-            //        if (result.size() != 2 || !result_pair_1.first ||
-            //            (result_pair_1.second != result_pair_2.second)) {
-            //          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
-            //                     false, 0);
-            //        } else {
-            //          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
-            //                     true, result_pair_1.second);
-            //        }
-          }};
+        if (result.size() != 2 || !result_pair_1.first ||
+            (result_pair_1.second != result_pair_2.second)) {
+          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
+                     false, 0);
+        } else {
+          self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
+                     true, result_pair_1.second);
+        }
+      }};
 }
 
 caf::behavior yanghui_load_balance_job_actor_fun(
@@ -101,8 +80,6 @@ caf::behavior yanghui_router_pool_job_actor_fun(
   return {[=](const YanghuiData& data) {
     std::cout << "start router pool job counting." << std::endl;
     auto yanghui_data = data.data;
-    //            caf::strong_actor_ptr message_sender =
-    //            self->current_sender();
     auto sender = self->current_sender();
     pool_guard->SendAndReceive(
         [&](int result) {
