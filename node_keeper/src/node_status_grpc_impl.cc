@@ -15,12 +15,21 @@ node_keeper::NodeStatusGRPCImpl::~NodeStatusGRPCImpl() = default;
 
 node_keeper::NodeStatusGRPCImpl::NodeStatusGRPCImpl(
     membership::Membership& clusterMember)
-    : cluster_member_(clusterMember) {}
+    : cluster_member_(clusterMember),
+      node_run_statues_factory_(*(new NodeRunStatusFactory())) {}
+
+node_keeper::NodeStatusGRPCImpl::NodeStatusGRPCImpl(
+    membership::Membership& clusterMember,
+    NodeRunStatusFactory& nodeRunStatusFactory)
+    : cluster_member_(clusterMember),
+      node_run_statues_factory_(nodeRunStatusFactory) {}
 
 grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
     ::grpc::ServerContext* context, const ::google::protobuf::Empty* request,
     ::NodeStatus* response) {
-  NodeRunStatus* node_run_status = NodeRunStatus::GetInstance();
+  // TODO::  factory_class.getInstance();
+  // NodeRunStatus* node_run_status = NodeRunStatus::GetInstance();
+  NodeRunStatus* node_run_status = node_run_statues_factory_.GetInstance();
   if (nullptr == node_run_status) {
     std::cout << "Can't get node status, os not match." << std::endl;
     return ::grpc::Status(grpc::UNAVAILABLE,
@@ -81,3 +90,4 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
 
   return ::grpc::Status::OK;
 }
+
