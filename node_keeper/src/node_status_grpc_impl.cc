@@ -31,7 +31,7 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
   // NodeRunStatus* node_run_status = NodeRunStatus::GetInstance();
   NodeRunStatus* node_run_status = node_run_statues_factory_.GetInstance();
   if (nullptr == node_run_status) {
-    std::cout << "Can't get node status, os not match." << std::endl;
+    CDCF_LOGGER_ERROR("Can't get node status, os not match.");
     return ::grpc::Status(grpc::UNAVAILABLE,
                           "Can't get node status, os not match.");
   }
@@ -39,8 +39,7 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
   MemoryStatus memory_status{};
   int ret = node_run_status->GetMemoryState(memory_status);
   if (0 != ret) {
-    std::cout << "Can't get memory status, please connect the administrator."
-              << std::endl;
+    CDCF_LOGGER_ERROR("Can't get memory status, please connect the administrator.");
     return ::grpc::Status(
         grpc::UNAVAILABLE,
         "Can't get memory status, please connect the administrator.");
@@ -90,4 +89,3 @@ grpc::Status node_keeper::NodeStatusGRPCImpl::GetStatus(
 
   return ::grpc::Status::OK;
 }
-

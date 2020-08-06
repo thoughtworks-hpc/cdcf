@@ -8,7 +8,7 @@
 
 class NodeRunStatusFactory {
  public:
-  NodeRunStatus *GetInstance() {
+  virtual NodeRunStatus *GetInstance() {
     return NodeRunStatus::GetInstance();
   };
 };
