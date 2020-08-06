@@ -25,9 +25,6 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
-      register: output
-    - debug:
-        var: output
     - assert:
         that:
           - "yanghui_server.yanghui_server.state.running"
@@ -57,9 +54,6 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
-      register: output
-    - debug:
-        var: output
     - assert:
         that:
           - "yanghui_worker.yanghui_worker.state.running"
@@ -89,9 +83,6 @@
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
-      register: output
-    - debug:
-        var: output
     - assert:
         that:
           - "yanghui_client.yanghui_client.state.running"
