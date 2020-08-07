@@ -118,3 +118,15 @@ TEST(LoggerTest, should_log_to_file_correctly_given_log_file_name) {
   EXPECT_THAT(output, testing::HasSubstr("logger_test.cc:"));
   EXPECT_TRUE(output.find("Debug Log") == std::string::npos);
 }
+
+TEST(LoggerTest, should_not_log_filename_and_line_num_given_correct_config) {
+  testing::internal::CaptureStdout();
+  CDCFConfig config;
+  config.log_no_display_filename_and_line_number_ = true;
+  cdcf::Logger::Init(config);
+
+  CDCF_LOGGER_INFO("Hello World");
+
+  std::string output = testing::internal::GetCapturedStdout();
+  EXPECT_TRUE(output.find("logger_test.cc") == std::string::npos);
+}

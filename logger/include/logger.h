@@ -23,7 +23,6 @@ class Logger {
 
  private:
   static std::shared_ptr<spdlog::logger> logger_;
-  static std::once_flag once_flag_;
 };
 
 #define CDCF_LOGGER_TRACE(...) SPDLOG_TRACE(__VA_ARGS__)
