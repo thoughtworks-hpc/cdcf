@@ -19,7 +19,7 @@ class MockProcessManager : public ProcessManager {
   MOCK_METHOD(void, Exit, (int), (override));
 };
 
-TEST(Daemon, should_guard_process_until_stop_guard) {
+TEST(Daemon, ShouldGuardProcessUntilStopGuard) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
 
@@ -42,7 +42,7 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
   d.Start();
 }
 
-TEST(Daemon, should_exit_when_process_not_stable) {
+TEST(Daemon, ShouldExitWhenProcessNotStable) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
   Daemon d(mock_process_manager, path, {"-l"});
