@@ -1,4 +1,8 @@
 ---
+- name: Copy filebeat_config to remote node
+  copy:
+    src: ./filebeat_config.yml
+    dest: /tmp/filebeat_config.yml
 - name: Run filebeat container
   hosts:
     - server
@@ -18,7 +22,7 @@
               container_name: filebeat
               volumes:
                 - /tmp/log:/tmp/log:ro
-                - ./filebeat_config.yml:/usr/share/filebeat/filebeat.yml:ro
+                - /tmp/filebeat_config.yml:/usr/share/filebeat/filebeat.yml:ro
                 - /var/run/docker.sock:/var/run/docker.sock
                 - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
 
