@@ -4,6 +4,7 @@
 
 #include "./logger.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 std::vector<spdlog::sink_ptr> GenerateSinks(const CDCFConfig& config);
@@ -67,4 +68,19 @@ TEST(GenerateSinksTest,
   auto sinks = GenerateSinks(config);
 
   EXPECT_EQ(2, sinks.size());
+}
+
+TEST(LoggerTest, should_log_to_console_correctly_given_default_config) {
+  testing::internal::CaptureStdout();
+  CDCFConfig config;
+  cdcf::Logger::Init(config);
+
+  CDCF_LOGGER_DEBUG("Debug Log");
+  CDCF_LOGGER_INFO("Hello World");
+
+  std::string output = testing::internal::GetCapturedStdout();
+  EXPECT_THAT(output, testing::HasSubstr("Hello World"));
+  EXPECT_THAT(output, testing::HasSubstr("info"));
+  EXPECT_THAT(output, testing::HasSubstr("logger_test.cc:"));
+  EXPECT_TRUE(output.find("Debug Log") == std::string::npos);
 }
