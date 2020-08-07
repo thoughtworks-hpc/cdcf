@@ -62,3 +62,8 @@ void cdcf::Logger::Init(const CDCFConfig& config) {
                       !config.log_no_display_filename_and_line_number_);
   });
 }
+void cdcf::Logger::Flush(){
+    if (logger_) {
+        logger_->flush();
+    }
+}

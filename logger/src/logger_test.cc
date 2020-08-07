@@ -7,6 +7,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+
 std::vector<spdlog::sink_ptr> GenerateSinks(const CDCFConfig& config);
 
 TEST(GenerateSinksTest,
@@ -79,6 +83,36 @@ TEST(LoggerTest, should_log_to_console_correctly_given_default_config) {
   CDCF_LOGGER_INFO("Hello World");
 
   std::string output = testing::internal::GetCapturedStdout();
+  EXPECT_THAT(output, testing::HasSubstr("Hello World"));
+  EXPECT_THAT(output, testing::HasSubstr("info"));
+  EXPECT_THAT(output, testing::HasSubstr("logger_test.cc:"));
+  EXPECT_TRUE(output.find("Debug Log") == std::string::npos);
+}
+
+static std::string ReadFileContent(const std::string& file) {
+  std::stringstream ss;
+  std::ifstream ifs;
+  ifs.open(file);
+  std::string buffer;
+  while (ifs) {
+    getline(ifs, buffer);
+    ss << buffer;
+  }
+  ifs.close();
+  return ss.str();
+}
+
+TEST(LoggerTest, should_log_to_file_correctly_given_log_file_name) {
+  CDCFConfig config;
+  config.log_file_ = "logger_test.log";
+  std::remove(config.log_file_.c_str());
+  cdcf::Logger::Init(config);
+
+  CDCF_LOGGER_DEBUG("Debug Log");
+  CDCF_LOGGER_INFO("Hello World");
+  cdcf::Logger::Flush();
+
+  std::string output = ReadFileContent(config.log_file_);
   EXPECT_THAT(output, testing::HasSubstr("Hello World"));
   EXPECT_THAT(output, testing::HasSubstr("info"));
   EXPECT_THAT(output, testing::HasSubstr("logger_test.cc:"));

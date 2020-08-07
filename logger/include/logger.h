@@ -19,6 +19,7 @@ namespace cdcf {
 class Logger {
  public:
   static void Init(const CDCFConfig& config);
+  static void Flush();
 
  private:
   static std::shared_ptr<spdlog::logger> logger_;
