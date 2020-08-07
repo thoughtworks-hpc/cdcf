@@ -1,0 +1,24 @@
+---
+- name: Run filebeat container
+  hosts:
+    - server
+    - client
+    - worker
+  #  become: true
+  gather_facts: no
+  tasks:
+    - docker_compose:
+        project_name: Run docker compose on server
+        state: present
+        definition:
+          version: "2"
+          services:
+            filebeat:
+              image: docker.elastic.co/beats/filebeat:7.8.1
+              container_name: filebeat
+              volumes:
+                - /tmp/log:/tmp/log:ro
+                - ./filebeat_config.yml:/usr/share/filebeat/filebeat.yml:ro
+                - /var/run/docker.sock:/var/run/docker.sock
+                - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+
