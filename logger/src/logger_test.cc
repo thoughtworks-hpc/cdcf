@@ -13,16 +13,14 @@
 
 std::vector<spdlog::sink_ptr> GenerateSinks(const CDCFConfig& config);
 
-TEST(GenerateSinksTest,
-     should_sinks_have_only_console_sink_given_default_config) {
+TEST(GenerateSinksTest, ShouldSinksHaveOnlyConsoleSinkGivenDefaultConfig) {
   CDCFConfig config;
   auto sinks = GenerateSinks(config);
 
   EXPECT_EQ(1, sinks.size());
 }
 
-TEST(GenerateSinksTest,
-     should_sinks_have_no_console_sink_given_log_to_config_is_false) {
+TEST(GenerateSinksTest, ShouldSinksHaveNoConsoleSinkGivenLogToConfigIsFalse) {
   CDCFConfig config;
   config.no_log_to_console_ = true;
 
@@ -31,7 +29,7 @@ TEST(GenerateSinksTest,
   EXPECT_EQ(0, sinks.size());
 }
 
-TEST(GenerateSinksTest, should_sinks_have_file_sink_given_log_file_not_empty) {
+TEST(GenerateSinksTest, ShouldSinksHaveFileSinkGivenLogFileNotEmpty) {
   CDCFConfig config;
   config.no_log_to_console_ = true;
   config.log_file_ = "cdcf.log";
@@ -42,7 +40,7 @@ TEST(GenerateSinksTest, should_sinks_have_file_sink_given_log_file_not_empty) {
 }
 
 TEST(GenerateSinksTest,
-     should_sinks_have_rotating_sink_given_log_file_size_in_bytes_not_0) {
+     ShouldSinksHaveRotatingSinkGivenLogFileSizeInBytesNot0) {
   CDCFConfig config;
   config.no_log_to_console_ = true;
   config.log_file_ = "cdcf.log";
@@ -53,8 +51,7 @@ TEST(GenerateSinksTest,
   EXPECT_EQ(1, sinks.size());
 }
 
-TEST(GenerateSinksTest,
-     should_sinks_have_console_and_file_sink_given_correct_config) {
+TEST(GenerateSinksTest, ShouldSinksHaveConsoleAndFileSinkGivenCorrectConfig) {
   CDCFConfig config;
   config.log_file_ = "cdcf.log";
 
@@ -64,7 +61,7 @@ TEST(GenerateSinksTest,
 }
 
 TEST(GenerateSinksTest,
-     should_sinks_have_console_and_rotating_sink_given_correct_config) {
+     ShouldSinksHaveConsoleAndRotatingSinkGivenCorrectConfig) {
   CDCFConfig config;
   config.log_file_ = "cdcf.log";
   config.log_file_size_in_bytes_ = 1024;
@@ -74,7 +71,7 @@ TEST(GenerateSinksTest,
   EXPECT_EQ(2, sinks.size());
 }
 
-TEST(LoggerTest, should_log_to_console_correctly_given_default_config) {
+TEST(LoggerTest, ShouldLogToConsoleCorrectlyGivenDefaultConfig) {
   testing::internal::CaptureStdout();
   CDCFConfig config;
   cdcf::Logger::Init(config);
@@ -102,7 +99,7 @@ static std::string ReadFileContent(const std::string& file) {
   return ss.str();
 }
 
-TEST(LoggerTest, should_log_to_file_correctly_given_log_file_name) {
+TEST(LoggerTest, ShouldLogToFileCorrectlyGivenLogFileName) {
   CDCFConfig config;
   config.log_file_ = "logger_test.log";
   std::remove(config.log_file_.c_str());
@@ -119,7 +116,7 @@ TEST(LoggerTest, should_log_to_file_correctly_given_log_file_name) {
   EXPECT_TRUE(output.find("Debug Log") == std::string::npos);
 }
 
-TEST(LoggerTest, should_not_log_filename_and_line_num_given_correct_config) {
+TEST(LoggerTest, ShouldNotLogFilenameAndLineNumGivenCorrectConfig) {
   testing::internal::CaptureStdout();
   CDCFConfig config;
   config.log_no_display_filename_and_line_number_ = true;
