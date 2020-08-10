@@ -1,0 +1,19 @@
+input {
+  beats {
+  port => "5044"
+  }
+}
+
+  filter {
+  grok {
+  match => { "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:level}%{DATA} %{DATA}%{PATH:source}:%{NUMBER:line_num}%{DATA} %{GREEDYDATA:line}" }
+  }
+}
+
+  output {
+  elasticsearch {
+  hosts => ["http://elasticsearch:9200"]
+  index => "cdcf_log"
+  }
+  stdout { codec => rubydebug }
+}

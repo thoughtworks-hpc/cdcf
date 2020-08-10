@@ -34,7 +34,7 @@ services:
     ports:
       - 5044:5044
     volumes:
-      - ./config/logstash.yml:/usr/share/logstash/pipeline/logstash.yml:ro
+      - ./logstash_config.yml:/usr/share/logstash/pipeline/logstash.yml:ro
     networks:
       - elastic
 
