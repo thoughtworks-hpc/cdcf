@@ -49,16 +49,7 @@ caf::actor StartWorker(caf::actor_system& system, const caf::node_id& nid,
 }
 
 void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
-  bool if_use_ssl = !cfg.openssl_cafile.empty() ||
-                    !cfg.openssl_certificate.empty() ||
-                    !cfg.openssl_key.empty();
-  CDCF_LOGGER_INFO("enable ssl: {}", if_use_ssl);
-  if (if_use_ssl) {
-    CDCF_LOGGER_DEBUG("cafile: {}", cfg.openssl_cafile);
-    CDCF_LOGGER_DEBUG("certificate: {}", cfg.openssl_certificate);
-    CDCF_LOGGER_DEBUG("key: {}", cfg.openssl_key);
-  }
-  YanghuiIO yanghui_io(if_use_ssl);
+  YanghuiIO yanghui_io(cfg);
 
   auto actor1 = system.spawn<typed_calculator>();
 
@@ -285,16 +276,7 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 }
 
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
-  bool if_use_ssl = !cfg.openssl_cafile.empty() ||
-                    !cfg.openssl_certificate.empty() ||
-                    !cfg.openssl_key.empty();
-  CDCF_LOGGER_INFO("enable ssl: {}", if_use_ssl);
-  if (if_use_ssl) {
-    CDCF_LOGGER_DEBUG("cafile: {}", cfg.openssl_cafile);
-    CDCF_LOGGER_DEBUG("certificate: {}", cfg.openssl_certificate);
-    CDCF_LOGGER_DEBUG("key: {}", cfg.openssl_key);
-  }
-  YanghuiIO yanghui_io(if_use_ssl);
+  YanghuiIO yanghui_io(cfg);
 
   ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
@@ -601,19 +583,14 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
     self->receive(
         [&](bool status, int result) {
           if (!status) {
-            aout(self) << "failed job: " << job_actor.id()
-                       << " : calculation error" << std::endl;
             running_status_normal = false;
             CDCF_LOGGER_ERROR("Yanghui Test: job id {} failed", job_actor.id());
           } else {
             if (result != result_to_check) {
-              aout(self) << "inconsistent job: " << job_actor.id() << std::endl;
               running_status_normal = false;
               CDCF_LOGGER_ERROR("Yanghui Test: job id {} result inconsistent",
                                 job_actor.id());
             } else {
-              aout(self) << "succeeded job: " << job_actor.id()
-                         << ", with result: " << result << std::endl;
               CDCF_LOGGER_INFO(
                   "Yanghui Test: job id {} succeeded with result {}",
                   job_actor.id(), result);
@@ -621,13 +598,10 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
           }
         },
         [&](caf::error& err) {
-          aout(self) << "failed job: " << job_actor.id() << " : "
-                     << system.render(err) << std::endl;
           running_status_normal = false;
           CDCF_LOGGER_ERROR("Yanghui Test: job id {} failed", job_actor.id());
         });
   } else {
-    std::cout << "job: " << job_actor.id() << " timeout" << std::endl;
     CDCF_LOGGER_INFO("Yanghui Test: job id {} timeout", job_actor.id());
     running_status_normal = false;
   }

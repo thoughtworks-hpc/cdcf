@@ -9,12 +9,22 @@
 #include <caf/openssl/all.hpp>
 
 #include "../../../logger/include/logger.h"
+#include "actor_system/config.h"
 
 class YanghuiIO {
   const bool use_ssl_;
 
  public:
-  explicit YanghuiIO(bool if_use_ssl) : use_ssl_(if_use_ssl) {}
+  explicit YanghuiIO(const actor_system::Config& cfg)
+      : use_ssl_(!cfg.openssl_cafile.empty() ||
+                 !cfg.openssl_certificate.empty() || !cfg.openssl_key.empty()) {
+    CDCF_LOGGER_INFO("enable ssl: {}", use_ssl_);
+    if (use_ssl_) {
+      CDCF_LOGGER_DEBUG("cafile: {}", cfg.openssl_cafile);
+      CDCF_LOGGER_DEBUG("certificate: {}", cfg.openssl_certificate);
+      CDCF_LOGGER_DEBUG("key: {}", cfg.openssl_key);
+    }
+  }
 
   template <class Handle>
   caf::expected<uint16_t> publish(const Handle& whom, uint16_t port,
