@@ -4,24 +4,42 @@
 #include "../include/logger.h"
 
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "spdlog/sinks/rotating_file_sink.h"
+#include <vector>
 
 std::shared_ptr<spdlog::logger> cdcf::Logger::logger_;
 
 std::once_flag cdcf::Logger::once_flag_;
 
+std::vector<spdlog::sink_ptr> GenerateSinks(const CDCFConfig& config) {
+  std::vector<spdlog::sink_ptr> sinks;
+  if (!config.no_log_to_console_) {
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+  }
+
+  if (!config.log_file_.empty()) {
+    if (config.log_file_size_in_bytes_ == 0) {
+      sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+          config.log_file_));
+    } else {
+      sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+          config.log_file_, config.log_file_size_in_bytes_,
+          config.log_file_number_));
+    }
+  }
+  return sinks;
+}
+
 void cdcf::Logger::Init(const CDCFConfig& config) {
   std::call_once(once_flag_, [&config]() {
-    if (config.log_file_size_in_bytes_ == 0) {
-      logger_ = spdlog::basic_logger_mt("basic_logger", config.log_file_);
-    } else {
-      logger_ = spdlog::rotating_logger_mt("rotating_logger", config.log_file_,
-                                           config.log_file_size_in_bytes_,
-                                           config.log_file_number_);
-    }
+    auto sinks = GenerateSinks(config);
+    logger_ = std::make_shared<spdlog::logger>("multi_sink", sinks.begin(),
+                                               sinks.end());
+
     std::string log_pattern;
-    if (config.log_display_filename_and_line_number_) {
+    if (!config.log_no_display_filename_and_line_number_) {
       //    [2020-07-09 16:51:29.684] [info]
       //    [/Users/xxx/github_repo/cdcf/logger/src/logger_test.cc:11] hello
       //    word, 1
@@ -41,6 +59,6 @@ void cdcf::Logger::Init(const CDCFConfig& config) {
     CDCF_LOGGER_DEBUG("Log file size is {}", config.log_file_size_in_bytes_);
     CDCF_LOGGER_DEBUG("Log file number is {}", config.log_file_number_);
     CDCF_LOGGER_DEBUG("Log file display filename and line number is {}",
-                      config.log_display_filename_and_line_number_);
+                      !config.log_no_display_filename_and_line_number_);
   });
 }

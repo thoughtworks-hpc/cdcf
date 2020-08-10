@@ -60,7 +60,7 @@ int membership::Membership::Init(
 
   CDCF_LOGGER_INFO("Node {} {}:{} initializing...", member.GetNodeName(),
                    member.GetIpAddress(), member.GetPort());
-
+  print_ping_log_ = config.IsPrintPingLogEnable();
   self_ = member;
   AddMember(member);
 
@@ -418,8 +418,6 @@ std::vector<uint8_t> membership::Membership::HandlePull(
   PullRequestMessage request;
   request.DeserializeFromArray(data, size);
 
-  CDCF_LOGGER_DEBUG("Received pull request from {};{}", address.host,
-                    address.port);
   if (request.IsFullStateType()) {
     FullStateMessage response;
     CDCF_LOGGER_INFO("Received full state pull request from {}:{}",
@@ -435,6 +433,10 @@ std::vector<uint8_t> membership::Membership::HandlePull(
 
     message_serialized = response.SerializeToString();
   } else if (request.IsPingType()) {
+    if (print_ping_log_) {
+      CDCF_LOGGER_DEBUG("Received ping request from {}:{}", address.host,
+                        address.port);
+    }
     PullResponseMessage response;
     response.InitAsPingSuccess(self_);
     message_serialized = response.SerializeToString();
@@ -442,6 +444,11 @@ std::vector<uint8_t> membership::Membership::HandlePull(
                  request.GetMembersWithActorSystem());
   } else if (request.IsPingRelayType()) {
     if (transport_) {
+      if (print_ping_log_) {
+        CDCF_LOGGER_DEBUG("Received ping relay request from {}:{}",
+                          address.host, address.port);
+      }
+
       PullRequestMessage request_message;
       request_message.InitAsPingType();
       std::string pull_request_message = request_message.SerializeToString();
@@ -523,8 +530,10 @@ void membership::Membership::Ping() {
       auto ping_target = random_member;
       gossip::Address address{ping_target.GetIpAddress(),
                               ping_target.GetPort()};
-      CDCF_LOGGER_DEBUG("Ping member {}:{} to check if it's alive",
-                        ping_target.GetIpAddress(), ping_target.GetPort());
+      if (print_ping_log_) {
+        CDCF_LOGGER_DEBUG("Ping member {}:{} to check if it's alive",
+                          ping_target.GetIpAddress(), ping_target.GetPort());
+      }
       transport_->Pull(
           address, pull_request_message.data(), pull_request_message.size(),
           [this, ping_target](const gossip::Transportable::PullResult& result) {
@@ -739,8 +748,10 @@ void membership::Membership::MergeMembers(
     for (const auto& member_pair : members) {
       auto member = member_pair.first;
       int incarnation = member_pair.second;
-      CDCF_LOGGER_DEBUG("Receive update for ping member {}:{}",
-                        member.GetIpAddress(), member.GetPort());
+      if (print_ping_log_) {
+        CDCF_LOGGER_DEBUG("Receive update for ping member {}:{}",
+                          member.GetIpAddress(), member.GetPort());
+      }
       if (members_.find(member) != members_.end()) {
         if (incarnation > members_[member]) {
           members_[member] = incarnation;

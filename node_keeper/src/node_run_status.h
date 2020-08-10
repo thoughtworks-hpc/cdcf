@@ -17,8 +17,11 @@ struct MemoryStatus {
 class NodeRunStatus {
  public:
   static NodeRunStatus *GetInstance();
-  double GetCpuRate();
-  int GetMemoryState(MemoryStatus &memory_info);
+  virtual double GetCpuRate();
+  virtual int GetMemoryState(MemoryStatus &memory_info);
+
+ protected:
+  NodeRunStatus(FILE *memoryFile, FILE *cpuFile);
 
  private:
   struct CpuInfo {
@@ -31,7 +34,6 @@ class NodeRunStatus {
     uint64_t soft_irq;
   };
 
-  NodeRunStatus(FILE *memoryFile, FILE *cpuFile);
   void GetCpuInfo(CpuInfo &cpu_info);
 
   FILE *memory_file;
