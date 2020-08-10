@@ -19,7 +19,7 @@ class MockProcessManager : public ProcessManager {
   MOCK_METHOD(void, Exit, (int), (override));
 };
 
-TEST(Daemon, should_guard_process_until_stop_guard) {
+TEST(Daemon, ShouldGuardProcessUntilStopGuard) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
 
@@ -32,17 +32,15 @@ TEST(Daemon, should_guard_process_until_stop_guard) {
               CreateProcess(testing::_, testing::_, testing::_))
       .Times(2);
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
-      .WillOnce(testing::InvokeWithoutArgs([]() {
-        using std::literals::operator""ms;
-        std::this_thread::sleep_for(40ms);
-      }))
+      .WillOnce(testing::InvokeWithoutArgs(
+          []() { std::this_thread::sleep_for(std::chrono::milliseconds(40)); }))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
   EXPECT_CALL(mock_process_manager, Exit(0));
 
   d.Start();
 }
 
-TEST(Daemon, should_exit_when_process_not_stable) {
+TEST(Daemon, ShouldExitWhenProcessNotStable) {
   MockProcessManager mock_process_manager;
   const char *path = "/bin/ls";
   Daemon d(mock_process_manager, path, {"-l"});
@@ -53,8 +51,7 @@ TEST(Daemon, should_exit_when_process_not_stable) {
               CreateProcess(testing::_, testing::_, testing::_));
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
       .WillOnce(testing::InvokeWithoutArgs([]() {
-        using std::literals::operator""ms;
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }));
   EXPECT_CALL(mock_process_manager, Exit(1))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));

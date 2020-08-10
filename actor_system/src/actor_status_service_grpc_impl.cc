@@ -5,8 +5,9 @@
 
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/server_builder.h>
+#include <logger.h>
 
-::grpc::Status ActorStatusServiceGprcImpl::GetNodeActorStatus(
+::grpc::Status ActorStatusServiceGrpcImpl::GetNodeActorStatus(
     ::grpc::ServerContext *context, const ::google::protobuf::Empty *request,
     ::ActorStatus *response) {
   std::vector<ActorStatusMonitor::ActorInfo> actor_list =
@@ -25,16 +26,16 @@
 
   return ::grpc::Status::OK;
 }
-void ActorStatusServiceGprcImpl::Run() {
+void ActorStatusServiceGrpcImpl::Run() {
   std::string server_address("0.0.0.0:" + std::to_string(server_port_));
-  std::cout << "actor status service up at port:" << server_port_ << std::endl;
+  CDCF_LOGGER_INFO("actor status service up at port:{}", server_port_);
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(this);
   server_ = builder.BuildAndStart();
 }
 
-void ActorStatusServiceGprcImpl::RunWithWait() {
+void ActorStatusServiceGrpcImpl::RunWithWait() {
   Run();
   server_->Wait();
 }

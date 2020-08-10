@@ -4,6 +4,7 @@
 
 #include "src/node_run_status.h"
 
+#include <logger.h>
 #include <unistd.h>
 
 #include <cstring>
@@ -94,8 +95,10 @@ int NodeRunStatus::GetMemoryState(MemoryStatus &memory_info) {
 
   sscanf(buff, "%s %llu ", check_str, &memory_total);
   if (0 != strcmp(check_str, kMemoryTotal)) {
-    std::cout << "line head(" << kMemoryTotal
-              << ") not match when read memory file" << std::endl;
+    CDCF_LOGGER_ERROR("line head({}) not match when read memory file",
+                      kMemoryTotal);
+    //    std::cout << "line head(" << kMemoryTotal
+    //              << ") not match when read memory file" << std::endl;
     return -1;
   }
 
@@ -107,8 +110,10 @@ int NodeRunStatus::GetMemoryState(MemoryStatus &memory_info) {
   // memory_available = strtoul(buff, &check_str, 10);
   sscanf(buff, "%s %llu ", check_str, &memory_available);
   if (0 != strcmp(check_str, kMemoryAvailable)) {
-    std::cout << "line head(" << kMemoryAvailable
-              << ") not match when read memory file" << std::endl;
+    //    std::cout << "line head(" << kMemoryAvailable
+    //              << ") not match when read memory file" << std::endl;
+    CDCF_LOGGER_ERROR("line head({}) not match when read memory file",
+                      kMemoryAvailable);
     return -1;
   }
 

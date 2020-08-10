@@ -59,7 +59,7 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(caf REQUIRED)
-target_link_libraries(${PROJECT_NAME} config_manager caf::caf grpc::grpc)
+target_link_libraries(${PROJECT_NAME} config_manager caf::caf grpc::grpc logger)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(TEST_SOURCES ${ALL_SOURCES})
@@ -67,7 +67,7 @@ list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")
 if(NOT "${TEST_SOURCES}" STREQUAL "")
     add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
     find_package(GTest REQUIRED)
-    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} GTest::GTest)
-	enable_testing()
+    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} GTest::GTest actor_monitor)
+    enable_testing()
     add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 endif()

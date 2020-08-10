@@ -12,6 +12,9 @@ std::vector<std::string> node_keeper::split(const std::string& input,
   std::stringstream ss(input);
   std::string token;
   while (std::getline(ss, token, delim)) {
+    if (token.empty()) {
+      continue;
+    }
     result.push_back(token);
   }
   return result;
