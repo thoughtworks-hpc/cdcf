@@ -32,10 +32,8 @@ TEST(Daemon, ShouldGuardProcessUntilStopGuard) {
               CreateProcess(testing::_, testing::_, testing::_))
       .Times(2);
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
-      .WillOnce(testing::InvokeWithoutArgs([]() {
-        using std::literals::operator""ms;
-        std::this_thread::sleep_for(40ms);
-      }))
+      .WillOnce(testing::InvokeWithoutArgs(
+          []() { std::this_thread::sleep_for(std::chrono::milliseconds(40)); }))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
   EXPECT_CALL(mock_process_manager, Exit(0));
 
@@ -53,8 +51,7 @@ TEST(Daemon, ShouldExitWhenProcessNotStable) {
               CreateProcess(testing::_, testing::_, testing::_));
   EXPECT_CALL(mock_process_manager, WaitProcessExit(testing::_))
       .WillOnce(testing::InvokeWithoutArgs([]() {
-        using std::literals::operator""ms;
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }));
   EXPECT_CALL(mock_process_manager, Exit(1))
       .WillOnce(testing::InvokeWithoutArgs([p = &d]() { p->StopGuard(); }));
