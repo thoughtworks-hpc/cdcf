@@ -23,6 +23,7 @@ class ActorStatusMonitor {
     std::string name;
     std::string description;
   };
+  virtual ~ActorStatusMonitor();
 
   explicit ActorStatusMonitor(caf::actor_system& actorSystem);
   void RegisterActor(caf::actor& actor, const std::string& name,
@@ -31,9 +32,9 @@ class ActorStatusMonitor {
 
  private:
   caf::actor_system& actor_system_;
+  caf::actor actor_monitor_;
   std::unordered_map<caf::actor_id, ActorInfo> actor_status_;
   std::mutex actor_status_lock_;
-  caf::actor actor_monitor_;
 };
 
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_

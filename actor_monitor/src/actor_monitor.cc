@@ -67,7 +67,11 @@ void ActorMonitor::DownMsgHandle(const caf::down_msg& down_msg,
 
 bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
                 const std::string& description) {
-  caf::anon_send(supervisor, worker.address(), description);
+  // caf::anon_send(supervisor, worker.address(), description);
+
+  supervisor->enqueue(nullptr, caf::make_message_id(),
+                      caf::make_message(worker.address(), description),
+                      nullptr);
   auto pointer = caf::actor_cast<caf::event_based_actor*>(supervisor);
   pointer->monitor(worker);
   return true;

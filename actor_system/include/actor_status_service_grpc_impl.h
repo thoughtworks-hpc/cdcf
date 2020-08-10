@@ -15,9 +15,9 @@
 #include "../include/actor_status_monitor.h"
 #include "../src/node_monitor.grpc.pb.h"
 
-class ActorStatusServiceGprcImpl final : public ::NodeActorMonitor::Service {
+class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
  public:
-  ActorStatusServiceGprcImpl(caf::actor_system& actorSystem,
+  ActorStatusServiceGrpcImpl(caf::actor_system& actorSystem,
                              ActorStatusMonitor& actorStatusMonitor,
                              uint16_t server_port = 50052)
       : actor_system_(actorSystem),
