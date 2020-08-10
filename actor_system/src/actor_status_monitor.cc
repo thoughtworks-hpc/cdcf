@@ -33,3 +33,8 @@ ActorStatusMonitor::GetActorStatus() {
 
   return ret;
 }
+ActorStatusMonitor::~ActorStatusMonitor() {
+  // must send kill to actor_monitor_, otherwise the actor_monitor_ will not
+  // stop
+  caf::anon_send_exit(actor_monitor_, caf::exit_reason::user_shutdown);
+}

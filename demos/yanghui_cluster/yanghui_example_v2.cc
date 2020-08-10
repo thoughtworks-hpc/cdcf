@@ -88,7 +88,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
             << ", worker_load:" << cfg.worker_load << std::endl;
 
   ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+  ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
 
@@ -223,7 +223,7 @@ size_t InputSize() {
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   YanghuiIO yanghui_io(cfg);
   ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGprcImpl actor_status_service(system, actor_status_monitor);
+  ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
 
   // router pool
   std::string routee_name = "calculator";
