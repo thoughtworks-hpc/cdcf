@@ -18,6 +18,8 @@
 #include "./include/yanghui_with_priority.h"
 
 struct YanghuiData {
+  YanghuiData() {}
+  YanghuiData(std::vector<std::vector<int>> data) { this->data = data; }
   std::vector<std::vector<int>> data;
 };
 

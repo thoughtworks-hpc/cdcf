@@ -141,6 +141,14 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   self->send_exit(cdcf_spawn, caf::exit_reason::user_shutdown);
 }
 
+std::vector<std::vector<int>> kYanghuiData1 = {{5},
+                                               {7, 8},
+                                               {2, 1, 4},
+                                               {4, 2, 6, 1},
+                                               {2, 7, 3, 4, 5},
+                                               {2, 3, 7, 6, 8, 3},
+                                               {2, 3, 4, 4, 2, 7, 7}};
+
 std::vector<std::vector<int>> kYanghuiData2 = {
     {5},
     {7, 8},
@@ -160,6 +168,56 @@ std::vector<std::vector<int>> kYanghuiData2 = {
     {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7},
     {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7},
     {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6}};
+
+std::vector<std::vector<int>> kYanghuiData3 = {
+    {5},
+    {7, 8},
+    {2, 1, 4},
+    {4, 2, 6, 1},
+    {2, 7, 3, 4, 5},
+    {2, 3, 7, 6, 8, 3},
+    {2, 3, 4, 4, 2, 7, 7},
+    {8, 4, 4, 3, 4, 5, 6, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 3},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2, 9, 4},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2, 9, 4, 8},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2, 9, 4, 2, 3},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6, 4, 2, 9, 4, 7, 8, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1,
+     6, 8, 7, 7, 6, 4, 2, 9, 4, 7, 8, 1, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6,
+     8, 7, 7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 5},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6,
+     8, 7, 7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8,
+     7, 7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 8},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8,
+     7, 7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 9, 5},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7,
+     7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7,
+     7, 6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7, 8},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7,
+     6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7, 3, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7,
+     6, 4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7, 3, 6, 9},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6,
+     4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7, 3, 6, 9, 1},
+    {1, 2, 8, 5, 6, 2, 9, 1, 1, 8, 9, 9, 1, 6, 8, 7, 7, 6,
+     4, 2, 9, 4, 7, 8, 1, 4, 6, 7, 3, 4, 7, 3, 6, 9, 5, 7},
+};
 
 void printRet(int return_value) {
   printf("call actor return value: %d\n", return_value);
@@ -621,9 +679,16 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   }
 
   caf::scoped_actor self{system};
-  YanghuiData yanghui_data;
-  yanghui_data.data = kYanghuiData2;
-  int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
+
+  std::vector<YanghuiData> yanghui_data;
+  yanghui_data.emplace_back(kYanghuiData1);
+  yanghui_data.emplace_back(kYanghuiData2);
+  yanghui_data.emplace_back(kYanghuiData3);
+
+  std::vector<int> yanghui_job_result;
+  yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData1));
+  yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData2));
+  yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData3));
 
   int successful_job_counter = 0;
   bool running_status_normal = true;
@@ -631,13 +696,16 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
     CDCF_LOGGER_INFO(
         "Yanghui Test: new round starts, total successful job count is {}",
         successful_job_counter);
-    for (int i = 0; i < yanghui_jobs.size(); i++) {
-      std::cout << "sending job to yanghui_job " << i << std::endl;
-      running_status_normal = SendJobAndCheckResult(
-          system, self, yanghui_jobs[i], yanghui_data, yanghui_job_result);
-      successful_job_counter++;
-      if (!running_status_normal) {
-        break;
+    for (int j = 0; j < yanghui_data.size(); j++) {
+      for (int i = 0; i < yanghui_jobs.size(); i++) {
+        std::cout << "sending job to yanghui_job " << i << std::endl;
+        running_status_normal =
+            SendJobAndCheckResult(system, self, yanghui_jobs[i],
+                                  yanghui_data[j], yanghui_job_result[j]);
+        successful_job_counter++;
+        if (!running_status_normal) {
+          break;
+        }
       }
     }
   }
