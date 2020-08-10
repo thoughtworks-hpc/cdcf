@@ -29,11 +29,11 @@ class actor_status_service_test : public testing::Test {
   ActorStatusMonitor status_monitor_{actor_system_};
 };
 
-const std::string kLocalHostAddress = "127.0.0.1:50052";
-const std::string kTestActorName1 = "TestActor1";
-const std::string kTestActorDescription1 = "test1 description";
-const std::string kTestActorName2 = "TestActor2";
-const std::string kTestActorDescription2 = "test2 description";
+const char kLocalHostAddress[] = "127.0.0.1:50052";
+const char kTestActorName1[] = "TestActor1";
+const char kTestActorDescription1[] = "test1 description";
+const char kTestActorName2[] = "TestActor2";
+const char kTestActorDescription2[] = "test2 description";
 
 TEST_F(actor_status_service_test, actor_system_has_no_actor) {
   ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
