@@ -1,8 +1,15 @@
 ---
-- name: Copy filebeat_config to remote node
-  copy:
-    src: ./filebeat_config.yml
-    dest: /tmp/filebeat_config.yml
+- name: Copy filebeat_config to remote nodes
+  hosts:
+    - server
+    - client
+    - worker
+  tasks:
+    - name: Copy filebeat_config to remote nodes
+      copy:
+        src: ./filebeat_config.yml
+        dest: /tmp/filebeat_config.yml
+
 - name: Run filebeat container
   hosts:
     - server
