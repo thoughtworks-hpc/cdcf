@@ -15,8 +15,16 @@
 #include "../../actor_fault_tolerance/include/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "../../message_priority_actor/include/message_priority_actor.h"
-#include "./include/yanghui_server.h"
 #include "./include/yanghui_with_priority.h"
+
+struct YanghuiData {
+  std::vector<std::vector<int>> data;
+};
+
+template <class Inspector>
+typename Inspector::result_type inspect(Inspector& f, const YanghuiData& x) {
+  return f(caf::meta::type_name("YanghuiData"), x.data);
+}
 
 struct NumberCompareData {
   std::vector<int> numbers;
