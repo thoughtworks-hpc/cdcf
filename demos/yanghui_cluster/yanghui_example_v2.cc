@@ -693,10 +693,10 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   int successful_job_counter = 0;
   bool running_status_normal = true;
   while (running_status_normal) {
-    CDCF_LOGGER_INFO(
-        "Yanghui Test: new round starts, total successful job count is {}",
-        successful_job_counter);
     for (int j = 0; j < yanghui_data.size(); j++) {
+      CDCF_LOGGER_INFO(
+          "Yanghui Test: new round starts, total successful job count is {}",
+          successful_job_counter);
       for (int i = 0; i < yanghui_jobs.size(); i++) {
         std::cout << "sending job to yanghui_job " << i << std::endl;
         running_status_normal =
