@@ -4,6 +4,8 @@
 
 #include "./router_pool.h"
 
+#include <logger.h>
+
 #include <unordered_set>
 
 #include <caf/openssl/all.hpp>
@@ -244,6 +246,7 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
     auto res = system().spawn<caf::actor>(factory_name_, factory_args_, nullptr,
                                           true, &mpi_);
     if (res) {
+      CDCF_LOGGER_INFO("Successfully create local actor.");
       add_actor = std::move(*res);
     }
   } else {
