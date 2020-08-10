@@ -11,17 +11,16 @@ void ErrorHandler(const caf::error& err) {
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard) {
   return {[=](const YanghuiData& data) {
-            std::cout << "start standard job counting." << std::endl;
-            auto yanghui_data = data.data;
-            self->state.message_sender = self->current_sender();
-            actor_guard->SendAndReceive(
-                [&](int result) { self->send(self, result); }, ErrorHandler,
-                yanghui_data);
-          },
-          [=](int result) {
-            self->send(caf::actor_cast<caf::actor>(self->state.message_sender),
-                       true, result);
-          }};
+    std::cout << "start standard job counting." << std::endl;
+    auto yanghui_data = data.data;
+    //            self->state.message_sender = self->current_sender();
+    auto sender = self->current_sender();
+    actor_guard->SendAndReceive(
+        [&](int result) {
+          self->send(caf::actor_cast<caf::actor>(sender), true, result);
+        },
+        ErrorHandler, yanghui_data);
+  }};
 }
 
 caf::behavior yanghui_priority_job_actor_fun(
