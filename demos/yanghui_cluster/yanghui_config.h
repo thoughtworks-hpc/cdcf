@@ -19,7 +19,9 @@
 
 struct YanghuiData {
   YanghuiData() {}
-  YanghuiData(std::vector<std::vector<int>> data) { this->data = data; }
+  explicit YanghuiData(std::vector<std::vector<int>> data) {
+    this->data = data;
+  }
   std::vector<std::vector<int>> data;
 };
 
