@@ -20,11 +20,11 @@ jobs:
       - name: Stop existing running containers
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: docker_stop.yml
-          directory: ./deployment/
+          playbook: stop_yanghui_cluster.yml
+          directory: ./deployment/ansible_playbook
 
       - name: Start containers using new image
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          playbook: docker_run.yml
-          directory: ./deployment/
+          playbook: start_yanghui_cluster.yml
+          directory: ./deployment/ansible_playbook

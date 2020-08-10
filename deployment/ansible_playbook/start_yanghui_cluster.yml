@@ -5,7 +5,7 @@
   gather_facts: no
   tasks:
     - docker_compose:
-        project_name: Run docker compose on server
+        project_name: yanghui_server
         state: present
         pull: yes
         recreate: always
@@ -34,7 +34,7 @@
   gather_facts: no
   tasks:
     - docker_compose:
-        project_name: Run docker compose on worker
+        project_name: yanghui_worker
         state: present
         pull: yes
         recreate: always
@@ -63,7 +63,7 @@
   gather_facts: no
   tasks:
     - docker_compose:
-        project_name: Run docker compose on client
+        project_name: yanghui_client
         state: present
         pull: yes
         recreate: always
