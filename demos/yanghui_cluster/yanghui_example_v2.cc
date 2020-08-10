@@ -658,7 +658,6 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
       std::cout << "sending job to yanghui_job " << i << std::endl;
       running_status_normal = SendJobAndCheckResult(
           system, self, yanghui_jobs[i], yanghui_data, yanghui_job_result);
-      std::this_thread::sleep_for(std::chrono::seconds(5));
       if (!running_status_normal) {
         break;
       }
