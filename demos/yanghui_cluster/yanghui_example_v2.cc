@@ -625,13 +625,17 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   yanghui_data.data = kYanghuiData2;
   int yanghui_job_result = LocalYanghuiJob(kYanghuiData2);
 
+  int successful_job_counter = 0;
   bool running_status_normal = true;
   while (running_status_normal) {
-    CDCF_LOGGER_INFO("Yanghui Test: start");
+    CDCF_LOGGER_INFO(
+        "Yanghui Test: new round starts, total successful job count is {}",
+        successful_job_counter);
     for (int i = 0; i < yanghui_jobs.size(); i++) {
       std::cout << "sending job to yanghui_job " << i << std::endl;
       running_status_normal = SendJobAndCheckResult(
           system, self, yanghui_jobs[i], yanghui_data, yanghui_job_result);
+      successful_job_counter++;
       if (!running_status_normal) {
         break;
       }
