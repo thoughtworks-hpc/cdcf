@@ -55,7 +55,7 @@ typename Inspector::result_type inspect(Inspector& f,
 using calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<int>,
                      caf::replies_to<NumberCompareData>::with<int>,
-                     caf::replies_to<int, int, int>::with<ResultWithPosition> >;
+                     caf::replies_to<int, int, int>::with<ResultWithPosition>>;
 
 calculator::behavior_type calculator_fun(calculator::pointer self);
 
