@@ -664,8 +664,9 @@ bool SendJobAndCheckResult(
         },
         [&](caf::error& err) {
           running_status_normal = false;
-          CDCF_LOGGER_ERROR("Yanghui Test: {} failed",
-                            job_actor_id_to_name[job_actor.id()]);
+          CDCF_LOGGER_ERROR("Yanghui Test: {} failed, {}",
+                            job_actor_id_to_name[job_actor.id()],
+                            system.render(err));
         });
   } else {
     CDCF_LOGGER_ERROR("Yanghui Test: {} timeout",
@@ -717,6 +718,9 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
         if (!running_status_normal) {
           break;
         }
+      }
+      if (!running_status_normal) {
+        break;
       }
     }
   }
