@@ -668,8 +668,8 @@ bool SendJobAndCheckResult(
                             job_actor_id_to_name[job_actor.id()]);
         });
   } else {
-    CDCF_LOGGER_INFO("Yanghui Test: {} timeout",
-                     job_actor_id_to_name[job_actor.id()]);
+    CDCF_LOGGER_ERROR("Yanghui Test: {} timeout",
+                      job_actor_id_to_name[job_actor.id()]);
     running_status_normal = false;
   }
 
