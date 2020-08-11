@@ -678,15 +678,27 @@ bool SendJobAndCheckResult(
 }
 
 void SillyClientStart(caf::actor_system& system, const config& cfg) {
-  std::cout << "waiting 10 seconds" << std::endl;
+  std::cout << "wait 10 seconds before try to connect to yanghui job"
+            << std::endl;
   std::this_thread::sleep_for(std::chrono::seconds(10));
-  std::cout << "waiting finished" << std::endl;
 
   std::vector<caf::actor> yanghui_jobs;
   std::unordered_map<uint16_t, std::string> job_actor_id_to_name;
-  auto error =
+
+  int try_limit = 5;
+  int error =
       AddYanghuiJob(system, cfg.root_host, yanghui_jobs, job_actor_id_to_name);
+  while (error != 0 && try_limit > 0) {
+    CDCF_LOGGER_DEBUG(
+        "Yanghui Test: retry connecting to yanghui job in 10 seconds");
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    error = AddYanghuiJob(system, cfg.root_host, yanghui_jobs,
+                          job_actor_id_to_name);
+    try_limit--;
+  }
+
   if (error) {
+    CDCF_LOGGER_ERROR("Yanghui Test: connection to yanghui job failed");
     return;
   }
 
