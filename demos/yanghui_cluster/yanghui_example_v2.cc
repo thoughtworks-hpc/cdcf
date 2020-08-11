@@ -339,6 +339,8 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
     std::cerr << "publish port failed: " << port
               << ", error: " << caf::to_string(actual_port.error())
               << std::endl;
+  } else {
+    std::cout << "publish port succeeded: " << port << std::endl;
   }
 }
 
@@ -467,7 +469,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto yanghui_router_pool_job_actor =
       system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
   std::cout << "yanghui_router_pool_job_actor spawned with id: "
-            << yanghui_job_dispatcher_actor.id() << std::endl;
+            << yanghui_router_pool_job_actor.id() << std::endl;
 
   PublishActor(system, yanghui_standard_job_actor, yanghui_job1_port);
   PublishActor(system, yanghui_priority_job_actor, yanghui_job2_port);
