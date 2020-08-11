@@ -228,8 +228,16 @@ bool RouterPool::DeleteActor(const std::string& key, size_t num) {
       break;
     }
     anon_send(actor, caf::exit_reason::user_shutdown);
+    //    caf::scoped_actor self(system_);
+    //    std::promise<bool> promise_;
+    //    self->request(actor, caf::infinite, caf::exit_reason::user_shutdown)
+    //        .receive(
+    //            [&](bool result) { promise_.set_value(result); },
+    //            [&](const caf::error& err) { promise_.set_value(0); });
+    //    bool result = promise_.get_future().get();
     count++;
   }
+  CDCF_LOGGER_INFO("Successfully delete actor.");
   return true;
 }
 
@@ -246,7 +254,7 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
     auto res = system().spawn<caf::actor>(factory_name_, factory_args_, nullptr,
                                           true, &mpi_);
     if (res) {
-      CDCF_LOGGER_INFO("Successfully create local actor.");
+      CDCF_LOGGER_INFO("Successfully spawn local actor.");
       add_actor = std::move(*res);
     }
   } else {
