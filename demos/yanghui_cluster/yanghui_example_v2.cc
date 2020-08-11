@@ -328,19 +328,17 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
   auto actual_port = system.middleman().publish(actor, port);
   int retry_limit = 3;
   while (!actual_port && retry_limit > 0) {
-    std::cerr << "retry publish actor to port " << port << " in 3 seconds"
-              << std::endl;
+    CDCF_LOGGER_DEBUG("retry publishing actor to port {} in 3 seconds", port);
     std::this_thread::sleep_for(std::chrono::seconds(3));
     actual_port = system.middleman().publish(actor, port);
     retry_limit--;
   }
 
   if (!actual_port) {
-    std::cerr << "publish port failed: " << port
-              << ", error: " << caf::to_string(actual_port.error())
-              << std::endl;
+    CDCF_LOGGER_INFO("publish port failed: {}, error: {}", port,
+                     caf::to_string(actual_port.error()));
   } else {
-    std::cout << "publish port succeeded: " << port << std::endl;
+    CDCF_LOGGER_INFO("publish port succeeded: {}", port);
   }
 }
 
@@ -451,9 +449,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui_job_dispatcher_actor spawned with id: "
             << yanghui_job_dispatcher_actor.id() << std::endl;
 
-  auto yanghui_load_balance_job_actor = system.spawn(
-      yanghui_load_balance_job_actor_fun, yanghui_load_balance_count_path,
-      yanghui_load_balance_get_min);
+  auto yanghui_standard_job_actor =
+      system.spawn(yanghui_standard_job_actor_fun, &actor_guard);
+  std::cout << "yanghui_standard_job_actor spawned with id: "
+            << yanghui_standard_job_actor.id() << std::endl;
 
   auto yanghui_priority_job_actor =
       system.spawn(yanghui_priority_job_actor_fun, &worker_pool,
@@ -461,10 +460,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui_priority_job_actor spawned with id: "
             << yanghui_priority_job_actor.id() << std::endl;
 
-  auto yanghui_standard_job_actor =
-      system.spawn(yanghui_standard_job_actor_fun, &actor_guard);
-  std::cout << "yanghui_standard_job_actor spawned with id: "
-            << yanghui_standard_job_actor.id() << std::endl;
+  auto yanghui_load_balance_job_actor = system.spawn(
+      yanghui_load_balance_job_actor_fun, yanghui_load_balance_count_path,
+      yanghui_load_balance_get_min);
 
   auto yanghui_router_pool_job_actor =
       system.spawn(yanghui_router_pool_job_actor_fun, &pool_guard);
