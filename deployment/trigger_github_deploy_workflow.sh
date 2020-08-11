@@ -1,5 +1,10 @@
 #! /bin/sh
 
+if [ -z "${1}" ]; then
+  echo "usage: trigger_github_deploy_workflow.sh 'username:personal_access_token'"
+  exit 0
+fi
+
 curl \
   -u "${1}" \
   -X POST \
