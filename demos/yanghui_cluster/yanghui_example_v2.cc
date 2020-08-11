@@ -326,6 +326,15 @@ int LocalYanghuiJob(const std::vector<std::vector<int>>& yanghui_data) {
 
 void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
   auto actual_port = system.middleman().publish(actor, port);
+  int retry_limit = 3;
+  while (!actual_port && retry_limit > 0) {
+    std::cerr << "retry publish actor to port " << port << " in 3 seconds"
+              << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    actual_port = system.middleman().publish(actor, port);
+    retry_limit--;
+  }
+
   if (!actual_port) {
     std::cerr << "publish port failed: " << port
               << ", error: " << caf::to_string(actual_port.error())

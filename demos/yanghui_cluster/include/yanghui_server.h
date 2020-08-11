@@ -13,10 +13,10 @@
 #include "../yanghui_config.h"
 #include "./yanghui_with_priority.h"
 
-static const uint16_t yanghui_job1_port = 55012;
-static const uint16_t yanghui_job2_port = 55013;
-static const uint16_t yanghui_job3_port = 55014;
-static const uint16_t yanghui_job4_port = 55015;
+static const uint16_t yanghui_job1_port = 55021;
+static const uint16_t yanghui_job2_port = 55022;
+static const uint16_t yanghui_job3_port = 55023;
+static const uint16_t yanghui_job4_port = 55024;
 
 static const char yanghui_job1_name[] = "yanghui_standard_job";
 static const char yanghui_job2_name[] = "yanghui_priority_job";
