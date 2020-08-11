@@ -10,7 +10,7 @@
         pull: yes
         recreate: always
         definition:
-          version: "2"
+          version: "2.2"
           services:
             yanghui_server:
               image: highperformancecomputing/cdcf:latest
@@ -39,7 +39,7 @@
         pull: yes
         recreate: always
         definition:
-          version: "2"
+          version: "2.2"
           services:
             yanghui_worker:
               image: highperformancecomputing/cdcf:latest
@@ -69,7 +69,7 @@
         pull: yes
         recreate: always
         definition:
-          version: "2"
+          version: "2.2"
           services:
             yanghui_client:
               image: highperformancecomputing/cdcf:latest
