@@ -460,10 +460,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui_router_pool_job_actor spawned with id: "
             << yanghui_job_dispatcher_actor.id() << std::endl;
 
-  PublishActor(system, yanghui_standard_job_actor, yanghui_job_port1);
-  PublishActor(system, yanghui_priority_job_actor, yanghui_job_port2);
-  PublishActor(system, yanghui_load_balance_job_actor, yanghui_job_port3);
-  PublishActor(system, yanghui_router_pool_job_actor, yanghui_job_port4);
+  PublishActor(system, yanghui_standard_job_actor, yanghui_job1_port);
+  PublishActor(system, yanghui_priority_job_actor, yanghui_job2_port);
+  PublishActor(system, yanghui_load_balance_job_actor, yanghui_job3_port);
+  PublishActor(system, yanghui_router_pool_job_actor, yanghui_job4_port);
 
   // start compute
   while (true) {
@@ -582,56 +582,63 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   }
 }
 
-int AddYanghuiJob(caf::actor_system& system, std::string host,
-                  std::vector<caf::actor>& yanghui_jobs) {
-  auto yanghui_job_actor1 =
-      system.middleman().remote_actor(host, yanghui_job_port1);
-  if (!yanghui_job_actor1) {
-    std::cerr << "unable to connect to yanghui_job_actor1: "
-              << to_string(yanghui_job_actor1.error()) << '\n';
+int AddYanghuiJob(
+    caf::actor_system& system, std::string host,
+    std::vector<caf::actor>& yanghui_jobs,
+    std::unordered_map<uint16_t, std::string>& job_actor_id_to_name) {
+  auto yanghui_job1_actor =
+      system.middleman().remote_actor(host, yanghui_job1_port);
+  if (!yanghui_job1_actor) {
+    std::cerr << "unable to connect to yanghui_job1_actor: "
+              << to_string(yanghui_job1_actor.error()) << '\n';
     return 1;
   }
+  job_actor_id_to_name[yanghui_job1_actor->id()] = yanghui_job1_name;
 
-  auto yanghui_job_actor2 =
-      system.middleman().remote_actor(host, yanghui_job_port2);
-  if (!yanghui_job_actor2) {
-    std::cerr << "unable to connect to yanghui_job_actor2: "
-              << to_string(yanghui_job_actor2.error()) << '\n';
+  auto yanghui_job2_actor =
+      system.middleman().remote_actor(host, yanghui_job2_port);
+  if (!yanghui_job2_actor) {
+    std::cerr << "unable to connect to yanghui_job2_actor: "
+              << to_string(yanghui_job2_actor.error()) << '\n';
     return 1;
   }
+  job_actor_id_to_name[yanghui_job2_actor->id()] = yanghui_job2_name;
 
-  auto yanghui_job_actor3 =
-      system.middleman().remote_actor(host, yanghui_job_port3);
-  if (!yanghui_job_actor3) {
-    std::cerr << "unable to connect to yanghui_job_actor3: "
-              << to_string(yanghui_job_actor3.error()) << '\n';
+  auto yanghui_job3_actor =
+      system.middleman().remote_actor(host, yanghui_job3_port);
+  if (!yanghui_job3_actor) {
+    std::cerr << "unable to connect to yanghui_job3_actor: "
+              << to_string(yanghui_job3_actor.error()) << '\n';
     return 1;
   }
+  job_actor_id_to_name[yanghui_job3_actor->id()] = yanghui_job3_name;
 
-  auto yanghui_job_actor4 =
-      system.middleman().remote_actor(host, yanghui_job_port4);
-  if (!yanghui_job_actor4) {
-    std::cerr << "unable to connect to yanghui_job_actor4: "
-              << to_string(yanghui_job_actor4.error()) << '\n';
+  auto yanghui_job4_actor =
+      system.middleman().remote_actor(host, yanghui_job4_port);
+  if (!yanghui_job4_actor) {
+    std::cerr << "unable to connect to yanghui_job4_actor: "
+              << to_string(yanghui_job4_actor.error()) << '\n';
     return 1;
   }
+  job_actor_id_to_name[yanghui_job4_actor->id()] = yanghui_job4_name;
 
-  yanghui_jobs.push_back(*yanghui_job_actor1);
-  yanghui_jobs.push_back(*yanghui_job_actor2);
-  yanghui_jobs.push_back(*yanghui_job_actor3);
-  yanghui_jobs.push_back(*yanghui_job_actor4);
+  yanghui_jobs.push_back(*yanghui_job1_actor);
+  yanghui_jobs.push_back(*yanghui_job2_actor);
+  yanghui_jobs.push_back(*yanghui_job3_actor);
+  yanghui_jobs.push_back(*yanghui_job4_actor);
 
-  std::cout << "yanghui_job_actor1: " << yanghui_job_actor1->id() << std::endl;
-  std::cout << "yanghui_job_actor2: " << yanghui_job_actor2->id() << std::endl;
-  std::cout << "yanghui_job_actor3: " << yanghui_job_actor3->id() << std::endl;
-  std::cout << "yanghui_job_actor4: " << yanghui_job_actor4->id() << std::endl;
+  std::cout << "yanghui_job1_actor: " << yanghui_job1_actor->id() << std::endl;
+  std::cout << "yanghui_job2_actor: " << yanghui_job2_actor->id() << std::endl;
+  std::cout << "yanghui_job3_actor: " << yanghui_job3_actor->id() << std::endl;
+  std::cout << "yanghui_job4_actor: " << yanghui_job4_actor->id() << std::endl;
 
   return 0;
 }
 
-bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
-                           caf::actor job_actor, YanghuiData& yanghui_data,
-                           int result_to_check) {
+bool SendJobAndCheckResult(
+    caf::actor_system& system, caf::scoped_actor& self, caf::actor job_actor,
+    YanghuiData& yanghui_data, int result_to_check,
+    std::unordered_map<uint16_t, std::string>& job_actor_id_to_name) {
   bool running_status_normal = true;
 
   self->send(job_actor, yanghui_data);
@@ -642,25 +649,27 @@ bool SendJobAndCheckResult(caf::actor_system& system, caf::scoped_actor& self,
         [&](bool status, int result) {
           if (!status) {
             running_status_normal = false;
-            CDCF_LOGGER_ERROR("Yanghui Test: job id {} failed", job_actor.id());
+            CDCF_LOGGER_ERROR("Yanghui Test: {} failed",
+                              job_actor_id_to_name[job_actor.id()]);
           } else {
             if (result != result_to_check) {
               running_status_normal = false;
-              CDCF_LOGGER_ERROR("Yanghui Test: job id {} result inconsistent",
-                                job_actor.id());
+              CDCF_LOGGER_ERROR("Yanghui Test: {} result inconsistent",
+                                job_actor_id_to_name[job_actor.id()]);
             } else {
-              CDCF_LOGGER_INFO(
-                  "Yanghui Test: job id {} succeeded with result {}",
-                  job_actor.id(), result);
+              CDCF_LOGGER_INFO("Yanghui Test: {} succeeded with result {}",
+                               job_actor_id_to_name[job_actor.id()], result);
             }
           }
         },
         [&](caf::error& err) {
           running_status_normal = false;
-          CDCF_LOGGER_ERROR("Yanghui Test: job id {} failed", job_actor.id());
+          CDCF_LOGGER_ERROR("Yanghui Test: {} failed",
+                            job_actor_id_to_name[job_actor.id()]);
         });
   } else {
-    CDCF_LOGGER_INFO("Yanghui Test: job id {} timeout", job_actor.id());
+    CDCF_LOGGER_INFO("Yanghui Test: {} timeout",
+                     job_actor_id_to_name[job_actor.id()]);
     running_status_normal = false;
   }
 
@@ -673,7 +682,9 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   std::cout << "waiting finished" << std::endl;
 
   std::vector<caf::actor> yanghui_jobs;
-  auto error = AddYanghuiJob(system, cfg.root_host, yanghui_jobs);
+  std::unordered_map<uint16_t, std::string> job_actor_id_to_name;
+  auto error =
+      AddYanghuiJob(system, cfg.root_host, yanghui_jobs, job_actor_id_to_name);
   if (error) {
     return;
   }
@@ -699,9 +710,9 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
           successful_job_counter);
       for (int i = 0; i < yanghui_jobs.size(); i++) {
         std::cout << "sending job to yanghui_job " << i << std::endl;
-        running_status_normal =
-            SendJobAndCheckResult(system, self, yanghui_jobs[i],
-                                  yanghui_data[j], yanghui_job_result[j]);
+        running_status_normal = SendJobAndCheckResult(
+            system, self, yanghui_jobs[i], yanghui_data[j],
+            yanghui_job_result[j], job_actor_id_to_name);
         successful_job_counter++;
         if (!running_status_normal) {
           break;

@@ -13,10 +13,15 @@
 #include "../yanghui_config.h"
 #include "./yanghui_with_priority.h"
 
-const uint16_t yanghui_job_port1 = 55011;
-const uint16_t yanghui_job_port2 = 55012;
-const uint16_t yanghui_job_port3 = 55013;
-const uint16_t yanghui_job_port4 = 55014;
+const uint16_t yanghui_job1_port = 55011;
+const uint16_t yanghui_job2_port = 55012;
+const uint16_t yanghui_job3_port = 55013;
+const uint16_t yanghui_job4_port = 55014;
+
+const std::string yanghui_job1_name = "yanghui_standard_job";
+const std::string yanghui_job2_name = "yanghui_priority_job";
+const std::string yanghui_job3_name = "yanghui_load_balance_job";
+const std::string yanghui_job4_name = "yanghui_router_pool_job";
 
 struct yanghui_job_state {
   caf::strong_actor_ptr message_sender;
