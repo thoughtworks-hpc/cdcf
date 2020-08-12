@@ -60,7 +60,7 @@ TEST_F(RouterPoolTest, should_return_default_size_3_when_add_a_new_node) {
   EXPECT_EQ(3, result);
 }
 
-TEST_F(RouterPoolTest, should_return_4_when_add_an_new_ator) {
+TEST_F(RouterPoolTest, should_return_4_when_add_an_new_actor) {
   caf::scoped_actor self(system_);
 
   self->send(pool_, caf::sys_atom::value, caf::add_atom::value,
@@ -79,7 +79,7 @@ TEST_F(RouterPoolTest, should_return_4_when_add_an_new_ator) {
   EXPECT_EQ(4, result);
 }
 
-TEST_F(RouterPoolTest, should_return_2_when_delete_an_ator) {
+TEST_F(RouterPoolTest, should_return_2_when_delete_an_actor) {
   caf::scoped_actor self(system_);
 
   self->send(pool_, caf::sys_atom::value, caf::add_atom::value,
@@ -217,6 +217,85 @@ TEST_F(RouterPoolTest, happy_path_send_three_add_msg) {
   EXPECT_NE(actor1_id, actor2_id);
   EXPECT_NE(actor2_id, actor3_id);
   EXPECT_NE(actor1_id, actor3_id);
+}
+
+TEST_F(RouterPoolTest, shoule_return_same_result_if_delete_a_actor) {
+  caf::scoped_actor self(system_);
+
+  std::promise<bool> addNode_promise;
+  self->request(pool_, caf::infinite, caf::sys_atom::value,
+                caf::add_atom::value, cdcf::router_pool::node_atom::value, "",
+                static_cast<uint16_t>(0))
+      .receive(
+          [&](bool ret) { addNode_promise.set_value(ret); },
+          [&](const caf::error& err) { addNode_promise.set_value(false); });
+  bool addNode_promise_result = addNode_promise.get_future().get();
+  EXPECT_EQ(true, addNode_promise_result);
+
+  {
+    int sum = 0;
+    for (int i = 0; i < 100; i++) {
+      std::promise<int> result_promise;
+      self->request(pool_, caf::infinite, 0, i)
+          .receive(
+              [&](int result, uint64_t actor_id) {
+                result_promise.set_value(result);
+              },
+              [&](const caf::error& err) { result_promise.set_value(-1); });
+      int actor_result = result_promise.get_future().get();
+      sum += actor_result;
+      EXPECT_EQ(0 + i, actor_result);
+    }
+    EXPECT_EQ(4950, sum);
+  }
+
+  std::promise<int> actor1_result_promise;
+  std::promise<uint64_t> actor1_id_promise;
+  self->request(pool_, caf::infinite, -1, -1)
+      .receive(
+          [&](int result, uint64_t actor_id) {
+            actor1_result_promise.set_value(result);
+            actor1_id_promise.set_value(actor_id);
+          },
+          [&](const caf::error& err) { actor1_result_promise.set_value(-1); });
+  int actor1_result = actor1_result_promise.get_future().get();
+  EXPECT_EQ(-1, actor1_result);
+
+  {
+    int sum = 0;
+    for (int i = 0; i < 100; i++) {
+      std::promise<int> result_promise;
+      self->request(pool_, caf::infinite, 0, i)
+          .receive(
+              [&](int result, uint64_t actor_id) {
+                result_promise.set_value(result);
+              },
+              [&](const caf::error& err) { result_promise.set_value(-1); });
+      int actor_result = result_promise.get_future().get();
+      sum += actor_result;
+      EXPECT_EQ(0 + i, actor_result);
+    }
+    EXPECT_EQ(4950, sum);
+  }
+
+  std::promise<std::vector<caf::actor>> getNode_promise;
+  self->request(pool_, caf::infinite, caf::sys_atom::value,
+                caf::get_atom::value)
+      .receive(
+          [&](std::vector<caf::actor> ret) { getNode_promise.set_value(ret); },
+          [&](const caf::error& err) { std::cout << "ERROR" << std::endl; });
+  std::vector<caf::actor> ret = getNode_promise.get_future().get();
+  EXPECT_EQ(2, ret.size());
+
+  std::promise<size_t> promise_;
+  self->request(pool_, caf::infinite, caf::sys_atom::value,
+                caf::get_atom::value, cdcf::router_pool::actor_atom::value, "",
+                static_cast<uint16_t>(0))
+      .receive(
+          [&](std::vector<caf::actor>& ret) { promise_.set_value(ret.size()); },
+          [&](const caf::error& err) { promise_.set_value(0); });
+  int result = promise_.get_future().get();
+  EXPECT_EQ(2, result);
 }
 
 TEST_F(RouterPoolTest, get_node_list) {
