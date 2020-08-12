@@ -31,13 +31,13 @@ class MockNodeRunStatusFactory : public NodeRunStatusFactory {
   MOCK_METHOD(NodeRunStatus*, GetInstance, ());
 };
 
-const double MOCK_CPU_RATE_NODE_1 = 57.8;
-const double MOCK_CPU_RATE_NODE_2 = 68.7;
-const int MOCK_MAX_MEMORY = 100;
-const int MOCK_USE_MEMORY_NODE_1 = 37;
-const int MOCK_USE_RATE_NODE_1 = 37;
-const int MOCK_USE_MEMORY_NODE_2 = 89;
-const int MOCK_USE_RATE_NODE_2 = 89;
+const double kMockCpuRateNode1 = 57.8;
+const double kMockCpuRateNode2 = 68.7;
+const int kMockMaxMemory = 100;
+const int kMockUseMemoryNode1 = 37;
+const int kMockUseRateNode1 = 37;
+const int kMockUseMemoryNode2 = 89;
+const int kMockUseRateNode2 = 89;
 
 TEST(GetStatus, happy_path_call_get_status_without_grpc) {
   MockMembership membership_;
@@ -50,10 +50,10 @@ TEST(GetStatus, happy_path_call_get_status_without_grpc) {
       .WillOnce(testing::Return(&mockNodeRunStatus));
   EXPECT_CALL(mockNodeRunStatus, GetCpuRate())
       .Times(1)
-      .WillOnce(testing::Return(MOCK_CPU_RATE_NODE_1));
+      .WillOnce(testing::Return(kMockCpuRateNode1));
 
-  MemoryStatus memory_status{MOCK_MAX_MEMORY, MOCK_USE_MEMORY_NODE_1,
-                             MOCK_USE_RATE_NODE_1};
+  MemoryStatus memory_status{kMockMaxMemory, kMockUseMemoryNode1,
+                             kMockUseRateNode1};
 
   EXPECT_CALL(mockNodeRunStatus, GetMemoryState(testing::_))
       .Times(1)
@@ -65,10 +65,10 @@ TEST(GetStatus, happy_path_call_get_status_without_grpc) {
   grpc::Status status = nodeStatusGRPCImpl.GetStatus(&query_context, {}, &resp);
 
   EXPECT_EQ(status.ok(), true);
-  EXPECT_EQ(resp.cpu_use_rate(), MOCK_CPU_RATE_NODE_1);
-  EXPECT_EQ(resp.use_memory(), MOCK_USE_MEMORY_NODE_1);
-  EXPECT_EQ(resp.max_memory(), MOCK_MAX_MEMORY);
-  EXPECT_EQ(resp.mem_use_rate(), MOCK_USE_RATE_NODE_1);
+  EXPECT_EQ(resp.cpu_use_rate(), kMockCpuRateNode1);
+  EXPECT_EQ(resp.use_memory(), kMockUseMemoryNode1);
+  EXPECT_EQ(resp.max_memory(), kMockMaxMemory);
+  EXPECT_EQ(resp.mem_use_rate(), kMockUseRateNode1);
 }
 
 TEST(GetStatus, happy_path_use_grpc_call) {
@@ -87,8 +87,8 @@ TEST(GetStatus, happy_path_use_grpc_call) {
       .Times(1)
       .WillOnce(testing::Return(&mockNodeRunStatus));
 
-  MemoryStatus memory_status{MOCK_MAX_MEMORY, MOCK_USE_MEMORY_NODE_1,
-                             MOCK_USE_RATE_NODE_1};
+  MemoryStatus memory_status{kMockMaxMemory, kMockUseMemoryNode1,
+                             kMockUseRateNode1};
   EXPECT_CALL(mockNodeRunStatus, GetMemoryState(testing::_))
       .Times(1)
       .WillOnce(testing::DoAll(testing::SetArgReferee<0>(memory_status),
@@ -96,7 +96,7 @@ TEST(GetStatus, happy_path_use_grpc_call) {
 
   EXPECT_CALL(mockNodeRunStatus, GetCpuRate())
       .Times(1)
-      .WillOnce(testing::Return(MOCK_CPU_RATE_NODE_1));
+      .WillOnce(testing::Return(kMockCpuRateNode1));
 
   auto channel = grpc::CreateChannel("127.0.0.1:50051",
                                      grpc::InsecureChannelCredentials());
@@ -107,10 +107,10 @@ TEST(GetStatus, happy_path_use_grpc_call) {
   grpc::Status status = client.GetStatus(&query_context, {}, &resp);
 
   EXPECT_EQ(status.ok(), true);
-  EXPECT_EQ(resp.cpu_use_rate(), MOCK_CPU_RATE_NODE_1);
-  EXPECT_EQ(resp.use_memory(), MOCK_USE_MEMORY_NODE_1);
-  EXPECT_EQ(resp.max_memory(), MOCK_MAX_MEMORY);
-  EXPECT_EQ(resp.mem_use_rate(), MOCK_USE_RATE_NODE_1);
+  EXPECT_EQ(resp.cpu_use_rate(), kMockCpuRateNode1);
+  EXPECT_EQ(resp.use_memory(), kMockUseMemoryNode1);
+  EXPECT_EQ(resp.max_memory(), kMockMaxMemory);
+  EXPECT_EQ(resp.mem_use_rate(), kMockUseRateNode1);
 }
 
 TEST(GetStatus, can_not_get_node_status) {
@@ -181,10 +181,10 @@ TEST(GetAllNodeStatus, happy_path_use_grpc_call) {
       .Times(1)
       .WillOnce(testing::Return(members));
 
-  MemoryStatus memory_status_1{MOCK_MAX_MEMORY, MOCK_USE_MEMORY_NODE_1,
-                               MOCK_USE_RATE_NODE_1};
-  MemoryStatus memory_status_2{MOCK_MAX_MEMORY, MOCK_USE_MEMORY_NODE_2,
-                               MOCK_USE_RATE_NODE_2};
+  MemoryStatus memory_status_1{kMockMaxMemory, kMockUseMemoryNode1,
+                               kMockUseRateNode1};
+  MemoryStatus memory_status_2{kMockMaxMemory, kMockUseMemoryNode2,
+                               kMockUseRateNode2};
 
   EXPECT_CALL(mockNodeRunStatus, GetMemoryState(testing::_))
       .Times(2)
@@ -195,8 +195,8 @@ TEST(GetAllNodeStatus, happy_path_use_grpc_call) {
 
   EXPECT_CALL(mockNodeRunStatus, GetCpuRate())
       .Times(2)
-      .WillOnce(testing::Return(MOCK_CPU_RATE_NODE_1))
-      .WillOnce(testing::Return(MOCK_CPU_RATE_NODE_2));
+      .WillOnce(testing::Return(kMockCpuRateNode1))
+      .WillOnce(testing::Return(kMockCpuRateNode2));
 
   grpc::ServerContext query_context;
   auto* resp = new AllNodeStatus();
@@ -205,15 +205,15 @@ TEST(GetAllNodeStatus, happy_path_use_grpc_call) {
   EXPECT_EQ(status.ok(), true);
   EXPECT_EQ(resp->node_status_size(), 2);
 
-  EXPECT_EQ(resp->node_status(0).cpu_use_rate(), MOCK_CPU_RATE_NODE_1);
-  EXPECT_EQ(resp->node_status(0).use_memory(), MOCK_USE_MEMORY_NODE_1);
-  EXPECT_EQ(resp->node_status(0).max_memory(), MOCK_MAX_MEMORY);
-  EXPECT_EQ(resp->node_status(0).mem_use_rate(), MOCK_USE_RATE_NODE_1);
+  EXPECT_EQ(resp->node_status(0).cpu_use_rate(), kMockCpuRateNode1);
+  EXPECT_EQ(resp->node_status(0).use_memory(), kMockUseMemoryNode1);
+  EXPECT_EQ(resp->node_status(0).max_memory(), kMockMaxMemory);
+  EXPECT_EQ(resp->node_status(0).mem_use_rate(), kMockUseRateNode1);
 
-  EXPECT_EQ(resp->node_status(1).cpu_use_rate(), MOCK_CPU_RATE_NODE_2);
-  EXPECT_EQ(resp->node_status(1).use_memory(), MOCK_USE_MEMORY_NODE_2);
-  EXPECT_EQ(resp->node_status(1).max_memory(), MOCK_MAX_MEMORY);
-  EXPECT_EQ(resp->node_status(1).mem_use_rate(), MOCK_USE_RATE_NODE_2);
+  EXPECT_EQ(resp->node_status(1).cpu_use_rate(), kMockCpuRateNode2);
+  EXPECT_EQ(resp->node_status(1).use_memory(), kMockUseMemoryNode2);
+  EXPECT_EQ(resp->node_status(1).max_memory(), kMockMaxMemory);
+  EXPECT_EQ(resp->node_status(1).mem_use_rate(), kMockUseRateNode2);
 }
 
 TEST(GetAllNodeStatus, one_node_is_unavailable) {
@@ -260,10 +260,10 @@ TEST(GetAllNodeStatus, one_node_is_unavailable) {
   EXPECT_EQ(status.ok(), true);
   EXPECT_EQ(resp->node_status_size(), 2);
 
-  EXPECT_EQ(resp->node_status(0).cpu_use_rate(), MOCK_CPU_RATE_NODE_1);
-  EXPECT_EQ(resp->node_status(0).use_memory(), MOCK_USE_MEMORY_NODE_1);
-  EXPECT_EQ(resp->node_status(0).max_memory(), MOCK_MAX_MEMORY);
-  EXPECT_EQ(resp->node_status(0).mem_use_rate(), MOCK_USE_RATE_NODE_1);
+  EXPECT_EQ(resp->node_status(0).cpu_use_rate(), kMockCpuRateNode1);
+  EXPECT_EQ(resp->node_status(0).use_memory(), kMockUseMemoryNode1);
+  EXPECT_EQ(resp->node_status(0).max_memory(), kMockMaxMemory);
+  EXPECT_EQ(resp->node_status(0).mem_use_rate(), kMockUseRateNode1);
 
   EXPECT_EQ(resp->node_status(1).cpu_use_rate(), 0);
   EXPECT_EQ(resp->node_status(1).use_memory(), 0);
