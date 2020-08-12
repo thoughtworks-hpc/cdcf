@@ -141,14 +141,6 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   self->send_exit(cdcf_spawn, caf::exit_reason::user_shutdown);
 }
 
-std::vector<std::vector<int>> kYanghuiData1 = {{5},
-                                               {7, 8},
-                                               {2, 1, 4},
-                                               {4, 2, 6, 1},
-                                               {2, 7, 3, 4, 5},
-                                               {2, 3, 7, 6, 8, 3},
-                                               {2, 3, 4, 4, 2, 7, 7}};
-
 std::vector<std::vector<int>> kYanghuiData2 = {
     {5},
     {7, 8},
@@ -714,12 +706,10 @@ void SillyClientStart(caf::actor_system& system, const config& cfg) {
   caf::scoped_actor self{system};
 
   std::vector<YanghuiData> yanghui_data;
-  yanghui_data.emplace_back(kYanghuiData1);
   yanghui_data.emplace_back(kYanghuiData2);
   yanghui_data.emplace_back(kYanghuiData3);
 
   std::vector<int> yanghui_job_result;
-  yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData1));
   yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData2));
   yanghui_job_result.emplace_back(LocalYanghuiJob(kYanghuiData3));
 

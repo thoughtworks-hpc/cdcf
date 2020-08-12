@@ -9,6 +9,7 @@
       copy:
         src: ./filebeat_config.yml
         dest: /tmp/filebeat_config.yml
+        mode: u=rw,g=r,o=r
 
 - name: Run filebeat container
   hosts:
