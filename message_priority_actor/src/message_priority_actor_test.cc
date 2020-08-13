@@ -5,7 +5,7 @@
 #include "../include/message_priority_actor.h"
 
 #include <gtest/gtest.h>
-//#include <logger.h>
+#include <logger.h>
 
 class CalculatorWithPriority : public MessagePriorityActor {
  public:
@@ -13,8 +13,7 @@ class CalculatorWithPriority : public MessagePriorityActor {
       : MessagePriorityActor(cfg) {}
   caf::behavior make_behavior() override {
     return {[=](int a, int b) -> int {
-      caf::aout(this) << "received add task. input a:" << a << " b:" << b
-                      << std::endl;
+      CDCF_LOGGER_INFO("received add task. input a:{} b:{}", a, b);
 
       int result = a + b;
 
@@ -27,7 +26,7 @@ class CalculatorWithPriority : public MessagePriorityActor {
         elapsed_seconds = end - start;
       }
 
-      caf::aout(this) << "return: " << result << std::endl;
+      CDCF_LOGGER_INFO("return: {}", result);
       return result;
     }};
   }
@@ -43,7 +42,7 @@ struct dispatcher_state {
 
 caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
                              caf::actor target, bool with_priority) {
-  int task_num = 20;
+  int task_num = 10;
   return {[=](start_atom) {
             self->state.sender = self->current_sender();
             for (int i = 0; i < task_num; i++) {
@@ -89,7 +88,7 @@ class ActorPriorityTest : public ::testing::Test {
   caf::actor dispatcher_without_priority_;
 };
 
-TEST_F(ActorPriorityTest, happy_path) {
+TEST_F(ActorPriorityTest, should_get_result_as_priority_order) {
   caf::scoped_actor scoped_sender(system_);
   scoped_sender->request(dispatcher_with_priority, caf::infinite,
                          start_atom::value);
