@@ -41,25 +41,36 @@ struct dispatcher_state {
 };
 
 caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
-                             caf::actor target, bool with_priority) {
-  int task_num = 10;
+                             caf::actor target, bool is_first_job_with_priority,
+                             bool is_second_job_with_priority) {
+  const int task_num = 10;
+  const int first_job_data = 1;
+  const int second_job_data = 2;
   return {[=](start_atom) {
             self->state.sender = self->current_sender();
+
             for (int i = 0; i < task_num; i++) {
-              self->send(target, 1, 1);
-            }
-            for (int i = 0; i < task_num; i++) {
-              if (with_priority) {
-                self->send(target, high_priority_atom::value, 2, 2);
+              if (!is_first_job_with_priority) {
+                self->send(target, first_job_data, first_job_data);
               } else {
-                self->send(target, 2, 2);
+                self->send(target, high_priority_atom::value, first_job_data,
+                           first_job_data);
+              }
+            }
+
+            for (int i = 0; i < task_num; i++) {
+              if (!is_second_job_with_priority) {
+                self->send(target, second_job_data, second_job_data);
+              } else {
+                self->send(target, high_priority_atom::value, second_job_data,
+                           second_job_data);
               }
             }
           },
           [=](int result) {
-            if (result == 2) {
+            if (result == first_job_data + first_job_data) {
               self->state.normal_priority_times += 1;
-            } else {
+            } else if (result == second_job_data + second_job_data) {
               self->state.high_priority_times += 1;
             }
 
@@ -75,9 +86,12 @@ caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
 class ActorPriorityTest : public ::testing::Test {
   void SetUp() override {
     calculator_ = system_.spawn<CalculatorWithPriority>();
-    dispatcher_with_priority = system_.spawn(job_dispatcher, calculator_, true);
-    dispatcher_without_priority_ =
-        system_.spawn(job_dispatcher, calculator_, false);
+    dispatcher_with_priority =
+        system_.spawn(job_dispatcher, calculator_, false, true);
+    dispatcher_all_normal_priority_ =
+        system_.spawn(job_dispatcher, calculator_, false, false);
+    dispatcher_all_high_priority_ =
+        system_.spawn(job_dispatcher, calculator_, true, true);
   }
 
  public:
@@ -85,7 +99,8 @@ class ActorPriorityTest : public ::testing::Test {
   caf::actor_system system_{config_};
   caf::actor calculator_;
   caf::actor dispatcher_with_priority;
-  caf::actor dispatcher_without_priority_;
+  caf::actor dispatcher_all_normal_priority_;
+  caf::actor dispatcher_all_high_priority_;
 };
 
 TEST_F(ActorPriorityTest, should_get_result_as_priority_order) {
@@ -98,7 +113,16 @@ TEST_F(ActorPriorityTest, should_get_result_as_priority_order) {
 
 TEST_F(ActorPriorityTest, should_get_result_as_send_order) {
   caf::scoped_actor scoped_sender(system_);
-  scoped_sender->request(dispatcher_without_priority_, caf::infinite,
+  scoped_sender->request(dispatcher_all_normal_priority_, caf::infinite,
+                         start_atom::value);
+  scoped_sender->receive([=](bool result) { EXPECT_EQ(false, result); },
+                         [=](caf::error err) { ASSERT_FALSE(true); });
+}
+
+TEST_F(ActorPriorityTest,
+       should_get_result_as_send_order_with_all_high_priority) {
+  caf::scoped_actor scoped_sender(system_);
+  scoped_sender->request(dispatcher_all_high_priority_, caf::infinite,
                          start_atom::value);
   scoped_sender->receive([=](bool result) { EXPECT_EQ(false, result); },
                          [=](caf::error err) { ASSERT_FALSE(true); });
