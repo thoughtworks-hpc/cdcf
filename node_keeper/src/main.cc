@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
       [&keeper]() { keeper.NotifyActorSystemDown(); },
       [&keeper]() { keeper.NotifyLeave(); });
 
-  if ("" != config.app_args_) {
+  if ("" != config.app_) {
     daemon.Start();
   }
 
