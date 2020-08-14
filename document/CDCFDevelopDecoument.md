@@ -36,7 +36,7 @@ Windows OS, VS2019, cmake 3.10, conan 1.24, git
 Mac OS, clang 11.0.0, cmake 3.10, conan 1.24, git
 
 ###Architecture diagram
-
+![CDCF_architecture](./image/CDCF_architecture.jpg)
 
 ##Getting Started
 
