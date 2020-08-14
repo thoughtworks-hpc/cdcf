@@ -1,6 +1,6 @@
 # CDCF Develop Document
 
-## Introduction
+## 1 Introduction
 CDCF full name is C++ Distributed Computing Framework. It was born for high performance. 
 It is to fill in the gap that there was no C++ distributed system development framework before.
 
@@ -12,7 +12,7 @@ Monitor tool is an executable program responsible for monitoring the running sta
 
 Actor system is composed of a series of C++ APIs. Users can use these APIs to develop distributed business based on actor model distributed system.
 
-### CDCF dependence 
+### 1.1 CDCF dependence 
 CAF(C++ actor framework): CDCF Actor system API use the CAF libs.
 
 ASIO: Node keeper connect use ASIO
@@ -23,11 +23,11 @@ spdlog: CDCF logger use spdlog
 
 gTest: CDCF 
 
-### CDCF run environment
+### 1.2 CDCF run environment
 
 Linux OS, docker 19.03(optional)
 
-### CDCF develop environment
+### 1.3 CDCF develop environment
 
 Linux OS: gcc 8.4, cmake 3.10, conan 1.24, git
 
@@ -35,10 +35,10 @@ Windows OS, VS2019, cmake 3.10, conan 1.24, git
 
 Mac OS, clang 11.0.0, cmake 3.10, conan 1.24, git
 
-### Architecture diagram
+### 1.4 Architecture diagram
 ![CDCF_architecture](./image/CDCF_architecture.jpg)
 
-## Getting Started
+## 2 Getting Started
 
 Down load CDCF code
 
@@ -65,7 +65,7 @@ Test
 ctest  --output-on-failure
 ```
 
-## Tour of CDCF
+## 3 Tour of CDCF
 
 This tour will show how to develop a simple ping pong cluster via CDCF.
 You can get this tour resource code in "cdcf/demo/simple_ping_pong"
@@ -181,11 +181,11 @@ CAF_MAIN(caf::io::middleman)
 
 
 
-## How to Use Yanghui demo
+## 4 How to Use Yanghui demo
 The Yanghui demo use all CDCF API to develop, So analysing Yanghui demo Code can help you know how to use 
 CDCF to develop your business. You can read Chapter 7 in combination with this chapter.
 
-### run Yanghui demo
+### 4.1 run Yanghui demo
 Make sure in CDCF folder
 ```shell script
 cd cdcf
@@ -209,7 +209,7 @@ docker exec -it docker_yanghui_root_v2_1 /bin/script.sh
 
 After that, you can input 'n' to run Yanghui triangle count and get result.
 
-### Yanghui demo code
+### 4.2 Yanghui demo code
 Yanghui demo code is in folder "cdcf/demos/yanghui_cluster". The demo use all CDCF feature to implement Yanghui triangle 
  min path in several way.
 
@@ -225,7 +225,7 @@ The root enter function is "SmartRootStart" and the work enter function is "Smar
 All cluster config implement code is in file "yanghui_config.h, you can understand how to config Yanghui cluster via
  this file. You can understand how to deploy the Yanghui cluster via file "cdcf/docker/yanghui_app.yml".
 
-## Node Keeper Deploy
+## 5 Node Keeper Deploy
 Node keeper is an executable program that needs to be deployed on each node of a distributed cluster. It is responsible 
 for managing all node members of the cluster. At the same time, it is also responsible for restarting the actor system
 when the actor system is hung. 
@@ -255,8 +255,8 @@ More advance Node Keeper parameters can get by --help
 node_keeper --help
 ```
 
-## Monitor Tool
-### Get All Cluster Node Run Status
+## 6 Monitor Tool
+### 6.1 Get All Cluster Node Run Status
 CDCF monitor tool can get all nodes of cluster status. 
 
 ```shell script
@@ -302,7 +302,7 @@ Cluster node ip: 172.21.0.5
   Use memory: 512948kB
 ```
 
-### Get One Node Actor Information
+### 6.2 Get One Node Actor Information
 
 CDCF monitor tool can get one node actor information by command
 ```shell script
