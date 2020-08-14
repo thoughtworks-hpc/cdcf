@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#ifndef DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_
-#define DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_
+#ifndef DEMOS_SIMPLE_PING_PONG_INCLUDE_PING_PONG_CONFIG_H_
+#define DEMOS_SIMPLE_PING_PONG_INCLUDE_PING_PONG_CONFIG_H_
 #include <actor_system.h>
 
 #include <string>
@@ -18,4 +18,4 @@ struct PingPongConfig : public actor_system::Config {
   }
 };
 
-#endif  // DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_
+#endif  // DEMOS_SIMPLE_PING_PONG_INCLUDE_PING_PONG_CONFIG_H_
