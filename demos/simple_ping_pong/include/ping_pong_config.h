@@ -1,10 +1,11 @@
-//
-// Created by Mingfei Deng on 2020/8/13.
-//
-
-#ifndef CDCF_PING_PONG_CONFIG_H
-#define CDCF_PING_PONG_CONFIG_H
+/*
+ * Copyright (c) 2020 ThoughtWorks Inc.
+ */
+#ifndef DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_
+#define DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_
 #include <actor_system.h>
+
+#include <string>
 
 struct PingPongConfig : public actor_system::Config {
   std::string pong_host = "127.0.0.1";
@@ -17,4 +18,4 @@ struct PingPongConfig : public actor_system::Config {
   }
 };
 
-#endif  // CDCF_PING_PONG_CONFIG_H
+#endif  // DEMOS_SIMPLE_PING_PONG_PING_PONG_CONFIG_H_

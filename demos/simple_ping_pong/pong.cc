@@ -4,7 +4,7 @@
 #include <actor_system.h>
 #include <logger.h>
 
-#include "ping_pong_config.h"
+#include "./include/ping_pong_config.h"
 
 // this struct will use to add cluster
 class Pong : public actor_system::cluster::Observer {

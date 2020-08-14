@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "ping_pong_config.h"
+#include "./include/ping_pong_config.h"
 
 caf::behavior ping_fun(caf::event_based_actor* self,
                        const caf::actor& pong_actor) {
