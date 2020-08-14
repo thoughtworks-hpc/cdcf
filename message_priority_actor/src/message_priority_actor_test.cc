@@ -20,7 +20,7 @@ class CalculatorWithPriority : public MessagePriorityActor {
       auto start = std::chrono::steady_clock::now();
       std::chrono::duration<double> elapsed_seconds =
           std::chrono::milliseconds(0);
-      std::chrono::duration<double> time_limit = std::chrono::milliseconds(100);
+      std::chrono::duration<double> time_limit = std::chrono::milliseconds(10);
       while (elapsed_seconds < time_limit) {
         auto end = std::chrono::steady_clock::now();
         elapsed_seconds = end - start;
@@ -35,15 +35,15 @@ class CalculatorWithPriority : public MessagePriorityActor {
 using start_atom = caf::atom_constant<caf::atom("start")>;
 
 struct dispatcher_state {
-  int normal_priority_times = 0;
-  int high_priority_times = 0;
+  int first_job_times = 0;
+  int second_job_times = 0;
   caf::strong_actor_ptr sender;
 };
 
 caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
                              caf::actor target, bool is_first_job_with_priority,
                              bool is_second_job_with_priority) {
-  const int task_num = 10;
+  const int task_num = 5;
   const int first_job_data = 1;
   const int second_job_data = 2;
   return {[=](start_atom) {
@@ -69,14 +69,14 @@ caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
           },
           [=](int result) {
             if (result == first_job_data + first_job_data) {
-              self->state.normal_priority_times += 1;
+              self->state.first_job_times += 1;
             } else if (result == second_job_data + second_job_data) {
-              self->state.high_priority_times += 1;
+              self->state.second_job_times += 1;
             }
 
-            if (self->state.high_priority_times == task_num) {
+            if (self->state.second_job_times == task_num) {
               self->send(caf::actor_cast<caf::actor>(self->state.sender), true);
-            } else if (self->state.normal_priority_times == task_num) {
+            } else if (self->state.first_job_times == task_num) {
               self->send(caf::actor_cast<caf::actor>(self->state.sender),
                          false);
             }
