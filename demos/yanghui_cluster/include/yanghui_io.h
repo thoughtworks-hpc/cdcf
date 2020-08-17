@@ -9,7 +9,7 @@
 #include <caf/openssl/all.hpp>
 
 #include "../../../logger/include/logger.h"
-#include "actor_system/config.h"
+#include "cdcf/actor_system/config.h"
 
 class YanghuiIO {
   const bool use_ssl_;

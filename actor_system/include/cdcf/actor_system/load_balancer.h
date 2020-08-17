@@ -12,7 +12,7 @@
 
 #include <caf/all.hpp>
 
-#include "actor_system/load_balancer/policy.h"
+#include "cdcf/actor_system/load_balancer/policy.h"
 
 namespace cdcf {
 namespace load_balancer {

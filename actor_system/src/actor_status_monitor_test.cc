@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../include/actor_status_monitor.h"
+#include "cdcf/actor_status_monitor.h"
 
 #include <gmock/gmock.h>
 

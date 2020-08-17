@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system/cluster.h>
+#include <cdcf/actor_system/cluster.h>
 
 #include <climits>
 #include <condition_variable>
@@ -15,10 +15,10 @@
 #include "../../actor_fault_tolerance/include/actor_guard.h"
 #include "../../actor_fault_tolerance/include/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
-#include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "../../logger/include/logger.h"
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
+#include "cdcf/actor_status_service_grpc_impl.h"
 #include "include/actor_union_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"

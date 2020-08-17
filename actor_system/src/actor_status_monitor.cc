@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include "../include/actor_status_monitor.h"
+#include "cdcf/actor_status_monitor.h"
 
 ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
     : actor_system_(actorSystem) {

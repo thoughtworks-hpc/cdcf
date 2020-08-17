@@ -14,7 +14,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../../actor_monitor/include/actor_monitor.h"
+#include "../../../actor_monitor/include/actor_monitor.h"
 
 class ActorStatusMonitor {
  public:

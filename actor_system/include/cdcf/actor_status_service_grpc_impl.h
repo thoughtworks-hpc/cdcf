@@ -12,8 +12,8 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../include/actor_status_monitor.h"
-#include "../src/node_monitor.grpc.pb.h"
+#include "../../src/node_monitor.grpc.pb.h"
+#include "actor_status_monitor.h"
 
 class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
  public:

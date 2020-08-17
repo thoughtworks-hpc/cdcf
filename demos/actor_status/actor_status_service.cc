@@ -2,9 +2,9 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../../actor_system/include/actor_status_monitor.h"
-#include "../../actor_system/include/actor_status_service_grpc_impl.h"
 #include "../../config_manager/include/cdcf_config.h"
+#include "cdcf/actor_status_monitor.h"
+#include "cdcf/actor_status_service_grpc_impl.h"
 
 class config : public CDCFConfig {
  public:

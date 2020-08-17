@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system/load_balancer.h>
+#include <cdcf/actor_system/load_balancer.h>
 #include <gmock/gmock.h>
 
 #include <algorithm>

@@ -3,7 +3,7 @@
  */
 #ifndef DEMOS_LOAD_BALANCER_WORKER_H_
 #define DEMOS_LOAD_BALANCER_WORKER_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 caf::behavior CalculatorFun(caf::stateful_actor<size_t>* self) {
   return {

@@ -3,7 +3,7 @@
  */
 #ifndef DEMOS_HELLO_WORLD_CONFIG_H_
 #define DEMOS_HELLO_WORLD_CONFIG_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include "./worker.h"
 

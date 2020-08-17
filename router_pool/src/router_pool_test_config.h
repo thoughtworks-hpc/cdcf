@@ -5,7 +5,7 @@
 #ifndef ROUTER_POOL_SRC_ROUTER_POOL_TEST_CONFIG_H_
 #define ROUTER_POOL_SRC_ROUTER_POOL_TEST_CONFIG_H_
 
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 using simple_calculator =
     caf::typed_actor<caf::replies_to<int, int>::with<caf::message>>;

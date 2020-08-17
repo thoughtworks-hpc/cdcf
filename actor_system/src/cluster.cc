@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "include/actor_system/cluster.h"
+#include "cdcf/actor_system/cluster.h"
 
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>

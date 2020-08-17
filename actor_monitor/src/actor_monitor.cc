@@ -6,7 +6,7 @@
 
 #include <logger.h>
 
-#include "../../actor_system/include/actor_system/cluster.h"
+#include "../../actor_system/include/cdcf/actor_system/cluster.h"
 
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(

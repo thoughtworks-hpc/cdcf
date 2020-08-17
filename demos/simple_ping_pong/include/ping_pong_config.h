@@ -3,7 +3,7 @@
  */
 #ifndef DEMOS_SIMPLE_PING_PONG_INCLUDE_PING_PONG_CONFIG_H_
 #define DEMOS_SIMPLE_PING_PONG_INCLUDE_PING_PONG_CONFIG_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <string>
 

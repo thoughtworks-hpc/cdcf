@@ -3,7 +3,7 @@
  */
 #ifndef DEMOS_LOAD_BALANCER_ROUTER_H_
 #define DEMOS_LOAD_BALANCER_ROUTER_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <mutex>
 #include <string>

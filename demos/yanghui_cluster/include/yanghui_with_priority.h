@@ -17,7 +17,7 @@
 
 #include "../../logger/include/logger.h"
 #include "./yanghui_io.h"
-#include "actor_system/cluster.h"
+#include "cdcf/actor_system/cluster.h"
 
 class WorkerPool : public actor_system::cluster::Observer {
  public:

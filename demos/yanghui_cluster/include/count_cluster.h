@@ -4,7 +4,7 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_COUNT_CLUSTER_H_
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_COUNT_CLUSTER_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <string>
 #include <vector>

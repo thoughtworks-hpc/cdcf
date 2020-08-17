@@ -4,7 +4,7 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <ostream>
 #include <sstream>

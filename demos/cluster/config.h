@@ -3,7 +3,7 @@
  */
 #ifndef DEMOS_CLUSTER_CONFIG_H_
 #define DEMOS_CLUSTER_CONFIG_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 class Config : public actor_system::Config {
  public:
