@@ -4,7 +4,8 @@
 
 #include "./include/cdcf_spawn.h"
 
-CdcfSpawn::CdcfSpawn(caf::actor_config& cfg, ActorStatusMonitor* monitor)
+CdcfSpawn::CdcfSpawn(caf::actor_config& cfg,
+                     cdcf::actor_system::ActorStatusMonitor* monitor)
     : event_based_actor(cfg) {
   monitor_ = monitor;
 }

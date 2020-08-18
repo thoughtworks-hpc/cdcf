@@ -10,12 +10,13 @@
 class CdcfSpawn : public caf::event_based_actor {
  public:
   explicit CdcfSpawn(caf::actor_config& cfg);
-  CdcfSpawn(caf::actor_config& cfg, ActorStatusMonitor* monitor);
+  CdcfSpawn(caf::actor_config& cfg,
+            cdcf::actor_system::ActorStatusMonitor* monitor);
 
   caf::behavior make_behavior() override;
 
  private:
-  ActorStatusMonitor* monitor_;
+  cdcf::actor_system::ActorStatusMonitor* monitor_;
 };
 
 #endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_CDCF_SPAWN_H_

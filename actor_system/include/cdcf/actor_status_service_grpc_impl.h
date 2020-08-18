@@ -17,9 +17,10 @@
 
 class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
  public:
-  ActorStatusServiceGrpcImpl(caf::actor_system& actorSystem,
-                             ActorStatusMonitor& actorStatusMonitor,
-                             uint16_t server_port = 50052)
+  ActorStatusServiceGrpcImpl(
+      caf::actor_system& actorSystem,
+      cdcf::actor_system::ActorStatusMonitor& actorStatusMonitor,
+      uint16_t server_port = 50052)
       : actor_system_(actorSystem),
         actor_status_monitor_(actorStatusMonitor),
         server_port_(server_port) {}
@@ -32,7 +33,7 @@ class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
 
  private:
   caf::actor_system& actor_system_;
-  ActorStatusMonitor& actor_status_monitor_;
+  cdcf::actor_system::ActorStatusMonitor& actor_status_monitor_;
   uint16_t server_port_;
   std::unique_ptr<grpc::Server> server_;
 };

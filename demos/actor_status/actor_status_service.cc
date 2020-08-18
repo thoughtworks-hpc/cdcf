@@ -27,7 +27,7 @@ caf::behavior countAdd(caf::event_based_actor* self) {
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  ActorStatusMonitor actor_status_monitor(system);
+  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGrpcImpl actor_status_(system, actor_status_monitor,
                                            cfg.port);
 

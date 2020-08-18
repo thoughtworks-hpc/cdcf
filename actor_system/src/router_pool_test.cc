@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 #include <cdcf/logger.h>
-#include <cdcf/router_pool.h>
+#include <cdcf/router_pool/router_pool.h>
 #include <gtest/gtest.h>
 
 #include "./router_pool_test_config.h"

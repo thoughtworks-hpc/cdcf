@@ -26,7 +26,7 @@ class actor_status_service_test : public testing::Test {
   caf::actor_system actor_system_{config_};
   caf::actor test_actor1_;
   caf::actor test_actor2_;
-  ActorStatusMonitor status_monitor_{actor_system_};
+  cdcf::actor_system::ActorStatusMonitor status_monitor_{actor_system_};
 };
 
 const char kLocalHostAddress[] = "127.0.0.1:50052";

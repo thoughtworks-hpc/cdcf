@@ -90,7 +90,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
             << ", worker_load:" << cfg.worker_load << std::endl;
 
-  ActorStatusMonitor actor_status_monitor(system);
+  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
@@ -337,7 +337,7 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   YanghuiIO yanghui_io(cfg);
 
-  ActorStatusMonitor actor_status_monitor(system);
+  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
   ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
 
   // router pool

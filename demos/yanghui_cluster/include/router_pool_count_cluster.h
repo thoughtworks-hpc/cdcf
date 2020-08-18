@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "./count_cluster.h"
-#include "cdcf/router_pool.h"
+#include "cdcf/router_pool/router_pool.h"
 
 class RouterPoolCountCluster : public CountCluster {
  public:
