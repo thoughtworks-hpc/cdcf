@@ -9,9 +9,9 @@
 #include <utility>
 #include <vector>
 
-#include "cdcf/actor_union.h"
 #include "./count_cluster.h"
 #include "./yanghui_io.h"
+#include "cdcf/actor_union.h"
 
 class ActorUnionCountCluster : public CountCluster {
  public:
@@ -42,7 +42,7 @@ class ActorUnionCountCluster : public CountCluster {
   caf::actor_system& system_;
   std::string host_;
   uint16_t worker_port_;
-  ActorUnion counter_;
+  cdcf::actor_system::ActorUnion counter_;
   caf::scoped_execution_unit context_;
   caf::actor load_balance_;
   YanghuiIO& yanghui_io_;

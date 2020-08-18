@@ -11,6 +11,7 @@
 
 #include "cdcf/logger.h"
 
+namespace cdcf::actor_system {
 enum class actor_union_error : uint8_t { all_actor_out_of_work = 1 };
 
 caf::error make_error(actor_union_error x);
@@ -79,5 +80,6 @@ class ActorUnion {
     }
   }
 };
+}  // namespace cdcf::actor_system
 
 #endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_

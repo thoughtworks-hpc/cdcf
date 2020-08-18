@@ -47,7 +47,8 @@ class ActorUnionTest : public ::testing::Test {
   caf::actor calculator1_;
   caf::actor calculator2_;
   caf::actor error_actor_;
-  ActorUnion actorUnion_{system_, caf::actor_pool::round_robin()};
+  cdcf::actor_system::ActorUnion actorUnion_{system_,
+                                             caf::actor_pool::round_robin()};
 };
 
 TEST_F(ActorUnionTest, happy_path) {
