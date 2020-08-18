@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include "cdcf/actor_system/load_balancer/policy.h"
+#include "cdcf/load_balancer/policy.h"
 
 #include <algorithm>
 #include <cassert>

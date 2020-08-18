@@ -12,10 +12,9 @@
 
 #include <caf/all.hpp>
 
-#include "cdcf/actor_system/load_balancer/policy.h"
+#include "./policy.h"
 
-namespace cdcf {
-namespace load_balancer {
+namespace cdcf::load_balancer {
 using Lock = caf::upgrade_lock<caf::detail::shared_spinlock>;
 
 class Proxy;
@@ -71,6 +70,5 @@ inline std::vector<Metrics> Router::GetMetrics() const {
   return result;
 }
 
-}  // namespace load_balancer
-}  // namespace cdcf
+}  // namespace cdcf::load_balancer
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_

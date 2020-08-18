@@ -8,5 +8,5 @@
 
 #include "actor_system/cluster.h"
 #include "actor_system/config.h"
-#include "actor_system/load_balancer.h"
+#include "cdcf/load_balancer/load_balancer.h"
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_H_
