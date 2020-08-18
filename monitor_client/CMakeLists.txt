@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(cluster_monitor)
+project(monitor_client)
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)

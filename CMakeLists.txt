@@ -18,7 +18,7 @@ endif ()
 include(CTest)
 add_subdirectory(common)
 add_subdirectory(actor_system)
-add_subdirectory(cluster_monitor)
+add_subdirectory(monitor_client)
 add_subdirectory(demos)
 
 if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
