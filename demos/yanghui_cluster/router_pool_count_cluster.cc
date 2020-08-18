@@ -20,7 +20,7 @@ RouterPoolCountCluster::RouterPoolCountCluster(
       routee_ifs, default_actor_num, policy, use_ssl);
 }
 
-void RouterPoolCountCluster::Update(const actor_system::cluster::Event& event) {
+void RouterPoolCountCluster::Update(const cdcf::cluster::Event& event) {
   if (event.member.hostname != host_) {
     if (event.member.status == event.member.ActorSystemDown) {
       RemoveNode(event.member.host, worker_port_);

@@ -6,7 +6,7 @@
 
 #include <cdcf/logger.h>
 
-#include "cdcf/actor_system/cluster.h"
+#include "cdcf/cluster/cluster.h"
 
 namespace cdcf {
 

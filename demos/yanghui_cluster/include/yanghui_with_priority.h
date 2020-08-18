@@ -15,11 +15,11 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "cdcf/logger.h"
 #include "./yanghui_io.h"
-#include "cdcf/actor_system/cluster.h"
+#include "cdcf/cluster/cluster.h"
+#include "cdcf/logger.h"
 
-class WorkerPool : public actor_system::cluster::Observer {
+class WorkerPool : public cdcf::cluster::Observer {
  public:
   WorkerPool(caf::actor_system& system, std::string host, uint16_t worker_port,
              YanghuiIO& yanghui_io)
@@ -37,7 +37,7 @@ class WorkerPool : public actor_system::cluster::Observer {
  private:
   int AddWorker(const std::string& host);
 
-  void Update(const actor_system::cluster::Event& event) override;
+  void Update(const cdcf::cluster::Event& event) override;
 
   void PrintClusterMembers();
 

@@ -21,7 +21,7 @@ class RouterPoolCountCluster : public CountCluster {
                          caf::actor_pool::policy& policy, bool use_ssl);
   virtual ~RouterPoolCountCluster();
 
-  void Update(const actor_system::cluster::Event& event) override;
+  void Update(const cdcf::cluster::Event& event) override;
 
   void AddWorkerNode(const std::string& host) override;
   int AddNumber(int a, int b, int& result) override;

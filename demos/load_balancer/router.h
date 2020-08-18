@@ -15,7 +15,7 @@ struct WorkerStats {
   size_t count;
 };
 
-class WorkerRouter : public actor_system::cluster::Observer {
+class WorkerRouter : public cdcf::cluster::Observer {
  public:
   WorkerRouter(caf::actor_system& system, const std::string host, uint16_t port)
       : system_(system), host_(host), port_(port) {
@@ -23,10 +23,10 @@ class WorkerRouter : public actor_system::cluster::Observer {
   }
 
   ~WorkerRouter() {
-    actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->RemoveObserver(this);
   }
 
-  void AddWorker(const actor_system::cluster::Member& member) {
+  void AddWorker(const cdcf::cluster::Member& member) {
     caf::actor worker;
     for (;;) {
       try {
@@ -45,7 +45,7 @@ class WorkerRouter : public actor_system::cluster::Observer {
     workers_.emplace_back(worker);
   }
 
-  void DeleteWorker(const actor_system::cluster::Member& member) {
+  void DeleteWorker(const cdcf::cluster::Member& member) {
     auto it = std::find_if(members_.begin(), members_.end(), [&](auto& m) {
       return m.host == member.host && m.port == member.port;
     });
@@ -60,11 +60,11 @@ class WorkerRouter : public actor_system::cluster::Observer {
     workers_.erase(workers_.begin() + index);
   }
 
-  void Update(const actor_system::cluster::Event& event) override {
-    if (event.member.status == actor_system::cluster::Member::Up) {
+  void Update(const cdcf::cluster::Event& event) override {
+    if (event.member.status == cdcf::cluster::Member::Up) {
       std::lock_guard lock{mutex_};
       AddWorker(event.member);
-    } else if (event.member.status == actor_system::cluster::Member::Down) {
+    } else if (event.member.status == cdcf::cluster::Member::Down) {
       std::lock_guard lock{mutex_};
       DeleteWorker(event.member);
     }
@@ -91,15 +91,15 @@ class WorkerRouter : public actor_system::cluster::Observer {
   void InitLoadBalancer() {
     auto policy = cdcf::load_balancer::policy::MinLoad();
     balancer_ = cdcf::load_balancer::Router::Make(&context_, std::move(policy));
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
     std::lock_guard lock{mutex_};
     for (const auto& member : FetchMembers()) {
       AddWorker(member);
     }
   }
 
-  std::vector<actor_system::cluster::Member> FetchMembers() const {
-    auto cluster = actor_system::cluster::Cluster::GetInstance();
+  std::vector<cdcf::cluster::Member> FetchMembers() const {
+    auto cluster = cdcf::cluster::Cluster::GetInstance();
     auto members = cluster->GetMembers();
     std::cout << "all members: " << cluster->GetMembers().size() << std::endl;
     auto it = std::remove_if(members.begin(), members.end(),
@@ -109,7 +109,7 @@ class WorkerRouter : public actor_system::cluster::Observer {
     return members;
   }
 
-  caf::actor SpawnWorkers(const actor_system::cluster::Member& member) const {
+  caf::actor SpawnWorkers(const cdcf::cluster::Member& member) const {
     std::cout << "routee: " << member.host << ":" << port_ << std::endl;
     auto node = system_.middleman().connect(member.host, port_);
     if (!node) {
@@ -132,7 +132,7 @@ class WorkerRouter : public actor_system::cluster::Observer {
 
   caf::actor_system& system_;
   caf::scoped_execution_unit context_{&system_};
-  std::vector<actor_system::cluster::Member> members_;
+  std::vector<cdcf::cluster::Member> members_;
   std::string host_;
   uint16_t port_;
   std::mutex mutex_;

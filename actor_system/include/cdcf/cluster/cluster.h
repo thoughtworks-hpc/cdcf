@@ -13,8 +13,7 @@
 
 #include <caf/all.hpp>
 
-namespace actor_system {
-namespace cluster {
+namespace cdcf::cluster {
 struct Member {
   std::string name;
 
@@ -111,6 +110,5 @@ class Cluster : public Subject {
 
   std::unique_ptr<ClusterImpl> impl_;
 };
-};  // namespace cluster
-}  // namespace actor_system
+};      // namespace cdcf::cluster
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CLUSTER_H_
