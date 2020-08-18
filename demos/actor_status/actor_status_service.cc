@@ -6,7 +6,7 @@
 #include "cdcf/actor_status_service_grpc_impl.h"
 #include "cdcf/cdcf_config.h"
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 50052;

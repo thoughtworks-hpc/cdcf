@@ -8,7 +8,7 @@
 
 #include "cdcf/cdcf_config.h"
 
-class test_config : public CDCFConfig {
+class test_config : public cdcf::CDCFConfig {
  public:
   uint16_t my_port = 0;
   bool my_server_mode = false;
@@ -27,10 +27,10 @@ TEST(TestConfigLoad, load_from_file) { /* NOLINT */
   char **fake_argv = new char *[fake_argc + 1] { arg0, INI_FILE_PARAMETER };
 
   test_config config;
-  CDCFConfig::RetValue ret =
+  cdcf::CDCFConfig::RetValue ret =
       config.parse_config(fake_argc, fake_argv, "cdcf-default.ini");
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8089, config.my_port);
   EXPECT_EQ("localhost111", config.host_);
   EXPECT_EQ(true, config.my_server_mode);
@@ -46,10 +46,10 @@ TEST(TestConfigLoad, load_from_parameter) { /* NOLINT */
   char **fake_argv = new char *[fake_argc + 1] { arg0, arg1, arg2, arg3 };
 
   test_config config;
-  CDCFConfig::RetValue ret =
+  cdcf::CDCFConfig::RetValue ret =
       config.parse_config(fake_argc, fake_argv, "cdcf-default.ini");
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8088, config.my_port);
   EXPECT_EQ("localhost666", config.host_);
   EXPECT_EQ(true, config.my_server_mode);
@@ -68,10 +68,10 @@ TEST(TestConfigLoad, load_from_parameter_short) { /* NOLINT */
       new char *[fake_argc + 1] { arg0, arg1, arg2, arg3, arg4, arg5 };
 
   test_config config;
-  CDCFConfig::RetValue ret =
+  cdcf::CDCFConfig::RetValue ret =
       config.parse_config(fake_argc, fake_argv, "cdcf-default.ini");
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(8088, config.my_port);
   EXPECT_EQ("localhost666", config.host_);
   EXPECT_EQ(true, config.my_server_mode);

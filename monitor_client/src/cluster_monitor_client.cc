@@ -6,7 +6,7 @@
 #include "./node_monitor.grpc.pb.h"
 #include "cdcf/cdcf_config.h"
 
-class ClientConfig : public CDCFConfig {
+class ClientConfig : public cdcf::CDCFConfig {
  public:
   std::string server_host = "localhost:50051";
   std::string actor_node_host = "";
@@ -101,9 +101,9 @@ int GetNodeStatus(const std::string& host) {
 
 int main(int argc, char* argv[]) {
   ClientConfig input_parameter;
-  CDCFConfig::RetValue parse_ret = input_parameter.parse_config(argc, argv);
+  cdcf::CDCFConfig::RetValue parse_ret = input_parameter.parse_config(argc, argv);
 
-  if (parse_ret != CDCFConfig::RetValue::kSuccess) {
+  if (parse_ret != cdcf::CDCFConfig::RetValue::kSuccess) {
     return 1;
   }
 

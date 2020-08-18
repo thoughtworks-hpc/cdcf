@@ -11,6 +11,7 @@
 
 #include <caf/all.hpp>
 
+namespace cdcf {
 class CDCFConfig : public caf::actor_system_config {
  public:
   CDCFConfig();
@@ -39,5 +40,6 @@ class CDCFConfig : public caf::actor_system_config {
   RetValue parse_config(const std::vector<std::string>& args,
                         const char* ini_file_cstr = "cdcf-default.ini");
 };
+}  // namespace cdcf
 
 #endif  // CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_

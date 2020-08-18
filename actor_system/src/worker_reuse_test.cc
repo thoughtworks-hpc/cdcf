@@ -14,8 +14,8 @@ TEST(TestScheduler, threads_proportion) {
     argv[i] = argv[i];
   }
 
-  CDCFConfig config;
-  CDCFConfig::RetValue ret =
+  cdcf::CDCFConfig config;
+  cdcf::CDCFConfig::RetValue ret =
       config.parse_config(argc, argv.data(), "cdcf-application.ini");
 
   auto thread_num = static_cast<size_t>(std::thread::hardware_concurrency() *
@@ -25,7 +25,7 @@ TEST(TestScheduler, threads_proportion) {
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_EQ(0.52, config.threads_proportion);
   EXPECT_EQ(thread_num, sch.num_workers());
 }
@@ -37,14 +37,14 @@ TEST(TestScheduler, load_from_file) {
     argv[i] = argv[i];
   }
 
-  CDCFConfig config;
-  CDCFConfig::RetValue ret =
+  cdcf::CDCFConfig config;
+  cdcf::CDCFConfig::RetValue ret =
       config.parse_config(argc, argv.data(), "cdcf-application.ini");
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(floor(std::thread::hardware_concurrency() *
                     config.threads_proportion) == sch.num_workers() ||
               4 == sch.num_workers());
@@ -55,13 +55,13 @@ TEST(TestScheduler, load_default) {
   int argc = static_cast<int>(argv.size());
   for (int i = 0; i < argc; i++) argv[i] = argv[i];
 
-  CDCFConfig config;
-  CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
+  cdcf::CDCFConfig config;
+  cdcf::CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(std::thread::hardware_concurrency() == sch.num_workers() ||
               4 == sch.num_workers());
 }
@@ -75,13 +75,13 @@ TEST(TestScheduler, load_option) {
   };
   int argc = static_cast<int>(argv.size());
 
-  CDCFConfig config;
-  CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
+  cdcf::CDCFConfig config;
+  cdcf::CDCFConfig::RetValue ret = config.parse_config(argc, argv.data());
 
   caf::actor_system system{config};
   caf::scheduler::abstract_coordinator &sch = system.scheduler();
 
-  EXPECT_THAT(CDCFConfig::RetValue::kSuccess, ret);
+  EXPECT_THAT(cdcf::CDCFConfig::RetValue::kSuccess, ret);
   EXPECT_TRUE(floor(std::thread::hardware_concurrency() *
                     config.threads_proportion) == sch.num_workers() ||
               4 * config.threads_proportion == sch.num_workers());

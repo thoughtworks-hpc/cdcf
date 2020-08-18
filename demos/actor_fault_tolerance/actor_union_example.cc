@@ -38,7 +38,7 @@ void dealSendErr(const caf::error& err) {
   std::cout << "get error:" << caf::to_string(err) << std::endl;
 }
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t worker_number = 0;
