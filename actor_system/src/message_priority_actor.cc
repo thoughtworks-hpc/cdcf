@@ -3,8 +3,10 @@
  */
 #include "cdcf/message_priority_actor.h"
 
-void cdcf::actor_system::MessagePriorityActor::enqueue(
-    caf::mailbox_element_ptr ptr, caf::execution_unit* eu) {
+namespace cdcf::actor_system {
+
+void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
+                                   caf::execution_unit* eu) {
   auto message = ptr->copy_content_to_message();
   auto message_id = ptr->mid;
 
@@ -24,22 +26,22 @@ void cdcf::actor_system::MessagePriorityActor::enqueue(
   }
 }
 
-bool cdcf::actor_system::MessagePriorityActor::IsFirstElementHighPriorityAtom(
+bool MessagePriorityActor::IsFirstElementHighPriorityAtom(
     const caf::message& message) {
   return message.match_element<high_priority_atom>(0);
 }
 
-bool cdcf::actor_system::MessagePriorityActor::IsFirstElementNormalPriorityAtom(
+bool MessagePriorityActor::IsFirstElementNormalPriorityAtom(
     const caf::message& message) {
   return message.match_element<normal_priority_atom>(0);
 }
 
-void cdcf::actor_system::MessagePriorityActor::DeleteFirstElement(
-    caf::message& message) {
+void MessagePriorityActor::DeleteFirstElement(caf::message& message) {
   message = message.drop(1);
 }
 
-void cdcf::actor_system::MessagePriorityActor::AddMessageIdWithHighPriority(
-    caf::message_id& id) {
+void MessagePriorityActor::AddMessageIdWithHighPriority(caf::message_id& id) {
   id = id.with_high_priority();
 }
+
+}  // namespace cdcf::actor_system
