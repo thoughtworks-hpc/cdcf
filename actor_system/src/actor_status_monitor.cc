@@ -3,6 +3,7 @@
  */
 #include "cdcf/actor_status_monitor.h"
 
+namespace cdcf::actor_system {
 ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
     : actor_system_(actorSystem) {
   actor_monitor_ = actor_system_.spawn<cdcf::actor_system::ActorMonitor>(
@@ -33,8 +34,10 @@ ActorStatusMonitor::GetActorStatus() {
 
   return ret;
 }
+
 ActorStatusMonitor::~ActorStatusMonitor() {
   // must send kill to actor_monitor_, otherwise the actor_monitor_ will not
   // stop
   caf::anon_send_exit(actor_monitor_, caf::exit_reason::user_shutdown);
 }
+}  // namespace cdcf::actor_system
