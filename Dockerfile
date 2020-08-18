@@ -15,7 +15,6 @@ RUN conan install . -s compiler.libcxx=libstdc++11 --build missing
 COPY CMakeLists.txt .
 COPY common common
 COPY node_keeper node_keeper
-COPY actor_monitor actor_monitor
 COPY actor_system actor_system
 COPY router_pool router_pool
 COPY demos demos

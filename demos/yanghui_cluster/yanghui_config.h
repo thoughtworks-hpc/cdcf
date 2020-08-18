@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "../../actor_monitor/include/actor_monitor.h"
 #include "./include/yanghui_with_priority.h"
 #include "cdcf/actor_guard.h"
+#include "cdcf/actor_monitor.h"
 #include "cdcf/actor_union.h"
 #include "cdcf/message_priority_actor.h"
 

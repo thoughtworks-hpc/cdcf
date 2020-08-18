@@ -17,7 +17,6 @@ endif ()
 
 include(CTest)
 add_subdirectory(common)
-add_subdirectory(actor_monitor)
 add_subdirectory(actor_system)
 add_subdirectory(cluster_monitor)
 add_subdirectory(demos)

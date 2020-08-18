@@ -5,7 +5,7 @@
 #include <chrono>
 #include <thread>
 
-#include "../../actor_monitor/include/actor_monitor.h"
+#include "cdcf/actor_monitor.h"
 #include "./actor_monitor_config.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;

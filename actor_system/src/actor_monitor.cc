@@ -2,11 +2,11 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../include/actor_monitor.h"
+#include "cdcf/actor_monitor.h"
 
 #include <cdcf/logger.h>
 
-#include "../../actor_system/include/cdcf/actor_system/cluster.h"
+#include "cdcf/actor_system/cluster.h"
 
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(

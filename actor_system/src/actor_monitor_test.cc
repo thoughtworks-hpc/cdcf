@@ -2,10 +2,10 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../include/actor_monitor.h"
+#include "cdcf/actor_monitor.h"
 
-#include <gtest/gtest.h>
 #include <cdcf/logger.h>
+#include <gtest/gtest.h>
 
 caf::behavior test_init_actor(caf::event_based_actor* self) { return {}; }
 

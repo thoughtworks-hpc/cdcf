@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../../actor_monitor/include/actor_monitor.h"
+#include "cdcf/actor_monitor.h"
 #include "./actor_monitor_config.h"
 
 void downMsgHandle(const caf::down_msg& downMsg,
