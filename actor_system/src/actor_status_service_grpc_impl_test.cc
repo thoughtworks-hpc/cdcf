@@ -36,7 +36,8 @@ const char kTestActorName2[] = "TestActor2";
 const char kTestActorDescription2[] = "test2 description";
 
 TEST_F(actor_status_service_test, actor_system_has_no_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::actor_system::ActorStatusServiceGrpcImpl service_grpc(actor_system_,
+                                                              status_monitor_);
   service_grpc.Run();
 
   auto actor_system_channel = grpc::CreateChannel(
@@ -52,7 +53,8 @@ TEST_F(actor_status_service_test, actor_system_has_no_actor) {
 }
 
 TEST_F(actor_status_service_test, actor_system_has_one_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::actor_system::ActorStatusServiceGrpcImpl service_grpc(actor_system_,
+                                                              status_monitor_);
   service_grpc.Run();
   status_monitor_.RegisterActor(test_actor1_, kTestActorName1,
                                 kTestActorDescription1);
@@ -74,7 +76,8 @@ TEST_F(actor_status_service_test, actor_system_has_one_actor) {
 }
 
 TEST_F(actor_status_service_test, actor_system_has_two_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::actor_system::ActorStatusServiceGrpcImpl service_grpc(actor_system_,
+                                                              status_monitor_);
   service_grpc.Run();
   status_monitor_.RegisterActor(test_actor1_, kTestActorName1,
                                 kTestActorDescription1);

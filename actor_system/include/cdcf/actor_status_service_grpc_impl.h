@@ -15,6 +15,7 @@
 #include "../../src/node_monitor.grpc.pb.h"
 #include "actor_status_monitor.h"
 
+namespace cdcf::actor_system {
 class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
  public:
   ActorStatusServiceGrpcImpl(
@@ -37,5 +38,7 @@ class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
   uint16_t server_port_;
   std::unique_ptr<grpc::Server> server_;
 };
+
+}  // namespace cdcf::actor_system
 
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
