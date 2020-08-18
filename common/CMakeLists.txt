@@ -16,10 +16,10 @@ include_directories(${caf_INCLUDE_DIRS})
 include_directories(include)
 
 set(TEST_INI_FILE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/test_source/test.ini)
-set(TEST_SOURCES ${ALL_SOURCES} include/config_manager_test.h)
+set(TEST_SOURCES ${ALL_SOURCES} src/config_manager_test.h)
 
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/config_manager_test.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config_manager_test.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config_manager_test.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/config_manager_test.h)
 
 list(FILTER TEST_SOURCES INCLUDE REGEX "^.*_test.cc$")
 

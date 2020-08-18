@@ -12,7 +12,7 @@ conan_paths.cmake
 conanbuildinfo.txt
 conaninfo.txt
 graph_info.json
-common/include/config_manager_test.h
+common/src/config_manager_test.h
 
 CMakeCache.txt
 CMakeFiles
