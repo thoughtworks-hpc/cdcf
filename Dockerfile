@@ -16,7 +16,6 @@ COPY CMakeLists.txt .
 COPY common common
 COPY node_keeper node_keeper
 COPY actor_system actor_system
-COPY router_pool router_pool
 COPY demos demos
 COPY cluster_monitor cluster_monitor
 RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \

@@ -20,7 +20,6 @@ add_subdirectory(common)
 add_subdirectory(actor_system)
 add_subdirectory(cluster_monitor)
 add_subdirectory(demos)
-add_subdirectory(router_pool)
 
 if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
     add_subdirectory(node_keeper)
