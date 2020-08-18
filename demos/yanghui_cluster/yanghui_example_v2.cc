@@ -12,8 +12,8 @@
 #include <caf/io/all.hpp>
 #include <caf/openssl/all.hpp>
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
-#include "../../actor_fault_tolerance/include/actor_union.h"
+#include "cdcf/actor_guard.h"
+#include "cdcf/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
 #include "../../logger/include/logger.h"
 #include "./yanghui_config.h"

@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "../../../actor_fault_tolerance/include/actor_union.h"
+#include "cdcf/actor_union.h"
 #include "./count_cluster.h"
 #include "./yanghui_io.h"
 

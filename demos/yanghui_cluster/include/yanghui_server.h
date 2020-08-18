@@ -9,7 +9,7 @@
 
 #include <caf/all.hpp>
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
+#include "cdcf/actor_guard.h"
 #include "../yanghui_config.h"
 #include "./yanghui_with_priority.h"
 
