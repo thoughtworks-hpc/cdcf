@@ -120,7 +120,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
           auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
           if (j == 0) {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::actor_system::high_priority_atom::value,
                          self->state.last_level_results_[0],
                          self->state.triangle_data_[i][j], j);
             } else {
@@ -129,7 +129,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             }
           } else if (j == i) {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::actor_system::high_priority_atom::value,
                          self->state.last_level_results_[j - 1],
                          self->state.triangle_data_[i][j], j);
             } else {
@@ -138,7 +138,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             }
           } else {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::actor_system::high_priority_atom::value,
                          std::min(self->state.last_level_results_[j - 1],
                                   self->state.last_level_results_[j]),
                          self->state.triangle_data_[i][j], j);
@@ -188,7 +188,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         NumberCompareData send_data;
         send_data.numbers = self->state.last_level_results_;
         auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
-        self->request(worker, caf::infinite, high_priority_atom::value,
+        self->request(worker, caf::infinite, cdcf::actor_system::high_priority_atom::value,
                       send_data)
             .await([=](int final_result) {
               if (is_high_priority) {
