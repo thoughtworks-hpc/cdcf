@@ -6,5 +6,5 @@ find_package(caf REQUIRED)
 add_executable(ping ping.cc)
 add_executable(pong pong.cc)
 
-target_link_libraries(ping actor_system logger)
-target_link_libraries(pong actor_system logger)
+target_link_libraries(ping actor_system common)
+target_link_libraries(pong actor_system common)

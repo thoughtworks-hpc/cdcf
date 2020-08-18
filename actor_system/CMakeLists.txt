@@ -59,7 +59,7 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(caf REQUIRED)
-target_link_libraries(${PROJECT_NAME} common caf::caf grpc::grpc logger)
+target_link_libraries(${PROJECT_NAME} common caf::caf grpc::grpc)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(TEST_SOURCES ${ALL_SOURCES})

@@ -10,7 +10,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 
 class ActorGuard {
  public:

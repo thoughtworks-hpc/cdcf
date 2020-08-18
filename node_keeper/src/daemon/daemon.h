@@ -11,7 +11,7 @@
 #include <thread>
 #include <vector>
 
-#include "../../../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "src/daemon/process_manager.h"
 
 class Daemon {

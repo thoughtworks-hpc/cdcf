@@ -8,7 +8,7 @@
 
 #include <caf/openssl/all.hpp>
 
-#include "../../../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "cdcf/actor_system/config.h"
 
 class YanghuiIO {

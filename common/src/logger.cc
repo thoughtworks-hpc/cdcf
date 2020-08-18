@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "../include/logger.h"
+#include "cdcf/logger.h"
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>

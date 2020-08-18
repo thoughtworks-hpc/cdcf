@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "src/gossip.h"
 #include "src/queue.h"
 

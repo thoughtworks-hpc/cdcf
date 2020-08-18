@@ -5,7 +5,7 @@
 
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/server_builder.h>
-#include <logger.h>
+#include <cdcf/logger.h>
 
 ::grpc::Status ActorStatusServiceGrpcImpl::GetNodeActorStatus(
     ::grpc::ServerContext *context, const ::google::protobuf::Empty *request,

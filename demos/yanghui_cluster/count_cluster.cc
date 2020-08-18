@@ -6,7 +6,7 @@
 
 #include <utility>
 
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 // CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
 //  // auto members =
 //  actor_system::cluster::Cluster::GetInstance()->GetMembers();

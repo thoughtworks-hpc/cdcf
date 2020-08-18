@@ -15,7 +15,7 @@
 #include "cdcf/actor_guard.h"
 #include "cdcf/actor_union.h"
 #include "../../actor_monitor/include/actor_monitor.h"
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
 #include "cdcf/actor_status_service_grpc_impl.h"

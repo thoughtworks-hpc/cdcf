@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "./logger.h"
+#include "cdcf/logger.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

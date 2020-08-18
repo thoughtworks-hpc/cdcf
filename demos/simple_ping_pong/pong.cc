@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 #include <cdcf/actor_system.h>
-#include <logger.h>
+#include <cdcf/logger.h>
 
 #include "./include/ping_pong_config.h"
 

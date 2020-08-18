@@ -9,7 +9,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 
 enum class actor_union_error : uint8_t { all_actor_out_of_work = 1 };
 

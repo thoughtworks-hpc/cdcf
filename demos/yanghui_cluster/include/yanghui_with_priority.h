@@ -15,7 +15,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "./yanghui_io.h"
 #include "cdcf/actor_system/cluster.h"
 

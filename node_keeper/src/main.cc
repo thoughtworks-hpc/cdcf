@@ -3,7 +3,7 @@
  */
 #include <vector>
 
-#include "../logger/include/logger.h"
+#include "cdcf/logger.h"
 #include "src/daemon/daemon.h"
 #include "src/node_keeper.h"
 

@@ -5,7 +5,7 @@
 #include "../include/message_priority_actor.h"
 
 #include <gtest/gtest.h>
-#include <logger.h>
+#include <cdcf/logger.h>
 
 class CalculatorWithPriority : public MessagePriorityActor {
  public:

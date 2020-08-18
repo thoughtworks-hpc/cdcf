@@ -4,7 +4,7 @@
 
 #include "src/node_run_status.h"
 
-#include <logger.h>
+#include <cdcf/logger.h>
 #include <unistd.h>
 
 #include <cstring>
