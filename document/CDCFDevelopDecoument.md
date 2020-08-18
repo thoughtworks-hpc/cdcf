@@ -4,7 +4,7 @@
 CDCF full name is C++ Distributed Computing Framework. It was born for high performance. 
 It is to fill in the gap that there was no C++ distributed system development framework before.
 
-CDCF consists of three parts：node keeper，monitor tool， actor system
+CDCF consists of three parts：node keeper, monitor tool, actor system.
 
 Node keeper is an executable program that needs to be deployed on each node of a distributed cluster. It is responsible for managing all node members of the cluster.At the same time, it is also responsible for restarting the actor system when the actor system is hung.
 
@@ -351,7 +351,7 @@ Total actor: 7
   description: pool description
 ```
 
-## 7.Develop with CDCF
+## 7 Develop with CDCF
 
 ### 7.1 Node Member Management
 
@@ -631,9 +631,9 @@ Run：
 Start workers first：
 
 ```shell
-./actor_fault_tolerance_guard --worker_number=1
-./actor_fault_tolerance_guard --worker_number=2
-./actor_fault_tolerance_guard --worker_number=3
+./actor_fault_tolerance_union --worker_number=1
+./actor_fault_tolerance_union --worker_number=2
+./actor_fault_tolerance_union --worker_number=3
 ```
 
 And then start leader：
