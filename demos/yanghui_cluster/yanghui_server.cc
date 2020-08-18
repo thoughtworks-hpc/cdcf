@@ -8,7 +8,7 @@
 
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
-    cdcf::actor_system::ActorGuard* actor_guard) {
+    cdcf::ActorGuard* actor_guard) {
   return {[=](const YanghuiData& data) {
     std::cout << "start standard job counting." << std::endl;
     auto yanghui_data = data.data;
@@ -80,7 +80,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
 
 caf::behavior yanghui_router_pool_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
-    cdcf::actor_system::ActorGuard* pool_guard) {
+    cdcf::ActorGuard* pool_guard) {
   return {[=](const YanghuiData& data) {
     std::cout << "start router pool job counting." << std::endl;
     auto yanghui_data = data.data;

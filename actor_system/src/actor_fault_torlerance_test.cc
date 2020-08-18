@@ -47,8 +47,7 @@ class ActorUnionTest : public ::testing::Test {
   caf::actor calculator1_;
   caf::actor calculator2_;
   caf::actor error_actor_;
-  cdcf::actor_system::ActorUnion actorUnion_{system_,
-                                             caf::actor_pool::round_robin()};
+  cdcf::ActorUnion actorUnion_{system_, caf::actor_pool::round_robin()};
 };
 
 TEST_F(ActorUnionTest, happy_path) {
@@ -166,7 +165,7 @@ TEST_F(ActorGuardTest, happy_path) {
   int result = 0;
   bool error = false;
 
-  cdcf::actor_system::ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -192,7 +191,7 @@ TEST_F(ActorGuardTest, init_error_actor) {
   int result = 0;
   bool error = false;
 
-  cdcf::actor_system::ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       error_actor_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -218,7 +217,7 @@ TEST_F(ActorGuardTest, actor_exit) {
   int result = 0;
   bool error = false;
 
-  cdcf::actor_system::ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -246,7 +245,7 @@ TEST_F(ActorGuardTest, actor_restart_failed) {
   int result = 0;
   bool error = false;
 
-  cdcf::actor_system::ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         active = false;

@@ -27,9 +27,9 @@ caf::behavior countAdd(caf::event_based_actor* self) {
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
-  cdcf::actor_system::ActorStatusServiceGrpcImpl actor_status_(
-      system, actor_status_monitor, cfg.port);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_(system, actor_status_monitor,
+                                                 cfg.port);
 
   auto add_actor1 = system.spawn(countAdd);
   actor_status_monitor.RegisterActor(add_actor1, "Adder1",

@@ -8,7 +8,7 @@
 
 #include "cdcf/actor_system/cluster.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 
 ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
 ActorMonitor::ActorMonitor(
@@ -87,4 +87,4 @@ bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker) {
   return true;
 }
 
-}  // namespace cdcf::actor_system
+}  // namespace cdcf

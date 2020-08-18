@@ -3,10 +3,10 @@
  */
 #include "cdcf/actor_status_monitor.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
     : actor_system_(actorSystem) {
-  actor_monitor_ = actor_system_.spawn<cdcf::actor_system::ActorMonitor>(
+  actor_monitor_ = actor_system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& msg, const std::string&) {
         std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
         actor_status_.erase(msg.source.id());
@@ -20,7 +20,7 @@ void ActorStatusMonitor::RegisterActor(caf::actor& actor,
     std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
     actor_status_[actor.id()] = {actor.id(), name, description};
   }
-  cdcf::actor_system::SetMonitor(actor_monitor_, actor, description);
+  cdcf::SetMonitor(actor_monitor_, actor, description);
 }
 
 std::vector<ActorStatusMonitor::ActorInfo>
@@ -40,4 +40,4 @@ ActorStatusMonitor::~ActorStatusMonitor() {
   // stop
   caf::anon_send_exit(actor_monitor_, caf::exit_reason::user_shutdown);
 }
-}  // namespace cdcf::actor_system
+}  // namespace cdcf

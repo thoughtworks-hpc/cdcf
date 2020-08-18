@@ -4,7 +4,7 @@
 
 #include "cdcf/actor_union.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 
 ActorUnion::ActorUnion(caf::actor_system& system,
                        caf::actor_pool::policy policy)
@@ -40,4 +40,4 @@ std::string to_string(actor_union_error x) {
   }
 }
 
-}  // namespace cdcf::actor_system
+}  // namespace cdcf

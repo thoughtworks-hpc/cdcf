@@ -7,14 +7,14 @@
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/server_builder.h>
 
-namespace cdcf::actor_system {
+namespace cdcf {
 ::grpc::Status ActorStatusServiceGrpcImpl::GetNodeActorStatus(
     ::grpc::ServerContext *context, const ::google::protobuf::Empty *request,
     ::ActorStatus *response) {
-  std::vector<cdcf::actor_system::ActorStatusMonitor::ActorInfo> actor_list =
+  std::vector<ActorStatusMonitor::ActorInfo> actor_list =
       actor_status_monitor_.GetActorStatus();
 
-  for (cdcf::actor_system::ActorStatusMonitor::ActorInfo &actor : actor_list) {
+  for (ActorStatusMonitor::ActorInfo &actor : actor_list) {
     ActorInfo *actor_info = response->add_actor_infos();
     actor_info->set_id(actor.id);
     actor_info->set_name(actor.name);
@@ -41,4 +41,4 @@ void ActorStatusServiceGrpcImpl::RunWithWait() {
   server_->Wait();
 }
 
-}  // namespace cdcf::actor_system
+}  // namespace cdcf

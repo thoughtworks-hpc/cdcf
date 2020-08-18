@@ -42,7 +42,7 @@ class ActorUnionCountCluster : public CountCluster {
   caf::actor_system& system_;
   std::string host_;
   uint16_t worker_port_;
-  cdcf::actor_system::ActorUnion counter_;
+  cdcf::ActorUnion counter_;
   caf::scoped_execution_unit context_;
   caf::actor load_balance_;
   YanghuiIO& yanghui_io_;

@@ -7,7 +7,7 @@
 
 #include <caf/all.hpp>
 
-namespace cdcf::actor_system {
+namespace cdcf {
 using high_priority_atom = caf::atom_constant<caf::atom("high_pri")>;
 using normal_priority_atom = caf::atom_constant<caf::atom("normal_pri")>;
 
@@ -23,6 +23,6 @@ class MessagePriorityActor : public caf::event_based_actor {
   void DeleteFirstElement(caf::message& message);
   void AddMessageIdWithHighPriority(caf::message_id& id);
 };
-}  // namespace cdcf::actor_system
+}  // namespace cdcf
 
 #endif  // MESSAGE_PRIORITY_ACTOR_INCLUDE_MESSAGE_PRIORITY_ACTOR_H_

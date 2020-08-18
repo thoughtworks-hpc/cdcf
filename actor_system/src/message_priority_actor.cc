@@ -3,7 +3,7 @@
  */
 #include "cdcf/message_priority_actor.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 
 void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
                                    caf::execution_unit* eu) {
@@ -44,4 +44,4 @@ void MessagePriorityActor::AddMessageIdWithHighPriority(caf::message_id& id) {
   id = id.with_high_priority();
 }
 
-}  // namespace cdcf::actor_system
+}  // namespace cdcf
