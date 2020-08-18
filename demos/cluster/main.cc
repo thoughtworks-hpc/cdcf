@@ -16,15 +16,15 @@
 
 using asio::ip::tcp;
 
-class WorkerRouter : public actor_system::cluster::Observer {
+class WorkerRouter : public cdcf::cluster::Observer {
  public:
   WorkerRouter(caf::actor_system& system, const std::string host, uint16_t port)
       : system_(system), host_(host), port_(port) {
     FetchMembers();
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
   }
   ~WorkerRouter() {
-    actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->RemoveObserver(this);
   }
 
   std::function<std::string(const std::string&)> Route() {
@@ -44,21 +44,21 @@ class WorkerRouter : public actor_system::cluster::Observer {
     };
   }
 
-  void Update(const actor_system::cluster::Event&) override {
+  void Update(const cdcf::cluster::Event&) override {
     // FIXME: handle event here instead of fetch
     FetchMembers();
   }
 
  private:
   void FetchMembers() {
-    auto cluster = actor_system::cluster::Cluster::GetInstance();
+    auto cluster = cdcf::cluster::Cluster::GetInstance();
     members_ = cluster->GetMembers();
     std::cout << "[worker] all members: " << cluster->GetMembers().size()
               << std::endl;
   }
 
   caf::actor_system& system_;
-  std::vector<actor_system::cluster::Member> members_;
+  std::vector<cdcf::cluster::Member> members_;
   std::string host_;
   uint16_t port_;
 };

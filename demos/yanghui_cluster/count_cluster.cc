@@ -9,9 +9,9 @@
 #include "cdcf/logger.h"
 // CountCluster::CountCluster(std::string host) : host_(std::move(host)) {
 //  // auto members =
-//  actor_system::cluster::Cluster::GetInstance()->GetMembers();
+//  cdcf::cluster::Cluster::GetInstance()->GetMembers();
 //  // InitWorkerNodes(members, host_);
-//  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+//  cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
 //}
 
 CountCluster::CountCluster(std::string host,
@@ -19,22 +19,22 @@ CountCluster::CountCluster(std::string host,
                            uint16_t node_keeper_port)
     : host_(std::move(host)) {
   if (node_keeper_host.empty()) {
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
   } else {
-    actor_system::cluster::Cluster::GetInstance(node_keeper_host,
+    cdcf::cluster::Cluster::GetInstance(node_keeper_host,
                                                 node_keeper_port)
         ->AddObserver(this);
   }
 }
 
 CountCluster::~CountCluster() {
-  actor_system::cluster::Cluster::GetInstance()->RemoveObserver(this);
+  cdcf::cluster::Cluster::GetInstance()->RemoveObserver(this);
 }
 
 const char k_role_worker[] = "worker";
 
 void CountCluster::InitWorkerNodes() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
 
   std::cout << "self, host: " << host_ << std::endl;
   std::cout << "members size:" << members.size() << std::endl;
@@ -49,7 +49,7 @@ void CountCluster::InitWorkerNodes() {
 }
 
 void PrintClusterMembers() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
   std::cout << "Current Cluster Members:" << std::endl;
   for (int i = 0; i < members.size(); ++i) {
     auto& member = members[i];
@@ -60,7 +60,7 @@ void PrintClusterMembers() {
   }
 }
 
-void CountCluster::Update(const actor_system::cluster::Event& event) {
+void CountCluster::Update(const cdcf::cluster::Event& event) {
   if (event.member.hostname != host_ || event.member.host != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
       CDCF_LOGGER_DEBUG("Actor system up, host: {}, role: {}",

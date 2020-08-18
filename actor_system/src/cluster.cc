@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include "cdcf/actor_system/cluster.h"
+#include "cdcf/cluster/cluster.h"
 
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
@@ -11,8 +11,7 @@
 
 #include "src/node_keeper.grpc.pb.h"
 
-namespace actor_system {
-namespace cluster {
+namespace cdcf::cluster {
 
 class ClusterImpl {
  public:
@@ -172,5 +171,4 @@ Cluster::~Cluster() {}
 
 void Cluster::NotifyReady() { impl_->NotifyReady(); }
 
-}  // namespace cluster
-};  // namespace actor_system
+}  // namespace cdcf::cluster

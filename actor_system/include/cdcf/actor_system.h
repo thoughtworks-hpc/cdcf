@@ -6,7 +6,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "actor_system/cluster.h"
 #include "actor_system/config.h"
+#include "cdcf/cluster/cluster.h"
 #include "cdcf/load_balancer/load_balancer.h"
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_H_

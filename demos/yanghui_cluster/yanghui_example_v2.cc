@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <cdcf/actor_system/cluster.h>
+#include <cdcf/cluster/cluster.h>
 
 #include <climits>
 #include <condition_variable>
@@ -120,7 +120,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 
   // start compute
   while (true) {
@@ -444,7 +444,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                    yanghui_load_balance_get_min);
 
   actor_status_service.Run();
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 
   WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port, yanghui_io);
 

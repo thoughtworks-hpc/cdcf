@@ -7,8 +7,8 @@
 #include "./include/yanghui_demo_calculator.h"
 
 int WorkerPool::Init() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
 
   for (const auto& member : members) {
     if (member.hostname == host_ || member.host == host_) {
@@ -69,7 +69,7 @@ int WorkerPool::AddWorker(const std::string& host) {
   return 0;
 }
 
-void WorkerPool::Update(const actor_system::cluster::Event& event) {
+void WorkerPool::Update(const cdcf::cluster::Event& event) {
   if (event.member.hostname != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
       AddWorker(event.member.host);
@@ -85,7 +85,7 @@ void WorkerPool::Update(const actor_system::cluster::Event& event) {
 }
 
 void WorkerPool::PrintClusterMembers() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
   std::cout << "Current Cluster Members:" << std::endl;
   for (int i = 0; i < members.size(); ++i) {
     auto& member = members[i];
