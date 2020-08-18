@@ -3,7 +3,7 @@
  */
 #include <grpcpp/create_channel.h>
 
-#include "../../config_manager/include/cdcf_config.h"
+#include "../../common/include/cdcf_config.h"
 #include "./node_monitor.grpc.pb.h"
 
 class ClientConfig : public CDCFConfig {

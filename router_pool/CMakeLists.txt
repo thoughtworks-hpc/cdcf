@@ -5,7 +5,7 @@ find_package(caf REQUIRED)
 include_directories(${caf_INCLUDE_DIRS})
 include_directories(./include)
 include_directories(../actor_system/include)
-include_directories(../config_manager/include)
+include_directories(../common/include)
 
 aux_source_directory(src ALL_SOURCES)
 set(LIB_SOURCES ${ALL_SOURCES})

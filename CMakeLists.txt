@@ -16,7 +16,7 @@ if ("${CONAN_COMPILER}" STREQUAL "gcc")
 endif ()
 
 include(CTest)
-add_subdirectory(config_manager)
+add_subdirectory(common)
 add_subdirectory(actor_monitor)
 add_subdirectory(actor_system)
 add_subdirectory(logger)

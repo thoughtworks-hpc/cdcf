@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "../../config_manager/include/cdcf_config.h"
+#include "../../common/include/cdcf_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 

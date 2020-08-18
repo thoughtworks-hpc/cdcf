@@ -36,4 +36,4 @@ list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
 add_executable(${PROJECT_NAME}_client ${ALL_SOURCES})
 
 
-target_link_libraries(${PROJECT_NAME}_client config_manager protobuf::protobuf grpc::grpc)
+target_link_libraries(${PROJECT_NAME}_client common protobuf::protobuf grpc::grpc)

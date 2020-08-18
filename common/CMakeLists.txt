@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(config_manager)
+project(common)
 
 aux_source_directory(src ALL_SOURCES)
 

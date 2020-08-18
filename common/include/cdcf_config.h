@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "caf/all.hpp"
+#include <caf/all.hpp>
 
 class CDCFConfig : public caf::actor_system_config {
  public:

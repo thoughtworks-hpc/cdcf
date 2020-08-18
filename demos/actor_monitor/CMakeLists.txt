@@ -6,8 +6,8 @@ include_directories(${caf_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME}_supervisor actor_monitor_supervisor.cc)
 target_link_libraries(${PROJECT_NAME}_supervisor caf::caf)
-target_link_libraries(${PROJECT_NAME}_supervisor actor_monitor config_manager)
+target_link_libraries(${PROJECT_NAME}_supervisor actor_monitor common)
 
 add_executable(${PROJECT_NAME}_actor actor_monitor_worker.cc)
 target_link_libraries(${PROJECT_NAME}_actor caf::caf)
-target_link_libraries(${PROJECT_NAME}_actor actor_monitor config_manager config_manager)
+target_link_libraries(${PROJECT_NAME}_actor actor_monitor common)
