@@ -4,38 +4,40 @@
 
 #include "cdcf/actor_union.h"
 
-cdcf::actor_system::ActorUnion::ActorUnion(caf::actor_system& system,
-                                           caf::actor_pool::policy policy)
+namespace cdcf::actor_system {
+
+ActorUnion::ActorUnion(caf::actor_system& system,
+                       caf::actor_pool::policy policy)
     : sender_actor_(system) {
   context_ = new caf::scoped_execution_unit(&system);
   pool_actor_ = caf::actor_pool::make(context_, std::move(policy));
 }
 
-cdcf::actor_system::ActorUnion::~ActorUnion() { delete context_; }
+ActorUnion::~ActorUnion() { delete context_; }
 
-void cdcf::actor_system::ActorUnion::AddActor(const caf::actor& actor) {
+void ActorUnion::AddActor(const caf::actor& actor) {
   caf::anon_send(pool_actor_, caf::sys_atom::value, caf::put_atom::value,
                  actor);
   actor_count_++;
 }
 
-void cdcf::actor_system::ActorUnion::RemoveActor(const caf::actor& actor) {
+void ActorUnion::RemoveActor(const caf::actor& actor) {
   caf::anon_send(pool_actor_, caf::sys_atom::value, caf::delete_atom::value,
                  actor);
   actor_count_--;
 }
 
-caf::error cdcf::actor_system::make_error(
-    cdcf::actor_system::actor_union_error x) {
+caf::error make_error(actor_union_error x) {
   return {static_cast<uint8_t>(x), caf::atom("act_union")};
 }
 
-std::string cdcf::actor_system::to_string(
-    cdcf::actor_system::actor_union_error x) {
+std::string to_string(actor_union_error x) {
   switch (x) {
-    case cdcf::actor_system::actor_union_error::all_actor_out_of_work:
+    case actor_union_error::all_actor_out_of_work:
       return "all actor out of work";
     default:
       return "-unknown-error-";
   }
 }
+
+}  // namespace cdcf::actor_system
