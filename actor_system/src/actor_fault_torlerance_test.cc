@@ -166,7 +166,7 @@ TEST_F(ActorGuardTest, happy_path) {
   int result = 0;
   bool error = false;
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -192,7 +192,7 @@ TEST_F(ActorGuardTest, init_error_actor) {
   int result = 0;
   bool error = false;
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       error_actor_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -218,7 +218,7 @@ TEST_F(ActorGuardTest, actor_exit) {
   int result = 0;
   bool error = false;
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         return system_.spawn(calculator_fun);
@@ -246,7 +246,7 @@ TEST_F(ActorGuardTest, actor_restart_failed) {
   int result = 0;
   bool error = false;
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       calculator1_,
       [=](std::atomic<bool>& active) -> caf::actor {
         active = false;

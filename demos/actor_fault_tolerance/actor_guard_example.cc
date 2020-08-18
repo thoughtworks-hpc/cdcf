@@ -104,7 +104,7 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
     return;
   }
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       worker_actor,
       [&](bool active) {
         return StartWorker(system, *node, type, args, tout, active);

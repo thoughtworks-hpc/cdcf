@@ -361,7 +361,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
 
-  ActorGuard pool_guard(
+  cdcf::actor_system::ActorGuard pool_guard(
       pool_actor,
       [&](std::atomic<bool>& active) {
         active = true;
@@ -416,7 +416,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
-  ActorGuard actor_guard(
+  cdcf::actor_system::ActorGuard actor_guard(
       yanghui_actor,
       [&](std::atomic<bool>& active) {
         active = true;
