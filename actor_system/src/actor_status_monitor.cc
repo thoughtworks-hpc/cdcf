@@ -5,7 +5,7 @@
 
 ActorStatusMonitor::ActorStatusMonitor(caf::actor_system& actorSystem)
     : actor_system_(actorSystem) {
-  actor_monitor_ = actor_system_.spawn<ActorMonitor>(
+  actor_monitor_ = actor_system_.spawn<cdcf::actor_system::ActorMonitor>(
       [&](const caf::down_msg& msg, const std::string&) {
         std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
         actor_status_.erase(msg.source.id());
@@ -19,7 +19,7 @@ void ActorStatusMonitor::RegisterActor(caf::actor& actor,
     std::lock_guard<std::mutex> lock_guard(actor_status_lock_);
     actor_status_[actor.id()] = {actor.id(), name, description};
   }
-  SetMonitor(actor_monitor_, actor, description);
+  cdcf::actor_system::SetMonitor(actor_monitor_, actor, description);
 }
 
 std::vector<ActorStatusMonitor::ActorInfo>

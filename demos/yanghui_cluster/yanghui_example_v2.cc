@@ -358,8 +358,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       pool_actor, "Yanghui",
       "a actor can count yanghui triangle using pool cluster.");
 
-  auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
-  SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
+  auto pool_supervisor = system.spawn<cdcf::actor_system::ActorMonitor>(downMsgHandle);
+  cdcf::actor_system::SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
 
   cdcf::actor_system::ActorGuard pool_guard(
       pool_actor,
@@ -413,8 +413,8 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                "go, 'q' to stop"
             << std::endl;
 
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
-  SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
+  auto supervisor = system.spawn<cdcf::actor_system::ActorMonitor>(downMsgHandle);
+  cdcf::actor_system::SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
   cdcf::actor_system::ActorGuard actor_guard(
       yanghui_actor,

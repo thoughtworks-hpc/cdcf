@@ -17,7 +17,7 @@ void downMsgHandle(const caf::down_msg& downMsg,
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
+  auto supervisor = system.spawn<cdcf::actor_system::ActorMonitor>(downMsgHandle);
 
   auto expected_port = caf::io::publish(supervisor, cfg.port);
   if (!expected_port) {

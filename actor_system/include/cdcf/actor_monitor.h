@@ -10,6 +10,7 @@
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
 
+namespace cdcf::actor_system {
 class ActorMonitor : public caf::event_based_actor {
  public:
   using demonitor_atom = caf::atom_constant<caf::atom("demonitor")>;
@@ -33,5 +34,5 @@ bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
                 const std::string& description);
 
 bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker);
-
+}  // namespace cdcf::actor_system
 #endif  // ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
