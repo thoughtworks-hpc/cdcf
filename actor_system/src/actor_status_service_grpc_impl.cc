@@ -7,6 +7,7 @@
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/server_builder.h>
 
+namespace cdcf::actor_system {
 ::grpc::Status ActorStatusServiceGrpcImpl::GetNodeActorStatus(
     ::grpc::ServerContext *context, const ::google::protobuf::Empty *request,
     ::ActorStatus *response) {
@@ -39,3 +40,5 @@ void ActorStatusServiceGrpcImpl::RunWithWait() {
   Run();
   server_->Wait();
 }
+
+}  // namespace cdcf::actor_system
