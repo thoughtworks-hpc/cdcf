@@ -2,10 +2,10 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../include/message_priority_actor.h"
+#include "cdcf/message_priority_actor.h"
 
-#include <gtest/gtest.h>
 #include <cdcf/logger.h>
+#include <gtest/gtest.h>
 
 class CalculatorWithPriority : public MessagePriorityActor {
  public:

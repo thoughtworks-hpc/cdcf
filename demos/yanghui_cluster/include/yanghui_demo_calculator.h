@@ -8,9 +8,9 @@
 
 #include <caf/all.hpp>
 
-#include "../../../message_priority_actor/include/message_priority_actor.h"
 #include "../yanghui_config.h"
 #include "./count_cluster.h"
+#include "cdcf/message_priority_actor.h"
 
 calculator::behavior_type calculator_fun(calculator::pointer self);
 calculator::behavior_type sleep_calculator_fun(calculator::pointer self,

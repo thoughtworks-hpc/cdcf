@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include "../include/message_priority_actor.h"
+#include "cdcf/message_priority_actor.h"
 
 void MessagePriorityActor::enqueue(caf::mailbox_element_ptr ptr,
                                    caf::execution_unit* eu) {

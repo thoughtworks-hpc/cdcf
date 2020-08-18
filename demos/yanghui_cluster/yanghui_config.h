@@ -11,11 +11,11 @@
 #include <string>
 #include <vector>
 
+#include "../../actor_monitor/include/actor_monitor.h"
+#include "./include/yanghui_with_priority.h"
 #include "cdcf/actor_guard.h"
 #include "cdcf/actor_union.h"
-#include "../../actor_monitor/include/actor_monitor.h"
-#include "../../message_priority_actor/include/message_priority_actor.h"
-#include "./include/yanghui_with_priority.h"
+#include "cdcf/message_priority_actor.h"
 
 struct YanghuiData {
   YanghuiData() {}
