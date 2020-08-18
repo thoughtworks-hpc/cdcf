@@ -32,7 +32,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
           }};
 }
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;

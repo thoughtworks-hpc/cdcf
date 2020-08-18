@@ -14,7 +14,7 @@
 
 namespace node_keeper {
 
-class Config : public CDCFConfig {
+class Config : public cdcf::CDCFConfig {
  public:
   uint16_t port_ = 4748;
   std::string seeds_ = "";

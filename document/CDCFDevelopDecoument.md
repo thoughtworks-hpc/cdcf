@@ -511,7 +511,7 @@ The following code example how to define the config struct in code
 ```C++
 #include <cdcf_config.h>
 
-class TestConfig :public CDCFConfig{
+class TestConfig :public cdcf::CDCFConfig{
 
 public:
     uint16_t my_port = 0;

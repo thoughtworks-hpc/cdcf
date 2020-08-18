@@ -3,6 +3,8 @@
  */
 #include "cdcf/cdcf_config.h"
 
+namespace cdcf {
+
 CDCFConfig::CDCFConfig() {
   opt_group{custom_options_, "global"}
       .add(threads_proportion, "threads_proportion", "set threads proportion")
@@ -68,3 +70,5 @@ CDCFConfig::RetValue CDCFConfig::parse_config(
 
   return RetValue::kSuccess;
 }
+
+}  // namespace cdcf
