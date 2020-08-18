@@ -27,5 +27,4 @@ add_subdirectory(message_priority_actor)
 
 if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
     add_subdirectory(node_keeper)
-    add_subdirectory(daemon)
 endif ()

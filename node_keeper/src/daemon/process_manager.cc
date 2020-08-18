@@ -2,7 +2,7 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#include <daemon/process_manager.h>
+#include "src/daemon/process_manager.h"
 #include <sys/wait.h>
 #include <unistd.h>
 

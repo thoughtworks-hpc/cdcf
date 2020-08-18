@@ -1,11 +1,10 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include <daemon.h>
-
 #include <vector>
 
 #include "../logger/include/logger.h"
+#include "src/daemon/daemon.h"
 #include "src/node_keeper.h"
 
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config);

@@ -11,8 +11,8 @@
 #include <thread>
 #include <vector>
 
-#include "../../logger/include/logger.h"
-#include "daemon/process_manager.h"
+#include "../../../logger/include/logger.h"
+#include "src/daemon/process_manager.h"
 
 class Daemon {
   ProcessManager& process_manager_;

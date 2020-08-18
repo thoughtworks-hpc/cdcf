@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "../../logger/include/logger.h"
+#include "../../../logger/include/logger.h"
 
 class ProcessManager {
  public:
