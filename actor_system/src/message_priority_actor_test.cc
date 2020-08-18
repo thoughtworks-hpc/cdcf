@@ -7,10 +7,10 @@
 #include <cdcf/logger.h>
 #include <gtest/gtest.h>
 
-class CalculatorWithPriority : public cdcf::actor_system::MessagePriorityActor {
+class CalculatorWithPriority : public cdcf::MessagePriorityActor {
  public:
   explicit CalculatorWithPriority(caf::actor_config& cfg)
-      : cdcf::actor_system::MessagePriorityActor(cfg) {}
+      : cdcf::MessagePriorityActor(cfg) {}
   caf::behavior make_behavior() override {
     return {[=](int a, int b) -> int {
       CDCF_LOGGER_INFO("received add task. input a:{} b:{}", a, b);
@@ -46,41 +46,41 @@ caf::behavior job_dispatcher(caf::stateful_actor<dispatcher_state>* self,
   const int task_num = 5;
   const int first_job_data = 1;
   const int second_job_data = 2;
-  return {
-      [=](start_atom) {
-        self->state.sender = self->current_sender();
+  return {[=](start_atom) {
+            self->state.sender = self->current_sender();
 
-        for (int i = 0; i < task_num; i++) {
-          if (!is_first_job_with_priority) {
-            self->send(target, first_job_data, first_job_data);
-          } else {
-            self->send(target, cdcf::actor_system::high_priority_atom::value,
-                       first_job_data, first_job_data);
-          }
-        }
+            for (int i = 0; i < task_num; i++) {
+              if (!is_first_job_with_priority) {
+                self->send(target, first_job_data, first_job_data);
+              } else {
+                self->send(target, cdcf::high_priority_atom::value,
+                           first_job_data, first_job_data);
+              }
+            }
 
-        for (int i = 0; i < task_num; i++) {
-          if (!is_second_job_with_priority) {
-            self->send(target, second_job_data, second_job_data);
-          } else {
-            self->send(target, cdcf::actor_system::high_priority_atom::value,
-                       second_job_data, second_job_data);
-          }
-        }
-      },
-      [=](int result) {
-        if (result == first_job_data + first_job_data) {
-          self->state.first_job_times += 1;
-        } else if (result == second_job_data + second_job_data) {
-          self->state.second_job_times += 1;
-        }
+            for (int i = 0; i < task_num; i++) {
+              if (!is_second_job_with_priority) {
+                self->send(target, second_job_data, second_job_data);
+              } else {
+                self->send(target, cdcf::high_priority_atom::value,
+                           second_job_data, second_job_data);
+              }
+            }
+          },
+          [=](int result) {
+            if (result == first_job_data + first_job_data) {
+              self->state.first_job_times += 1;
+            } else if (result == second_job_data + second_job_data) {
+              self->state.second_job_times += 1;
+            }
 
-        if (self->state.second_job_times == task_num) {
-          self->send(caf::actor_cast<caf::actor>(self->state.sender), true);
-        } else if (self->state.first_job_times == task_num) {
-          self->send(caf::actor_cast<caf::actor>(self->state.sender), false);
-        }
-      }};
+            if (self->state.second_job_times == task_num) {
+              self->send(caf::actor_cast<caf::actor>(self->state.sender), true);
+            } else if (self->state.first_job_times == task_num) {
+              self->send(caf::actor_cast<caf::actor>(self->state.sender),
+                         false);
+            }
+          }};
 }
 
 class ActorPriorityTest : public ::testing::Test {

@@ -24,7 +24,7 @@ class actor_status_monitor_test : public testing::Test {
 };
 
 TEST_F(actor_status_monitor_test, register_none_actor) {
-  cdcf::actor_system::ActorStatusMonitor actorStatusMonitor(actor_system_);
+  cdcf::ActorStatusMonitor actorStatusMonitor(actor_system_);
   auto actor_infos = actorStatusMonitor.GetActorStatus();
 
   EXPECT_EQ(0, actor_infos.size());
@@ -33,7 +33,7 @@ TEST_F(actor_status_monitor_test, register_none_actor) {
 TEST_F(actor_status_monitor_test, register_one_actor) {
   const std::string kTestActorName = "test_actor";
   const std::string kTestActorDescription = "for testing";
-  cdcf::actor_system::ActorStatusMonitor actorStatusMonitor(actor_system_);
+  cdcf::ActorStatusMonitor actorStatusMonitor(actor_system_);
   actorStatusMonitor.RegisterActor(test_actor_, kTestActorName,
                                    kTestActorDescription);
   auto actor_infos = actorStatusMonitor.GetActorStatus();

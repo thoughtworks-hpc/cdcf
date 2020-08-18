@@ -129,8 +129,7 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
     return;
   }
 
-  cdcf::actor_system::ActorUnion actor_union(system,
-                                             caf::actor_pool::round_robin());
+  cdcf::ActorUnion actor_union(system, caf::actor_pool::round_robin());
 
   actor_union.AddActor(worker_actor1);
   actor_union.AddActor(worker_actor2);

@@ -29,8 +29,7 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   auto worker = system.spawn(calculator_fun);
 
   // set monitor
-  cdcf::actor_system::SetMonitor(supervisor, worker,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor, worker, "worker actor for testing");
 
   std::cout << "worker running" << std::endl;
 

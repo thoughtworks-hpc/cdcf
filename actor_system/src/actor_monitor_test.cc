@@ -46,11 +46,10 @@ class ActorMonitorTest : public ::testing::Test {
 TEST_F(ActorMonitorTest, happy_path) {
   caf::scoped_actor scoped_sender(system_);
   std::string error_message_ = "";
-  supervisor_ = system_.spawn<cdcf::actor_system::ActorMonitor>(
+  supervisor_ = system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& downMsg, const std::string& actor_description) {
       });
-  cdcf::actor_system::SetMonitor(supervisor_, calculator_,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor_, calculator_, "worker actor for testing");
 
   scoped_sender->request(calculator_, caf::infinite, sub_atom::value, 3, 1)
       .receive([=](int reseult) { EXPECT_EQ(2, reseult); },
@@ -64,12 +63,11 @@ TEST_F(ActorMonitorTest, should_report_down_msg_when_down_event_happen) {
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
-  supervisor_ = system_.spawn<cdcf::actor_system::ActorMonitor>(
+  supervisor_ = system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& downMsg, const std::string& actor_description) {
         promise_.set_value(caf::to_string(downMsg.reason));
       });
-  cdcf::actor_system::SetMonitor(supervisor_, calculator_,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor_, calculator_, "worker actor for testing");
 
   event_based_sender->send(calculator_, add_atom::value, 1, 2);
   error_message_ = promise_.get_future().get();
@@ -81,12 +79,11 @@ TEST_F(ActorMonitorTest, should_report_exit_msg_when_exit_event_happen) {
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
-  supervisor_ = system_.spawn<cdcf::actor_system::ActorMonitor>(
+  supervisor_ = system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& downMsg, const std::string& actor_description) {
         promise_.set_value(caf::to_string(downMsg.reason));
       });
-  cdcf::actor_system::SetMonitor(supervisor_, calculator_,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor_, calculator_, "worker actor for testing");
 
   event_based_sender->send_exit(calculator_, caf::exit_reason::kill);
 
@@ -99,12 +96,11 @@ TEST_F(ActorMonitorTest, should_report_error_msg_when_error_event_message) {
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
-  supervisor_ = system_.spawn<cdcf::actor_system::ActorMonitor>(
+  supervisor_ = system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& downMsg, const std::string& actor_description) {
         promise_.set_value(caf::to_string(downMsg.reason));
       });
-  cdcf::actor_system::SetMonitor(supervisor_, calculator_,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor_, calculator_, "worker actor for testing");
 
   event_based_sender->send(calculator_,
                            caf::make_error(caf::exit_reason::out_of_workers));
@@ -117,12 +113,11 @@ TEST_F(ActorMonitorTest, should_report_default_msg_when_send_unknown_message) {
   auto event_based_sender =
       caf::actor_cast<caf::event_based_actor*>(test_init_);
 
-  supervisor_ = system_.spawn<cdcf::actor_system::ActorMonitor>(
+  supervisor_ = system_.spawn<cdcf::ActorMonitor>(
       [&](const caf::down_msg& downMsg, const std::string& actor_description) {
         promise_.set_value(caf::to_string(downMsg.reason));
       });
-  cdcf::actor_system::SetMonitor(supervisor_, calculator_,
-                                 "worker actor for testing");
+  cdcf::SetMonitor(supervisor_, calculator_, "worker actor for testing");
 
   event_based_sender->send(calculator_, "unknown message");
 

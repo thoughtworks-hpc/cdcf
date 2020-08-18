@@ -16,7 +16,7 @@
 
 #include "actor_monitor.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 class ActorStatusMonitor {
  public:
   struct ActorInfo {
@@ -37,5 +37,5 @@ class ActorStatusMonitor {
   std::unordered_map<caf::actor_id, ActorInfo> actor_status_;
   std::mutex actor_status_lock_;
 };
-}  // namespace cdcf::actor_system
+}  // namespace cdcf
 #endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_

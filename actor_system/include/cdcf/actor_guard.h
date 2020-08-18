@@ -12,7 +12,7 @@
 
 #include "cdcf/logger.h"
 
-namespace cdcf::actor_system {
+namespace cdcf {
 class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
@@ -69,5 +69,5 @@ class ActorGuard {
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
   std::atomic<bool> active_ = true;
 };
-}  // namespace cdcf::actor_system
+}  // namespace cdcf
 #endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_

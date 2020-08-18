@@ -9,9 +9,9 @@
 
 #include <caf/all.hpp>
 
-#include "cdcf/actor_guard.h"
 #include "../yanghui_config.h"
 #include "./yanghui_with_priority.h"
+#include "cdcf/actor_guard.h"
 
 static const uint16_t yanghui_job1_port = 55021;
 static const uint16_t yanghui_job2_port = 55022;
@@ -31,7 +31,8 @@ struct yanghui_job_state {
  *  yanghui_standard_job_actor
  */
 caf::behavior yanghui_standard_job_actor_fun(
-    caf::stateful_actor<yanghui_job_state>* self, cdcf::actor_system::ActorGuard* actor_guard);
+    caf::stateful_actor<yanghui_job_state>* self,
+    cdcf::ActorGuard* actor_guard);
 
 /**
  *  yanghui_priority_job_actor
@@ -51,6 +52,6 @@ caf::behavior yanghui_load_balance_job_actor_fun(
  *  yanghui_router_pool_job_actor
  */
 caf::behavior yanghui_router_pool_job_actor_fun(
-    caf::stateful_actor<yanghui_job_state>* self, cdcf::actor_system::ActorGuard* pool_guard);
+    caf::stateful_actor<yanghui_job_state>* self, cdcf::ActorGuard* pool_guard);
 
 #endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_SERVER_H_

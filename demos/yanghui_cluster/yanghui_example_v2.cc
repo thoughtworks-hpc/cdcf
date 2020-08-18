@@ -90,9 +90,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
             << ", worker_load:" << cfg.worker_load << std::endl;
 
-  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
-  cdcf::actor_system::ActorStatusServiceGrpcImpl actor_status_service(
-      system, actor_status_monitor);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_service(system,
+                                                        actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
 
@@ -338,9 +338,9 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   YanghuiIO yanghui_io(cfg);
 
-  cdcf::actor_system::ActorStatusMonitor actor_status_monitor(system);
-  cdcf::actor_system::ActorStatusServiceGrpcImpl actor_status_service(
-      system, actor_status_monitor);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_service(system,
+                                                        actor_status_monitor);
 
   // router pool
   std::string routee_name = "calculator";
@@ -360,12 +360,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       pool_actor, "Yanghui",
       "a actor can count yanghui triangle using pool cluster.");
 
-  auto pool_supervisor =
-      system.spawn<cdcf::actor_system::ActorMonitor>(downMsgHandle);
-  cdcf::actor_system::SetMonitor(pool_supervisor, pool_actor,
-                                 "worker actor for testing");
+  auto pool_supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
+  cdcf::SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
 
-  cdcf::actor_system::ActorGuard pool_guard(
+  cdcf::ActorGuard pool_guard(
       pool_actor,
       [&](std::atomic<bool>& active) {
         active = true;
@@ -417,12 +415,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                "go, 'q' to stop"
             << std::endl;
 
-  auto supervisor =
-      system.spawn<cdcf::actor_system::ActorMonitor>(downMsgHandle);
-  cdcf::actor_system::SetMonitor(supervisor, yanghui_actor,
-                                 "worker actor for testing");
+  auto supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
+  cdcf::SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
-  cdcf::actor_system::ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       yanghui_actor,
       [&](std::atomic<bool>& active) {
         active = true;
