@@ -90,10 +90,10 @@ class typed_slow_calculator : public calculator::base {
   std::atomic_int deal_msg_count = 0;
 };
 
-class CalculatorWithPriority : public MessagePriorityActor {
+class CalculatorWithPriority : public cdcf::actor_system::MessagePriorityActor {
  public:
   explicit CalculatorWithPriority(caf::actor_config& cfg)
-      : MessagePriorityActor(cfg) {}
+      : cdcf::actor_system::MessagePriorityActor(cfg) {}
   caf::behavior make_behavior() override;
 };
 
