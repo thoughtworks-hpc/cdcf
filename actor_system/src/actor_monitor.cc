@@ -8,14 +8,15 @@
 
 #include "cdcf/actor_system/cluster.h"
 
-cdcf::actor_system::ActorMonitor::ActorMonitor(caf::actor_config& cfg)
-    : event_based_actor(cfg) {}
-cdcf::actor_system::ActorMonitor::ActorMonitor(
+namespace cdcf::actor_system {
+
+ActorMonitor::ActorMonitor(caf::actor_config& cfg) : event_based_actor(cfg) {}
+ActorMonitor::ActorMonitor(
     caf::actor_config& cfg,
     std::function<void(const caf::down_msg&, const std::string&)>&& downMsgFun)
     : event_based_actor(cfg), down_msg_fun(std::move(downMsgFun)) {}
 
-caf::behavior cdcf::actor_system::ActorMonitor::make_behavior() {
+caf::behavior ActorMonitor::make_behavior() {
   set_down_handler([=](const caf::down_msg& msg) {
     std::string description;
 
@@ -56,8 +57,8 @@ caf::behavior cdcf::actor_system::ActorMonitor::make_behavior() {
       }};
 }
 
-void cdcf::actor_system::ActorMonitor::DownMsgHandle(
-    const caf::down_msg& down_msg, const std::string& description) {
+void ActorMonitor::DownMsgHandle(const caf::down_msg& down_msg,
+                                 const std::string& description) {
   std::stringstream buffer;
   buffer << "actor:" << caf::to_string(down_msg.source)
          << " down, reason:" << caf::to_string(down_msg.reason)
@@ -66,8 +67,8 @@ void cdcf::actor_system::ActorMonitor::DownMsgHandle(
   this->send(this, buffer.str());
 }
 
-bool cdcf::actor_system::SetMonitor(caf::actor& supervisor, caf::actor& worker,
-                                    const std::string& description) {
+bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
+                const std::string& description) {
   // caf::anon_send(supervisor, worker.address(), description);
 
   supervisor->enqueue(nullptr, caf::make_message_id(),
@@ -78,12 +79,12 @@ bool cdcf::actor_system::SetMonitor(caf::actor& supervisor, caf::actor& worker,
   return true;
 }
 
-bool cdcf::actor_system::StopMonitor(caf::actor& supervisor,
-                                     const caf::actor_addr& worker) {
-  caf::anon_send(supervisor,
-                 cdcf::actor_system::ActorMonitor::demonitor_atom::value,
+bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker) {
+  caf::anon_send(supervisor, ActorMonitor::demonitor_atom::value,
                  caf::to_string(worker));
   auto pointer = caf::actor_cast<caf::event_based_actor*>(supervisor);
   pointer->demonitor(worker);
   return true;
 }
+
+}  // namespace cdcf::actor_system
