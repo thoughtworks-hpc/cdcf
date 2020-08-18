@@ -12,7 +12,7 @@
 #include <mutex>
 #include <string>
 
-#include "../../common/include/cdcf_config.h"
+#include "cdcf/cdcf_config.h"
 
 namespace cdcf {
 

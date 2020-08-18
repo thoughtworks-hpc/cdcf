@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 #include <math.h>
 
 #include <iostream>

@@ -6,7 +6,7 @@
 #include <caf/io/all.hpp>
 
 #include "cdcf/actor_union.h"
-#include "../../common/include/cdcf_config.h"
+#include "cdcf/cdcf_config.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;

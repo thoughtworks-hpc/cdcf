@@ -3,7 +3,7 @@
  */
 #ifndef NODE_KEEPER_SRC_CONFIG_H_
 #define NODE_KEEPER_SRC_CONFIG_H_
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 
 #include <sstream>
 #include <string>

@@ -3,7 +3,7 @@
  */
 #ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CONFIG_H_
 #define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CONFIG_H_
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 
 #include <cstdint>
 #include <string>

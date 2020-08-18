@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 #include <gmock/gmock.h>
 
 #include <cmath>

@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "../../common/include/cdcf_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
+#include "cdcf/cdcf_config.h"
 
 struct NumberCompareData {
   std::vector<int> numbers;
