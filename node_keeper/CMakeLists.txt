@@ -59,6 +59,7 @@ list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
 set(EXE_SOURCES ${ALL_SOURCES})
 list(FILTER EXE_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_executable(${PROJECT_NAME} ${EXE_SOURCES} ${NODE_KEEPER_PROTO_SRCS} ${NODE_KEEPER_GRPC_SRCS})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 target_link_libraries(${PROJECT_NAME} asio::asio protobuf::protobuf grpc::grpc common)
 protobuf_generate(LANGUAGE cpp TARGET ${PROJECT_NAME})

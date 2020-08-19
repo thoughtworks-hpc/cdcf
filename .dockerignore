@@ -29,3 +29,4 @@ cmake-build-debug
 **/*.pb.h
 
 tags
+pack
