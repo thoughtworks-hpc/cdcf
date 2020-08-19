@@ -24,3 +24,7 @@ add_subdirectory(demos)
 if ("$ENV{ACTOR_SYS_ONLY}" STREQUAL "")
     add_subdirectory(node_keeper)
 endif ()
+
+include(InstallRequiredSystemLibraries)
+set(CPACK_PACKAGE_DIRECTORY ${PROJECT_SOURCE_DIR}/pack)
+include(CPack)

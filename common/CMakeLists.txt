@@ -8,6 +8,9 @@ find_package(spdlog REQUIRED)
 set(LIB_SOURCES ${ALL_SOURCES})
 list(FILTER LIB_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_library(${PROJECT_NAME} ${LIB_SOURCES})
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+install(DIRECTORY include/cdcf DESTINATION include FILES_MATCHING PATTERN "*.h")
+
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} caf::caf spdlog::spdlog)
 
