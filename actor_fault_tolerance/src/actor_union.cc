@@ -5,8 +5,9 @@
 #include "../include/actor_union.h"
 
 ActorUnion::ActorUnion(caf::actor_system& system,
-                       caf::actor_pool::policy policy)
-    : sender_actor_(system) {
+                       caf::actor_pool::policy policy,
+                       std::chrono::seconds timeout_in_seconds)
+    : sender_actor_(system), timeout_in_seconds_(timeout_in_seconds) {
   context_ = new caf::scoped_execution_unit(&system);
   pool_actor_ = caf::actor_pool::make(context_, std::move(policy));
 }

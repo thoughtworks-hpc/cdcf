@@ -3,6 +3,8 @@
  */
 #include "include/actor_union_count_cluster.h"
 
+#include <limits.h>
+
 #include <caf/openssl/all.hpp>
 
 void ActorUnionCountCluster::AddWorkerNodeWithPort(const std::string& host,
@@ -46,7 +48,11 @@ int ActorUnionCountCluster::AddNumber(int a, int b, int& result) {
   std::cout << "start add task input:" << a << ", " << b << std::endl;
 
   counter_.SendAndReceive([&](int ret) { promise.set_value(ret); },
-                          [&](const caf::error& err) { error = 1; }, a, b);
+                          [&](const caf::error& err) {
+                            promise.set_value(INT_MAX);
+                            error = 1;
+                          },
+                          a, b);
 
   result = promise.get_future().get();
 
@@ -73,7 +79,11 @@ int ActorUnionCountCluster::Compare(std::vector<int> numbers, int& min) {
         min = ret;
         promise.set_value(ret);
       },
-      [&](const caf::error& err) { error = 1; }, send_data);
+      [&](const caf::error& err) {
+        promise.set_value(INT_MAX);
+        error = 1;
+      },
+      send_data);
 
   min = promise.get_future().get();
   std::cout << "get min:" << min << std::endl;

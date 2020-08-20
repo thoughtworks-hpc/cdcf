@@ -354,8 +354,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto pool_actor = system.spawn(yanghui, pool_cluster);
   std::cout << "pool_actor for router pool job spawned with id: "
             << pool_actor.id() << std::endl;
-  actor_status_monitor.RegisterActor(pool_actor, "Yanghui",
-                                     "a actor can count yanghui triangle.");
+  actor_status_monitor.RegisterActor(
+      pool_actor, "Yanghui",
+      "a actor can count yanghui triangle using pool cluster.");
 
   auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
   SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
@@ -365,8 +366,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       [&](std::atomic<bool>& active) {
         active = true;
         auto new_yanghui = system.spawn(yanghui, pool_cluster);
+        CDCF_LOGGER_ERROR(
+            "yanghui actor for pool cluster failed. spawn new one: {}",
+            caf::to_string(new_yanghui.address()));
         actor_status_monitor.RegisterActor(
-            pool_actor, "Yanghui", "a actor can count yanghui triangle.");
+            new_yanghui, "Yanghui",
+            "a actor can count yanghui triangle using pool cluster.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
         return new_yanghui;
       },
@@ -400,8 +405,9 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   std::cout << "yanghui_actor for standard job spawned with id: "
             << yanghui_actor.id() << std::endl;
 
-  actor_status_monitor.RegisterActor(yanghui_actor, "Yanghui",
-                                     "a actor can count yanghui triangle.");
+  actor_status_monitor.RegisterActor(
+      yanghui_actor, "Yanghui",
+      "a actor can count yanghui triangle using count cluster.");
 
   std::cout << "yanghui server ready to work, press 'n', 'p', 'b' or 'e' to "
                "go, 'q' to stop"
@@ -415,8 +421,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       [&](std::atomic<bool>& active) {
         active = true;
         auto new_yanghui = system.spawn(yanghui, count_cluster);
+        CDCF_LOGGER_ERROR(
+            "yanghui actor for count cluster failed. spawn new one: {}",
+            caf::to_string(new_yanghui.address()));
         actor_status_monitor.RegisterActor(
-            yanghui_actor, "Yanghui", "a actor can count yanghui triangle.");
+            new_yanghui, "Yanghui",
+            "a actor can count yanghui triangle using countcluster.");
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
         return new_yanghui;
       },
