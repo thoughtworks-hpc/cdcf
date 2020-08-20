@@ -19,7 +19,9 @@ std::string to_string(actor_union_error x);
 
 class ActorUnion {
  public:
-  ActorUnion(caf::actor_system& system, caf::actor_pool::policy policy);
+  ActorUnion(
+      caf::actor_system& system, caf::actor_pool::policy policy,
+      std::chrono::seconds timeout_in_seconds = std::chrono::seconds(30));
   virtual ~ActorUnion();
   void AddActor(const caf::actor& actor);
   void RemoveActor(const caf::actor& actor);
@@ -36,6 +38,7 @@ class ActorUnion {
   caf::scoped_execution_unit* context_;
   caf::scoped_actor sender_actor_;
   uint16_t actor_count_ = 0;
+  std::chrono::seconds timeout_in_seconds_;
 
   template <class... send_type, class return_function_type>
   void SendAndReceiveWithTryTime(
@@ -45,7 +48,7 @@ class ActorUnion {
     caf::message send_message = caf::make_message(messages...);
     sender_actor_
         ->request<caf::message_priority::high>(
-            pool_actor_, std::chrono::seconds(1), messages...)
+            pool_actor_, timeout_in_seconds_, messages...)
         .receive(return_function, [=](caf::error err) {
           HandleSendFailed(send_message, return_function, handle_error_function,
                            err, has_try_time);
