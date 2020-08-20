@@ -260,7 +260,7 @@ node_keeper --help
 CDCF monitor tool can get all nodes of cluster status. 
 
 ```shell script
-cluster_monitor_client -S ${HOST}:${PORT}
+monitor_client -S ${HOST}:${PORT}
 ```
 
 The ${HOST} and ${PORT} is the same parameter of node_keeper. Input any node host and port can get all cluster node status
@@ -269,7 +269,7 @@ The ${HOST} and ${PORT} is the same parameter of node_keeper. Input any node hos
 For example in Yanghui cluster demo input 
 
 ```shell script
-cluster_monitor_client -S yanghui_root_v2:50051
+monitor_client -S yanghui_root_v2:50051
 ```
 
 And will get all cluster nodes information as below 
@@ -306,13 +306,13 @@ Cluster node ip: 172.21.0.5
 
 CDCF monitor tool can get one node actor information by command
 ```shell script
-cluster_monitor_client -N ${HOST}
+monitor_client -N ${HOST}
 ```
 
 
 For example in Yanghui cluster demo input 
 ```shell script
-cluster_monitor_client -N yanghui_worker2_v2
+monitor_client -N yanghui_worker2_v2
 ```
 
 Get the one yanghui_worker2 node information 

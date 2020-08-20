@@ -33,7 +33,7 @@ add_custom_command(
 list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
 
 
-add_executable(${PROJECT_NAME}_client ${ALL_SOURCES})
+add_executable(${PROJECT_NAME} ${ALL_SOURCES})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-
-target_link_libraries(${PROJECT_NAME}_client common protobuf::protobuf grpc::grpc)
+target_link_libraries(${PROJECT_NAME} common protobuf::protobuf grpc::grpc)
