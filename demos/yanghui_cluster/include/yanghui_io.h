@@ -15,7 +15,7 @@ class YanghuiIO {
   const bool use_ssl_;
 
  public:
-  explicit YanghuiIO(const actor_system::Config& cfg)
+  explicit YanghuiIO(const cdcf::actor_system::Config& cfg)
       : use_ssl_(!cfg.openssl_cafile.empty() ||
                  !cfg.openssl_certificate.empty() || !cfg.openssl_key.empty()) {
     CDCF_LOGGER_INFO("enable ssl: {}", use_ssl_);
