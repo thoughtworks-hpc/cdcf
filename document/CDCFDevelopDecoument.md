@@ -380,7 +380,7 @@ CDCF using **Observer Pattern** to notify node member status change. You can ext
 
 ```c++
 #include <caf/all.hpp>
-#include <actor_system.h>
+#include <cdcf/all.h>
 
 class MyObserver: public cdcf::cluster::Observer {
  public:
@@ -509,7 +509,7 @@ CDCF configures applications at startup using an cdcf_config or a user-defined s
 The following code example how to define the config struct in code
 
 ```C++
-#include <cdcf_config.h>
+#include <cdcf/all.h>
 
 class TestConfig :public cdcf::CDCFConfig{
 
@@ -574,7 +574,7 @@ CDCF provide `ActorUnion` and `ActorGuard` to support actor fault tolerance, mak
 Demo：
 
 ```c++
-#include <actor_union.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   ActorUnion actor_union(system, caf::actor_pool::round_robin());
@@ -601,7 +601,7 @@ void foo(caf::actor_system& system) {
 Demo:
 
 ```c++
-#include <actor_guard.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   ActorGuard actor_guard(worker_actor, restart_func, system);
@@ -674,7 +674,7 @@ It will get error if you send message to a failed actor. And it will run normall
 Demo:
 
 ```c++
-#include <actor_monitor.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   auto supervisor = system.spawn<ActorMonitor>(down_handle);
@@ -722,6 +722,7 @@ Demo:
 
 ```c++
 #include <caf/all.hpp>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   caf::scoped_execution_unit context(&system);
@@ -831,6 +832,7 @@ Yanghui_root use two actors to send normal priority and high priority task.
 
 ```C++
 #include <caf/all.hpp>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   auto worker_actor_args = caf::make_message();

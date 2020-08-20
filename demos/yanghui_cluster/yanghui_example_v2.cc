@@ -1,8 +1,6 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <cdcf/cluster/cluster.h>
-
 #include <climits>
 #include <condition_variable>
 #include <sstream>
@@ -14,11 +12,7 @@
 
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
-#include "cdcf/actor_guard.h"
-#include "cdcf/actor_monitor.h"
-#include "cdcf/actor_status_service_grpc_impl.h"
-#include "cdcf/actor_union.h"
-#include "cdcf/logger.h"
+#include <cdcf/all.h>
 #include "include/actor_union_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"
