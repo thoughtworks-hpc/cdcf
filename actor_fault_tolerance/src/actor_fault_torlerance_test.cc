@@ -32,6 +32,14 @@ caf::behavior calculator_error(caf::event_based_actor* self) {
   }};
 }
 
+caf::behavior calculator_timeout(caf::event_based_actor* self,
+                                 int sleep_in_seconds) {
+  return {[=](add_atom, int a, int b) {
+    std::this_thread::sleep_for(std::chrono::seconds(sleep_in_seconds));
+    return a + b;
+  }};
+}
+
 class ActorUnionTest : public ::testing::Test {
   void SetUp() override {
     calculator1_ = system_.spawn(calculator_fun);
@@ -145,6 +153,7 @@ TEST_F(ActorUnionTest, all_error_actor) {
 
 class ActorGuardTest : public ::testing::Test {
   void SetUp() override {
+    // TODO(Yujia.Li): Bad naming
     calculator1_ = system_.spawn(calculator_fun);
     calculator2_ = system_.spawn(calculator_fun);
     error_actor_ = system_.spawn(calculator_error);
@@ -267,4 +276,50 @@ TEST_F(ActorGuardTest, actor_restart_failed) {
 
   EXPECT_EQ(result, 0);
   EXPECT_EQ(true, error);
+}
+
+TEST_F(ActorGuardTest, should_not_failed_when_actor_not_exceed_timeout) {
+  std::promise<int> promise;
+  auto actor = system_.spawn(calculator_timeout, 2);
+  bool error = false;
+  ActorGuard actor_guard(
+      actor,
+      [=](std::atomic<bool>& active) -> caf::actor {
+        active = false;
+        return nullptr;
+      },
+      system_);
+
+  actor_guard.SendAndReceive([&](int ret) { promise.set_value(ret); },
+                             [&](const caf::error&) {
+                               error = true;
+                               promise.set_value(0);
+                             },
+                             add_atom::value, 2, 1);
+
+  promise.get_future().get();
+  EXPECT_EQ(error, false);
+}
+
+TEST_F(ActorGuardTest, should_failed_when_actor_exceed_timeout) {
+  std::promise<int> promise;
+  auto actor = system_.spawn(calculator_timeout, 2);
+  bool error = false;
+  ActorGuard actor_guard(
+      actor,
+      [=](std::atomic<bool>& active) -> caf::actor {
+        active = false;
+        return nullptr;
+      },
+      system_, std::chrono::seconds(1));
+
+  actor_guard.SendAndReceive([&](int ret) { promise.set_value(ret); },
+                             [&](const caf::error&) {
+                               error = true;
+                               promise.set_value(0);
+                             },
+                             add_atom::value, 2, 1);
+
+  promise.get_future().get();
+  EXPECT_EQ(error, true);
 }
