@@ -4,10 +4,6 @@
 
 #include "./include/yanghui_server.h"
 
-void ErrorHandler(const caf::error& err) {
-  std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
-}
-
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard) {
   return {[=](const YanghuiData& data) {
@@ -19,7 +15,12 @@ caf::behavior yanghui_standard_job_actor_fun(
         [&](int result) {
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
         },
-        ErrorHandler, yanghui_data);
+        [&](const caf::error& err) {
+          std::cout << "call actor get error:" << caf::to_string(err)
+                    << std::endl;
+          self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
+        },
+        yanghui_data);
   }};
 }
 
@@ -84,6 +85,11 @@ caf::behavior yanghui_router_pool_job_actor_fun(
         [&](int result) {
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
         },
-        ErrorHandler, yanghui_data);
+        [&](const caf::error& err) {
+          std::cout << "call actor get error:" << caf::to_string(err)
+                    << std::endl;
+          self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
+        },
+        yanghui_data);
   }};
 }
