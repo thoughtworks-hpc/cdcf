@@ -17,10 +17,12 @@ class ActorGuard {
  public:
   ActorGuard(caf::actor& keepActor,
              std::function<caf::actor(std::atomic<bool>&)> restart,
-             caf::actor_system& system)
+             caf::actor_system& system,
+             std::chrono::seconds timeout_in_seconds = std::chrono::seconds(30))
       : keep_actor_(keepActor),
         restart_fun_(std::move(restart)),
-        sender_actor_(system) {}
+        sender_actor_(system),
+        timeout_in_seconds_(timeout_in_seconds){}
 
   template <class... send_type, class return_function_type>
   bool SendAndReceive(return_function_type return_function,
@@ -29,7 +31,7 @@ class ActorGuard {
     if (active_) {
       caf::message send_message = caf::make_message(messages...);
 
-      sender_actor_->request(keep_actor_, std::chrono::seconds(1), messages...)
+      sender_actor_->request(keep_actor_, timeout_in_seconds_, messages...)
           .receive(return_function, [&](caf::error err) {
             HandleSendFailed(send_message, return_function, error_deal_function,
                              err);
@@ -68,6 +70,7 @@ class ActorGuard {
   caf::scoped_actor sender_actor_;
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
   std::atomic<bool> active_ = true;
+  std::chrono::seconds timeout_in_seconds_;
 };
 }  // namespace cdcf
 #endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
