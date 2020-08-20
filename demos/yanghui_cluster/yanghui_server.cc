@@ -4,6 +4,8 @@
 
 #include "./include/yanghui_server.h"
 
+#include <limits.h>
+
 caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self, ActorGuard* actor_guard) {
   return {[=](const YanghuiData& data) {

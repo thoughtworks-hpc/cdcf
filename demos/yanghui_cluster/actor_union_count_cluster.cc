@@ -3,6 +3,8 @@
  */
 #include "include/actor_union_count_cluster.h"
 
+#include <limits.h>
+
 #include <caf/openssl/all.hpp>
 
 void ActorUnionCountCluster::AddWorkerNodeWithPort(const std::string& host,
