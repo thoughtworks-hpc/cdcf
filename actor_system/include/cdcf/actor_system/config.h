@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 
-namespace actor_system {
+namespace cdcf::actor_system {
 class Config : public cdcf::CDCFConfig {
  public:
   uint16_t port_ = 4750;

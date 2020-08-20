@@ -73,7 +73,7 @@ You can get this tour resource code in "cdcf/demo/simple_ping_pong"
 Define the cluster run config
 
 ```c++
-struct PingPongConfig : public actor_system::Config {
+struct PingPongConfig : public cdcf::actor_system::Config {
   std::string pong_host = "127.0.0.1";
   uint16_t pong_port = 58888;
 

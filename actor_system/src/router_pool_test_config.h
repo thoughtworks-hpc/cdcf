@@ -31,7 +31,7 @@ simple_calculator::behavior_type simple_calculator_fun(
   }};
 }
 
-class router_config : public actor_system::Config {
+class router_config : public cdcf::actor_system::Config {
  public:
   router_config() {
     load<caf::io::middleman>();

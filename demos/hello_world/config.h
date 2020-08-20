@@ -7,7 +7,7 @@
 
 #include "./worker.h"
 
-class Config : public actor_system::Config {
+class Config : public cdcf::actor_system::Config {
  public:
   uint16_t reception_port_ = 3335;
 

@@ -97,7 +97,7 @@ class CalculatorWithPriority : public cdcf::MessagePriorityActor {
   caf::behavior make_behavior() override;
 };
 
-class config : public actor_system::Config {
+class config : public cdcf::actor_system::Config {
  public:
   uint16_t root_port = 0;
   std::string root_host = "localhost";
