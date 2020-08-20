@@ -27,7 +27,7 @@ COPY --from=builder /cdcf/node_keeper/node_keeper /bin/node_keeper
 COPY --from=builder /cdcf/demos/cluster/cluster /bin/cluster
 COPY --from=builder /cdcf/demos/yanghui_cluster/yanghui_cluster_root_v2 /bin/yanghui_cluster_root_v2
 COPY --from=builder /cdcf/demos/load_balancer/load_balancer /bin/load_balancer
-COPY --from=builder /cdcf/monitor_client/cluster_monitor_client /bin/cluster_monitor_client
+COPY --from=builder /cdcf/monitor_client/monitor_client /bin/monitor_client
 
 RUN apt-get clean \
         && apt-get update \
