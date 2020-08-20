@@ -151,6 +151,44 @@ TEST_F(ActorUnionTest, all_error_actor) {
   EXPECT_EQ(true, error);
 }
 
+TEST_F(ActorUnionTest, should_not_failed_when_actor_not_exceed_timeout) {
+  auto actor = system_.spawn(calculator_timeout, 2);
+  actorUnion_.AddActor(actor);
+  std::promise<int> promise;
+  bool error = false;
+
+  actorUnion_.SendAndReceive(
+      [&](int return_value) { promise.set_value(return_value); },
+      [&](const caf::error&) {
+        error = true;
+        promise.set_value(0);
+      },
+      add_atom::value, 3, 5);
+
+  promise.get_future().get();
+  EXPECT_EQ(error, false);
+}
+
+TEST_F(ActorUnionTest, should_failed_when_actor_exceed_timeout) {
+  auto actor = system_.spawn(calculator_timeout, 2);
+  actorUnion_.AddActor(actor);
+  std::promise<int> promise;
+  bool error = false;
+
+  ActorUnion actor_union{system_, caf::actor_pool::round_robin(),
+                         std::chrono::seconds(1)};
+  actor_union.SendAndReceive(
+      [&](int return_value) { promise.set_value(return_value); },
+      [&](const caf::error&) {
+        error = true;
+        promise.set_value(0);
+      },
+      add_atom::value, 3, 5);
+
+  promise.get_future().get();
+  EXPECT_EQ(error, true);
+}
+
 class ActorGuardTest : public ::testing::Test {
   void SetUp() override {
     // TODO(Yujia.Li): Bad naming
