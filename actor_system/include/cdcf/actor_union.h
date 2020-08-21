@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
-#define ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_UNION_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_UNION_H_
 #include <string>
 
 #include <caf/all.hpp>
@@ -47,8 +47,8 @@ class ActorUnion {
       uint16_t has_try_time, const send_type&... messages) {
     caf::message send_message = caf::make_message(messages...);
     sender_actor_
-        ->request<caf::message_priority::high>(
-            pool_actor_, timeout_in_seconds_, messages...)
+        ->request<caf::message_priority::high>(pool_actor_, timeout_in_seconds_,
+                                               messages...)
         .receive(return_function, [=](caf::error err) {
           HandleSendFailed(send_message, return_function, handle_error_function,
                            err, has_try_time);
@@ -85,4 +85,4 @@ class ActorUnion {
 };
 }  // namespace cdcf
 
-#endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_UNION_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_UNION_H_

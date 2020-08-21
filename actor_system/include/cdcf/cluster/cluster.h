@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CLUSTER_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CLUSTER_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_CLUSTER_CLUSTER_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_CLUSTER_CLUSTER_H_
 #include <iostream>
 #include <list>
 #include <memory>
@@ -111,4 +111,4 @@ class Cluster : public Subject {
   std::unique_ptr<ClusterImpl> impl_;
 };
 };      // namespace cdcf::cluster
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CLUSTER_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_CLUSTER_CLUSTER_H_

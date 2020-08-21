@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
 
 #include <grpcpp/server.h>
 
@@ -40,4 +40,4 @@ class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
 
 }  // namespace cdcf
 
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_SERVICE_GRPC_IMPL_H_

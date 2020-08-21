@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_MONITOR_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_MONITOR_H_
 
 #include <map>
 #include <string>
@@ -38,4 +38,4 @@ class ActorStatusMonitor {
   std::mutex actor_status_lock_;
 };
 }  // namespace cdcf
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_STATUS_MONITOR_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_STATUS_MONITOR_H_

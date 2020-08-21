@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef ROUTER_POOL_INCLUDE_ROUTER_POOL_H_
-#define ROUTER_POOL_INCLUDE_ROUTER_POOL_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ROUTER_POOL_ROUTER_POOL_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ROUTER_POOL_ROUTER_POOL_H_
 
 #include <memory>
 #include <set>
@@ -67,4 +67,4 @@ class RouterPool : public caf::event_based_actor {
 
 }  // namespace cdcf::router_pool
 
-#endif  // ROUTER_POOL_INCLUDE_ROUTER_POOL_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ROUTER_POOL_ROUTER_POOL_H_
