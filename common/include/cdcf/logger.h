@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef LOGGER_INCLUDE_LOGGER_H_
-#define LOGGER_INCLUDE_LOGGER_H_
+#ifndef COMMON_INCLUDE_CDCF_LOGGER_H_
+#define COMMON_INCLUDE_CDCF_LOGGER_H_
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 #include <spdlog/spdlog.h>
@@ -39,4 +39,4 @@ class Logger {
 
 }  // namespace cdcf
 
-#endif  // LOGGER_INCLUDE_LOGGER_H_
+#endif  // COMMON_INCLUDE_CDCF_LOGGER_H_
