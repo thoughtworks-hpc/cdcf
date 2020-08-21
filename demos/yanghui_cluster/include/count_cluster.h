@@ -16,8 +16,7 @@ const uint16_t k_yanghui_work_port2 = 55002;
 const uint16_t k_yanghui_work_port3 = 55003;
 const uint16_t k_yanghui_work_port4 = 55004;
 
-class CountCluster : public cdcf::cluster::Observer,
-                     public counter_interface {
+class CountCluster : public cdcf::cluster::Observer, public counter_interface {
  public:
   virtual void AddWorkerNode(const std::string& host) = 0;
   //  virtual int AddNumber(int a, int b, int& result) = 0;

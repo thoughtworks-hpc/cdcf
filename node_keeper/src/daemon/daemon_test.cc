@@ -3,6 +3,7 @@
  */
 
 #include "src/daemon/daemon.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

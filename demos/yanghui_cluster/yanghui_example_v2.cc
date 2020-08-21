@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
+#include <cdcf/all.h>
+
 #include <climits>
 #include <condition_variable>
 #include <sstream>
@@ -12,7 +14,6 @@
 
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
-#include <cdcf/all.h>
 #include "include/actor_union_count_cluster.h"
 #include "include/cdcf_spawn.h"
 #include "include/router_pool_count_cluster.h"

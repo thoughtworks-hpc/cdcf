@@ -18,5 +18,5 @@ class Config : public cdcf::CDCFConfig {
                                              "set port for actor_system");
   }
 };
-}  // namespace actor_system
+}  // namespace cdcf::actor_system
 #endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_SYSTEM_CONFIG_H_

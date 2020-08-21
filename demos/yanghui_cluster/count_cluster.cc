@@ -21,8 +21,7 @@ CountCluster::CountCluster(std::string host,
   if (node_keeper_host.empty()) {
     cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
   } else {
-    cdcf::cluster::Cluster::GetInstance(node_keeper_host,
-                                                node_keeper_port)
+    cdcf::cluster::Cluster::GetInstance(node_keeper_host, node_keeper_port)
         ->AddObserver(this);
   }
 }

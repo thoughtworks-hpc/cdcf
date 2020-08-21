@@ -176,7 +176,7 @@ TEST_F(ActorUnionTest, should_failed_when_actor_exceed_timeout) {
   bool error = false;
 
   cdcf::ActorUnion actor_union{system_, caf::actor_pool::round_robin(),
-                         std::chrono::seconds(1)};
+                               std::chrono::seconds(1)};
   actor_union.SendAndReceive(
       [&](int return_value) { promise.set_value(return_value); },
       [&](const caf::error&) {

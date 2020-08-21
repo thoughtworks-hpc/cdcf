@@ -8,8 +8,8 @@
 
 #include <caf/openssl/all.hpp>
 
-#include "cdcf/logger.h"
 #include "cdcf/actor_system/config.h"
+#include "cdcf/logger.h"
 
 class YanghuiIO {
   const bool use_ssl_;
