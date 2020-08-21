@@ -2,8 +2,8 @@
  * Copyright (c) 2019 ThoughtWorks Inc.
  */
 
-#ifndef CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
-#define CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
+#ifndef COMMON_INCLUDE_CDCF_CDCF_CONFIG_H_
+#define COMMON_INCLUDE_CDCF_CDCF_CONFIG_H_
 
 #include <algorithm>
 #include <string>
@@ -42,4 +42,4 @@ class CDCFConfig : public caf::actor_system_config {
 };
 }  // namespace cdcf
 
-#endif  // CONFIG_MANAGER_INCLUDE_CDCF_CONFIG_H_
+#endif  // COMMON_INCLUDE_CDCF_CDCF_CONFIG_H_
