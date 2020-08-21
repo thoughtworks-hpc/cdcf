@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "../../config_manager/include/cdcf_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
+#include "cdcf/cdcf_config.h"
 
 struct NumberCompareData {
   std::vector<int> numbers;
@@ -22,7 +22,7 @@ typename Inspector::result_type inspect(Inspector& f,
   return f(caf::meta::type_name("NumberCompareData"), x.numbers, x.index);
 }
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   uint16_t port = 0;
   std::string host = "localhost";

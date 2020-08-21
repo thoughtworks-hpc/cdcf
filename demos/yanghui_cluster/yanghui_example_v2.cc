@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system/cluster.h>
+#include <cdcf/all.h>
 
 #include <climits>
 #include <condition_variable>
@@ -12,11 +12,6 @@
 #include <caf/io/all.hpp>
 #include <caf/openssl/all.hpp>
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
-#include "../../actor_fault_tolerance/include/actor_union.h"
-#include "../../actor_monitor/include/actor_monitor.h"
-#include "../../actor_system/include/actor_status_service_grpc_impl.h"
-#include "../../logger/include/logger.h"
 #include "./yanghui_config.h"
 #include "./yanghui_simple_actor.h"
 #include "include/actor_union_count_cluster.h"
@@ -90,8 +85,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   std::cout << "load balance worker start at port:" << k_yanghui_work_port4
             << ", worker_load:" << cfg.worker_load << std::endl;
 
-  ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_service(system,
+                                                        actor_status_monitor);
 
   auto cdcf_spawn = system.spawn<CdcfSpawn>(&actor_status_monitor);
 
@@ -119,7 +115,7 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
 
   std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
   actor_status_service.Run();
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 
   // start compute
   while (true) {
@@ -337,8 +333,9 @@ void PublishActor(caf::actor_system& system, caf::actor actor, uint16_t port) {
 void SmartRootStart(caf::actor_system& system, const config& cfg) {
   YanghuiIO yanghui_io(cfg);
 
-  ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGrpcImpl actor_status_service(system, actor_status_monitor);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_service(system,
+                                                        actor_status_monitor);
 
   // router pool
   std::string routee_name = "calculator";
@@ -358,10 +355,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
       pool_actor, "Yanghui",
       "a actor can count yanghui triangle using pool cluster.");
 
-  auto pool_supervisor = system.spawn<ActorMonitor>(downMsgHandle);
-  SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
+  auto pool_supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
+  cdcf::SetMonitor(pool_supervisor, pool_actor, "worker actor for testing");
 
-  ActorGuard pool_guard(
+  cdcf::ActorGuard pool_guard(
       pool_actor,
       [&](std::atomic<bool>& active) {
         active = true;
@@ -413,10 +410,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                "go, 'q' to stop"
             << std::endl;
 
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
-  SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
+  auto supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
+  cdcf::SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
-  ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       yanghui_actor,
       [&](std::atomic<bool>& active) {
         active = true;
@@ -442,7 +439,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
                    yanghui_load_balance_get_min);
 
   actor_status_service.Run();
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 
   WorkerPool worker_pool(system, cfg.root_host, cfg.worker_port, yanghui_io);
 

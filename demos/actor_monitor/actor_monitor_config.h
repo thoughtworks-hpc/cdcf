@@ -7,11 +7,11 @@
 
 #include <string>
 
-#include "../../config_manager/include/cdcf_config.h"
 #include "caf/all.hpp"
 #include "caf/io/all.hpp"
+#include "cdcf/cdcf_config.h"
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;

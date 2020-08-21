@@ -4,18 +4,18 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_CONFIG_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
-#include "../../actor_fault_tolerance/include/actor_union.h"
-#include "../../actor_monitor/include/actor_monitor.h"
-#include "../../message_priority_actor/include/message_priority_actor.h"
 #include "./include/yanghui_with_priority.h"
+#include "cdcf/actor_guard.h"
+#include "cdcf/actor_monitor.h"
+#include "cdcf/actor_union.h"
+#include "cdcf/message_priority_actor.h"
 
 struct YanghuiData {
   YanghuiData() {}
@@ -90,14 +90,14 @@ class typed_slow_calculator : public calculator::base {
   std::atomic_int deal_msg_count = 0;
 };
 
-class CalculatorWithPriority : public MessagePriorityActor {
+class CalculatorWithPriority : public cdcf::MessagePriorityActor {
  public:
   explicit CalculatorWithPriority(caf::actor_config& cfg)
-      : MessagePriorityActor(cfg) {}
+      : cdcf::MessagePriorityActor(cfg) {}
   caf::behavior make_behavior() override;
 };
 
-class config : public actor_system::Config {
+class config : public cdcf::actor_system::Config {
  public:
   uint16_t root_port = 0;
   std::string root_host = "localhost";

@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../../actor_monitor/include/actor_monitor.h"
 #include "./actor_monitor_config.h"
+#include "cdcf/actor_monitor.h"
 
 void downMsgHandle(const caf::down_msg& downMsg,
                    const std::string& actor_description) {
@@ -17,7 +17,7 @@ void downMsgHandle(const caf::down_msg& downMsg,
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  auto supervisor = system.spawn<ActorMonitor>(downMsgHandle);
+  auto supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
 
   auto expected_port = caf::io::publish(supervisor, cfg.port);
   if (!expected_port) {

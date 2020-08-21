@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 #include <math.h>
 
 #include <iostream>
@@ -50,7 +50,7 @@ void Sum(blocking_actor* self) {
 }
 
 int main(int argc, char** argv) {
-  CDCFConfig cfg;
+  cdcf::CDCFConfig cfg;
   cfg.parse_config(argc, argv);
   caf::actor_system system{cfg};
 

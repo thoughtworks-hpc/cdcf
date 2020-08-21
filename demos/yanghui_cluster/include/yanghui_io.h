@@ -8,14 +8,14 @@
 
 #include <caf/openssl/all.hpp>
 
-#include "../../../logger/include/logger.h"
-#include "actor_system/config.h"
+#include "cdcf/actor_system/config.h"
+#include "cdcf/logger.h"
 
 class YanghuiIO {
   const bool use_ssl_;
 
  public:
-  explicit YanghuiIO(const actor_system::Config& cfg)
+  explicit YanghuiIO(const cdcf::actor_system::Config& cfg)
       : use_ssl_(!cfg.openssl_cafile.empty() ||
                  !cfg.openssl_certificate.empty() || !cfg.openssl_key.empty()) {
     CDCF_LOGGER_INFO("enable ssl: {}", use_ssl_);

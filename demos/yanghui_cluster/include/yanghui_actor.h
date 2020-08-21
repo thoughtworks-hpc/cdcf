@@ -5,7 +5,7 @@
 #ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_ACTOR_H_
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_ACTOR_H_
 
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include "../counter_interface.h"
 

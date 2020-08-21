@@ -2,7 +2,7 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../include/actor_status_service_grpc_impl.h"
+#include "cdcf/actor_status_service_grpc_impl.h"
 
 #include <gmock/gmock.h>
 #include <grpcpp/create_channel.h>
@@ -26,7 +26,7 @@ class actor_status_service_test : public testing::Test {
   caf::actor_system actor_system_{config_};
   caf::actor test_actor1_;
   caf::actor test_actor2_;
-  ActorStatusMonitor status_monitor_{actor_system_};
+  cdcf::ActorStatusMonitor status_monitor_{actor_system_};
 };
 
 const char kLocalHostAddress[] = "127.0.0.1:50052";
@@ -36,7 +36,7 @@ const char kTestActorName2[] = "TestActor2";
 const char kTestActorDescription2[] = "test2 description";
 
 TEST_F(actor_status_service_test, actor_system_has_no_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
   service_grpc.Run();
 
   auto actor_system_channel = grpc::CreateChannel(
@@ -52,7 +52,7 @@ TEST_F(actor_status_service_test, actor_system_has_no_actor) {
 }
 
 TEST_F(actor_status_service_test, actor_system_has_one_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
   service_grpc.Run();
   status_monitor_.RegisterActor(test_actor1_, kTestActorName1,
                                 kTestActorDescription1);
@@ -74,7 +74,7 @@ TEST_F(actor_status_service_test, actor_system_has_one_actor) {
 }
 
 TEST_F(actor_status_service_test, actor_system_has_two_actor) {
-  ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
+  cdcf::ActorStatusServiceGrpcImpl service_grpc(actor_system_, status_monitor_);
   service_grpc.Run();
   status_monitor_.RegisterActor(test_actor1_, kTestActorName1,
                                 kTestActorDescription1);

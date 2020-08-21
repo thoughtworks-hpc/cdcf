@@ -1,15 +1,15 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system.h>
-#include <logger.h>
+#include <cdcf/actor_system.h>
+#include <cdcf/logger.h>
 
 #include "./include/ping_pong_config.h"
 
 // this struct will use to add cluster
-class Pong : public actor_system::cluster::Observer {
+class Pong : public cdcf::cluster::Observer {
  public:
-  void Update(const actor_system::cluster::Event& event) override {}
+  void Update(const cdcf::cluster::Event& event) override {}
 
   Pong() {}
 };
@@ -29,7 +29,7 @@ void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   system.spawn(pong_fun);
 
   // add node to cluster
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(pong);
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(pong);
 
   // start pong actor
   auto pong_actor = system.spawn(pong_fun);
@@ -39,7 +39,7 @@ void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   CDCF_LOGGER_INFO("pong_actor start at port:{}", cfg.pong_port);
 
   // notify cluster the application is start read
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 }
 
 // this code is necessary

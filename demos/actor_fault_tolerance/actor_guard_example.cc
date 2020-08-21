@@ -7,8 +7,8 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "../../actor_fault_tolerance/include/actor_guard.h"
-#include "../../config_manager/include/cdcf_config.h"
+#include "cdcf/actor_guard.h"
+#include "cdcf/cdcf_config.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;
@@ -32,7 +32,7 @@ calculator::behavior_type calculator_fun(calculator::pointer self) {
           }};
 }
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 56088;
@@ -104,7 +104,7 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
     return;
   }
 
-  ActorGuard actor_guard(
+  cdcf::ActorGuard actor_guard(
       worker_actor,
       [&](bool active) {
         return StartWorker(system, *node, type, args, tout, active);

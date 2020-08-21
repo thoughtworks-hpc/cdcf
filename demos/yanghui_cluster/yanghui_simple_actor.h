@@ -5,7 +5,7 @@
 #ifndef DEMOS_YANGHUI_CLUSTER_YANGHUI_SIMPLE_ACTOR_H_
 #define DEMOS_YANGHUI_CLUSTER_YANGHUI_SIMPLE_ACTOR_H_
 
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <map>
 #include <vector>

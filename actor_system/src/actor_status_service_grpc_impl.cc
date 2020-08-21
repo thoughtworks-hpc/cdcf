@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include "../include/actor_status_service_grpc_impl.h"
+#include "cdcf/actor_status_service_grpc_impl.h"
 
+#include <cdcf/logger.h>
 #include <grpcpp/security/server_credentials.h>
 #include <grpcpp/server_builder.h>
-#include <logger.h>
 
+namespace cdcf {
 ::grpc::Status ActorStatusServiceGrpcImpl::GetNodeActorStatus(
     ::grpc::ServerContext *context, const ::google::protobuf::Empty *request,
     ::ActorStatus *response) {
@@ -39,3 +40,5 @@ void ActorStatusServiceGrpcImpl::RunWithWait() {
   Run();
   server_->Wait();
 }
+
+}  // namespace cdcf

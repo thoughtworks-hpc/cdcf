@@ -5,8 +5,8 @@
 #include <chrono>
 #include <thread>
 
-#include "../../actor_monitor/include/actor_monitor.h"
 #include "./actor_monitor_config.h"
+#include "cdcf/actor_monitor.h"
 
 using add_atom = caf::atom_constant<caf::atom("add")>;
 using sub_atom = caf::atom_constant<caf::atom("sub")>;
@@ -29,7 +29,7 @@ void caf_main(caf::actor_system& system, const config& cfg) {
   auto worker = system.spawn(calculator_fun);
 
   // set monitor
-  SetMonitor(supervisor, worker, "worker actor for testing");
+  cdcf::SetMonitor(supervisor, worker, "worker actor for testing");
 
   std::cout << "worker running" << std::endl;
 

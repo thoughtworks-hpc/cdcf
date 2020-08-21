@@ -19,4 +19,7 @@ $ conan install .. --build missing
 $ cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake
 $ cmake --build . -j
 $ ctest .
+$ cpack
 ```
+
+cpack will generate installation package in dir `pack`.

@@ -3,7 +3,7 @@
  */
 #ifndef NODE_KEEPER_SRC_CONFIG_H_
 #define NODE_KEEPER_SRC_CONFIG_H_
-#include <cdcf_config.h>
+#include <cdcf/cdcf_config.h>
 
 #include <sstream>
 #include <string>
@@ -14,7 +14,7 @@
 
 namespace node_keeper {
 
-class Config : public CDCFConfig {
+class Config : public cdcf::CDCFConfig {
  public:
   uint16_t port_ = 4748;
   std::string seeds_ = "";

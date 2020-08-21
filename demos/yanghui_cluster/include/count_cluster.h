@@ -4,7 +4,7 @@
 
 #ifndef DEMOS_YANGHUI_CLUSTER_INCLUDE_COUNT_CLUSTER_H_
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_COUNT_CLUSTER_H_
-#include <actor_system.h>
+#include <cdcf/actor_system.h>
 
 #include <string>
 #include <vector>
@@ -16,8 +16,7 @@ const uint16_t k_yanghui_work_port2 = 55002;
 const uint16_t k_yanghui_work_port3 = 55003;
 const uint16_t k_yanghui_work_port4 = 55004;
 
-class CountCluster : public actor_system::cluster::Observer,
-                     public counter_interface {
+class CountCluster : public cdcf::cluster::Observer, public counter_interface {
  public:
   virtual void AddWorkerNode(const std::string& host) = 0;
   //  virtual int AddNumber(int a, int b, int& result) = 0;
@@ -29,7 +28,7 @@ class CountCluster : public actor_system::cluster::Observer,
                uint16_t node_keeper_port);
   virtual ~CountCluster();
   void InitWorkerNodes();
-  void Update(const actor_system::cluster::Event& event) override;
+  void Update(const cdcf::cluster::Event& event) override;
 };
 
 #endif  // DEMOS_YANGHUI_CLUSTER_INCLUDE_COUNT_CLUSTER_H_

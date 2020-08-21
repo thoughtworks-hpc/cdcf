@@ -1,11 +1,10 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#include <daemon.h>
-
 #include <vector>
 
-#include "../logger/include/logger.h"
+#include "cdcf/logger.h"
+#include "src/daemon/daemon.h"
 #include "src/node_keeper.h"
 
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config);
@@ -13,7 +12,7 @@ std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config);
 int main(int argc, char* argv[]) {
   node_keeper::Config config;
   auto ret = config.parse_config(argc, argv, "cdcf-default.ini");
-  if (ret != CDCFConfig::RetValue::kSuccess) {
+  if (ret != cdcf::CDCFConfig::RetValue::kSuccess) {
     return 1;
   }
 

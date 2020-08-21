@@ -2,11 +2,11 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#include "../../actor_system/include/actor_status_monitor.h"
-#include "../../actor_system/include/actor_status_service_grpc_impl.h"
-#include "../../config_manager/include/cdcf_config.h"
+#include "cdcf/actor_status_monitor.h"
+#include "cdcf/actor_status_service_grpc_impl.h"
+#include "cdcf/cdcf_config.h"
 
-class config : public CDCFConfig {
+class config : public cdcf::CDCFConfig {
  public:
   std::string host = "localhost";
   uint16_t port = 50052;
@@ -27,9 +27,9 @@ caf::behavior countAdd(caf::event_based_actor* self) {
 }
 
 void caf_main(caf::actor_system& system, const config& cfg) {
-  ActorStatusMonitor actor_status_monitor(system);
-  ActorStatusServiceGrpcImpl actor_status_(system, actor_status_monitor,
-                                           cfg.port);
+  cdcf::ActorStatusMonitor actor_status_monitor(system);
+  cdcf::ActorStatusServiceGrpcImpl actor_status_(system, actor_status_monitor,
+                                                 cfg.port);
 
   auto add_actor1 = system.spawn(countAdd);
   actor_status_monitor.RegisterActor(add_actor1, "Adder1",

@@ -4,7 +4,7 @@
 CDCF full name is C++ Distributed Computing Framework. It was born for high performance. 
 It is to fill in the gap that there was no C++ distributed system development framework before.
 
-CDCF consists of three parts：node keeper，monitor tool， actor system
+CDCF consists of three parts：node keeper, monitor tool, actor system.
 
 Node keeper is an executable program that needs to be deployed on each node of a distributed cluster. It is responsible for managing all node members of the cluster.At the same time, it is also responsible for restarting the actor system when the actor system is hung.
 
@@ -73,7 +73,7 @@ You can get this tour resource code in "cdcf/demo/simple_ping_pong"
 Define the cluster run config
 
 ```c++
-struct PingPongConfig : public actor_system::Config {
+struct PingPongConfig : public cdcf::actor_system::Config {
   std::string pong_host = "127.0.0.1";
   uint16_t pong_port = 58888;
 
@@ -114,9 +114,9 @@ start pong actor and publish it, so anther node can send message to it, and add 
 ```c++
 
 //this struct will use to add cluster
-class Pong : public actor_system::cluster::Observer  {
+class Pong : public cdcf::cluster::Observer  {
  public:
-  void Update(const actor_system::cluster::Event& event) override {
+  void Update(const cdcf::cluster::Event& event) override {
   }
 
   Pong() {
@@ -129,7 +129,7 @@ void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   system.spawn(pong_fun);
 
   //add node to cluster
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(pong);
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(pong);
 
   //start pong actor
   auto pong_actor = system.spawn(pong_fun);
@@ -139,7 +139,7 @@ void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   CDCF_LOGGER_INFO("pong_actor start at port:{}", cfg.pong_port);
 
   //notify cluster the application is start read
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 }
 
 //this code is necessary
@@ -148,9 +148,9 @@ CAF_MAIN(caf::io::middleman)
 
 Start ping node, when pong node up, connect pong node
 ```c++
-class Ping : public actor_system::cluster::Observer {
+class Ping : public cdcf::cluster::Observer {
  public:
-  void Update(const actor_system::cluster::Event& event) override {
+  void Update(const cdcf::cluster::Event& event) override {
       if (event.member.name == "Pong"){
         auto remote_pong = system_.middleman().remote_actor(config_.pong_host, config_.pong_port);
         if (nullptr == remote_pong){
@@ -172,8 +172,8 @@ class Ping : public actor_system::cluster::Observer {
 
 void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   Ping* ping = new Ping(system, cfg);
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(ping);
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(ping);
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 }
 
 CAF_MAIN(caf::io::middleman)
@@ -260,7 +260,7 @@ node_keeper --help
 CDCF monitor tool can get all nodes of cluster status. 
 
 ```shell script
-cluster_monitor_client -S ${HOST}:${PORT}
+monitor_client -S ${HOST}:${PORT}
 ```
 
 The ${HOST} and ${PORT} is the same parameter of node_keeper. Input any node host and port can get all cluster node status
@@ -269,7 +269,7 @@ The ${HOST} and ${PORT} is the same parameter of node_keeper. Input any node hos
 For example in Yanghui cluster demo input 
 
 ```shell script
-cluster_monitor_client -S yanghui_root_v2:50051
+monitor_client -S yanghui_root_v2:50051
 ```
 
 And will get all cluster nodes information as below 
@@ -306,13 +306,13 @@ Cluster node ip: 172.21.0.5
 
 CDCF monitor tool can get one node actor information by command
 ```shell script
-cluster_monitor_client -N ${HOST}
+monitor_client -N ${HOST}
 ```
 
 
 For example in Yanghui cluster demo input 
 ```shell script
-cluster_monitor_client -N yanghui_worker2_v2
+monitor_client -N yanghui_worker2_v2
 ```
 
 Get the one yanghui_worker2 node information 
@@ -351,45 +351,45 @@ Total actor: 7
   description: pool description
 ```
 
-## 7.Develop with CDCF
+## 7 Develop with CDCF
 
 ### 7.1 Node Member Management
 
-CDCF using node keeper to maintain cluster membership. User can use class `actor_system::cluster::Cluster` to get info and changes in the cluster.
+CDCF using node keeper to maintain cluster membership. User can use class `cdcf::cluster::Cluster` to get info and changes in the cluster.
 
 #### Get Cluster Instance
 
 You should obtain cluster instance first if you want to interact with cluster.
 
 ```c++
-auto cluster = actor_system::cluster::Cluster::GetInstance()
+auto cluster = cdcf::cluster::Cluster::GetInstance()
 ```
 
-`Cluster` Connect to local(`127.0.0.1`) node keeper per default. Set remote node keeper host and port if you want to deploy actor system and node keeper separately.(`actor_system::cluster::Cluster::GetInstance("192.168.1.3", 4445)`)
+`Cluster` Connect to local(`127.0.0.1`) node keeper per default. Set remote node keeper host and port if you want to deploy actor system and node keeper separately.(`cdcf::cluster::Cluster::GetInstance("192.168.1.3", 4445)`)
 
 #### Get All Members Inside Cluster
 
 ```c++
-auto cluster = actor_system::cluster::Cluster::GetInstance()
+auto cluster = cdcf::cluster::Cluster::GetInstance()
 auto members = cluster->GetMembers();
 ```
 
 #### Get Changes
 
-CDCF using **Observer Pattern** to notify node member status change. You can extends `actor_system::cluster::Observer`  and add to cluster to get update when something change.
+CDCF using **Observer Pattern** to notify node member status change. You can extends `cdcf::cluster::Observer`  and add to cluster to get update when something change.
 
 ```c++
 #include <caf/all.hpp>
-#include <actor_system.h>
+#include <cdcf/all.h>
 
-class MyObserver: public actor_system::cluster::Observer {
+class MyObserver: public cdcf::cluster::Observer {
  public:
   MyObserver() {
-    actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+    cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
   }
 
-  void Update(const actor_system::cluster::Event &event) override {
-    if (event.member.status == actor_system::cluster::Member::Status::ActorSystemDown) {
+  void Update(const cdcf::cluster::Event &event) override {
+    if (event.member.status == cdcf::cluster::Member::Status::ActorSystemDown) {
       //....
     }
   }
@@ -411,7 +411,7 @@ CDCF have following event currently：
 
 #### ActorSystemUp
 
-You should call `actor_system::cluster::Cluster::GetInstance()->NotifyReady()` to notify others when you finish initialize and ready to work. CDCF will notify all other actor system that this actor system ready.(ActorSystemUp)
+You should call `cdcf::cluster::Cluster::GetInstance()->NotifyReady()` to notify others when you finish initialize and ready to work. CDCF will notify all other actor system that this actor system ready.(ActorSystemUp)
 
 #### Runnable Demo
 
@@ -509,9 +509,9 @@ CDCF configures applications at startup using an cdcf_config or a user-defined s
 The following code example how to define the config struct in code
 
 ```C++
-#include <cdcf_config.h>
+#include <cdcf/all.h>
 
-class TestConfig :public CDCFConfig{
+class TestConfig :public cdcf::CDCFConfig{
 
 public:
     uint16_t my_port = 0;
@@ -574,7 +574,7 @@ CDCF provide `ActorUnion` and `ActorGuard` to support actor fault tolerance, mak
 Demo：
 
 ```c++
-#include <actor_union.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   ActorUnion actor_union(system, caf::actor_pool::round_robin());
@@ -601,7 +601,7 @@ void foo(caf::actor_system& system) {
 Demo:
 
 ```c++
-#include <actor_guard.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   ActorGuard actor_guard(worker_actor, restart_func, system);
@@ -631,9 +631,9 @@ Run：
 Start workers first：
 
 ```shell
-./actor_fault_tolerance_guard --worker_number=1
-./actor_fault_tolerance_guard --worker_number=2
-./actor_fault_tolerance_guard --worker_number=3
+./actor_fault_tolerance_union --worker_number=1
+./actor_fault_tolerance_union --worker_number=2
+./actor_fault_tolerance_union --worker_number=3
 ```
 
 And then start leader：
@@ -674,7 +674,7 @@ It will get error if you send message to a failed actor. And it will run normall
 Demo:
 
 ```c++
-#include <actor_monitor.h>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   auto supervisor = system.spawn<ActorMonitor>(down_handle);
@@ -722,6 +722,7 @@ Demo:
 
 ```c++
 #include <caf/all.hpp>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   caf::scoped_execution_unit context(&system);
@@ -831,6 +832,7 @@ Yanghui_root use two actors to send normal priority and high priority task.
 
 ```C++
 #include <caf/all.hpp>
+#include <cdcf/all.h>
 
 void foo(caf::actor_system& system) {
   auto worker_actor_args = caf::make_message();

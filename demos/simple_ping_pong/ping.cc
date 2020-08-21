@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#include <actor_system.h>
-#include <logger.h>
+#include <cdcf/actor_system.h>
+#include <cdcf/logger.h>
 
 #include <iostream>
 
@@ -19,9 +19,9 @@ caf::behavior ping_fun(caf::event_based_actor* self,
   };
 }
 
-class Ping : public actor_system::cluster::Observer {
+class Ping : public cdcf::cluster::Observer {
  public:
-  void Update(const actor_system::cluster::Event& event) override {
+  void Update(const cdcf::cluster::Event& event) override {
     if (event.member.name == "Pong") {
       auto remote_pong = system_.middleman().remote_actor(config_.pong_host,
                                                           config_.pong_port);
@@ -43,8 +43,8 @@ class Ping : public actor_system::cluster::Observer {
 
 void caf_main(caf::actor_system& system, const PingPongConfig& cfg) {
   Ping* ping = new Ping(system, cfg);
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(ping);
-  actor_system::cluster::Cluster::GetInstance()->NotifyReady();
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(ping);
+  cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 }
 
 CAF_MAIN(caf::io::middleman)

@@ -7,8 +7,8 @@
 #include "./include/yanghui_demo_calculator.h"
 
 int WorkerPool::Init() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
-  actor_system::cluster::Cluster::GetInstance()->AddObserver(this);
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
+  cdcf::cluster::Cluster::GetInstance()->AddObserver(this);
 
   for (const auto& member : members) {
     if (member.hostname == host_ || member.host == host_) {
@@ -69,7 +69,7 @@ int WorkerPool::AddWorker(const std::string& host) {
   return 0;
 }
 
-void WorkerPool::Update(const actor_system::cluster::Event& event) {
+void WorkerPool::Update(const cdcf::cluster::Event& event) {
   if (event.member.hostname != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
       AddWorker(event.member.host);
@@ -85,7 +85,7 @@ void WorkerPool::Update(const actor_system::cluster::Event& event) {
 }
 
 void WorkerPool::PrintClusterMembers() {
-  auto members = actor_system::cluster::Cluster::GetInstance()->GetMembers();
+  auto members = cdcf::cluster::Cluster::GetInstance()->GetMembers();
   std::cout << "Current Cluster Members:" << std::endl;
   for (int i = 0; i < members.size(); ++i) {
     auto& member = members[i];
@@ -120,7 +120,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
           auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
           if (j == 0) {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::high_priority_atom::value,
                          self->state.last_level_results_[0],
                          self->state.triangle_data_[i][j], j);
             } else {
@@ -129,7 +129,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             }
           } else if (j == i) {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::high_priority_atom::value,
                          self->state.last_level_results_[j - 1],
                          self->state.triangle_data_[i][j], j);
             } else {
@@ -138,7 +138,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
             }
           } else {
             if (is_high_priority) {
-              self->send(worker, high_priority_atom::value,
+              self->send(worker, cdcf::high_priority_atom::value,
                          std::min(self->state.last_level_results_[j - 1],
                                   self->state.last_level_results_[j]),
                          self->state.triangle_data_[i][j], j);
@@ -188,7 +188,7 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
         NumberCompareData send_data;
         send_data.numbers = self->state.last_level_results_;
         auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
-        self->request(worker, caf::infinite, high_priority_atom::value,
+        self->request(worker, caf::infinite, cdcf::high_priority_atom::value,
                       send_data)
             .await([=](int final_result) {
               if (is_high_priority) {
