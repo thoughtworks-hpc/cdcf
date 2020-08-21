@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef DAEMON_INCLUDE_DAEMON_H_
-#define DAEMON_INCLUDE_DAEMON_H_
+#ifndef NODE_KEEPER_SRC_DAEMON_DAEMON_H_
+#define NODE_KEEPER_SRC_DAEMON_DAEMON_H_
 
 #include <chrono>
 #include <memory>
@@ -43,4 +43,4 @@ class Daemon {
   void Start();
 };
 
-#endif  // DAEMON_INCLUDE_DAEMON_H_
+#endif  // NODE_KEEPER_SRC_DAEMON_DAEMON_H_

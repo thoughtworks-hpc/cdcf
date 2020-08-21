@@ -2,8 +2,8 @@
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
 
-#ifndef DAEMON_INCLUDE_DAEMON_PROCESS_MANAGER_H_
-#define DAEMON_INCLUDE_DAEMON_PROCESS_MANAGER_H_
+#ifndef NODE_KEEPER_SRC_DAEMON_PROCESS_MANAGER_H_
+#define NODE_KEEPER_SRC_DAEMON_PROCESS_MANAGER_H_
 
 #include <memory>
 #include <string>
@@ -37,4 +37,4 @@ class PosixProcessManager : public ProcessManager {
   void WaitProcessExit(std::shared_ptr<void> process_info) override;
 };
 
-#endif  // DAEMON_INCLUDE_DAEMON_PROCESS_MANAGER_H_
+#endif  // NODE_KEEPER_SRC_DAEMON_PROCESS_MANAGER_H_
