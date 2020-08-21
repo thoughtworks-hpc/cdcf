@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
-#define ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_MONITOR_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_MONITOR_H_
 #include <map>
 #include <string>
 
@@ -35,4 +35,4 @@ bool SetMonitor(caf::actor& supervisor, caf::actor& worker,
 
 bool StopMonitor(caf::actor& supervisor, const caf::actor_addr& worker);
 }  // namespace cdcf
-#endif  // ACTOR_MONITOR_INCLUDE_ACTOR_MONITOR_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_MONITOR_H_

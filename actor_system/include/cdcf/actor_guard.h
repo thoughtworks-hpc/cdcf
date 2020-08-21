@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
-#define ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_GUARD_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_GUARD_H_
 
 #include <utility>
 
@@ -22,7 +22,7 @@ class ActorGuard {
       : keep_actor_(keepActor),
         restart_fun_(std::move(restart)),
         sender_actor_(system),
-        timeout_in_seconds_(timeout_in_seconds){}
+        timeout_in_seconds_(timeout_in_seconds) {}
 
   template <class... send_type, class return_function_type>
   bool SendAndReceive(return_function_type return_function,
@@ -73,4 +73,4 @@ class ActorGuard {
   std::chrono::seconds timeout_in_seconds_;
 };
 }  // namespace cdcf
-#endif  // ACTOR_FAULT_TOLERANCE_INCLUDE_ACTOR_GUARD_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_GUARD_H_

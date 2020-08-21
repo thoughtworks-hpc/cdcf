@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef CDCF_ALL_H
-#define CDCF_ALL_H
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ALL_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ALL_H_
 
 #include <cdcf/cdcf_config.h>
 #include <cdcf/logger.h>
@@ -19,4 +19,4 @@
 #include "cdcf/message_priority_actor.h"
 #include "cdcf/router_pool/router_pool.h"
 
-#endif  // CDCF_ALL_H
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ALL_H_

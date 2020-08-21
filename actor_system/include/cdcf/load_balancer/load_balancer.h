@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_LOAD_BALANCER_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_LOAD_BALANCER_H_
 
 #include <algorithm>
 #include <cassert>
@@ -71,4 +71,4 @@ inline std::vector<Metrics> Router::GetMetrics() const {
 }
 
 }  // namespace cdcf::load_balancer
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_LOAD_BALANCER_H_

@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2019-2020 ThoughtWorks Inc.
  */
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CONFIG_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CONFIG_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_SYSTEM_CONFIG_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_SYSTEM_CONFIG_H_
 #include <cdcf/cdcf_config.h>
 
 #include <cstdint>
@@ -19,4 +19,4 @@ class Config : public cdcf::CDCFConfig {
   }
 };
 }  // namespace actor_system
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_CONFIG_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_ACTOR_SYSTEM_CONFIG_H_

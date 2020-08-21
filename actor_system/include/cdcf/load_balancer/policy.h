@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
-#ifndef ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_POLICY_H_
-#define ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_POLICY_H_
+#ifndef ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_POLICY_H_
+#define ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_POLICY_H_
 #include <utility>
 #include <vector>
 
@@ -25,4 +25,4 @@ Policy MinLoad(size_t load_threshold_to_hold = kDefaultLoadThreshold);
 }  // namespace policy
 }  // namespace cdcf::load_balancer
 
-#endif  // ACTOR_SYSTEM_INCLUDE_ACTOR_SYSTEM_LOAD_BALANCER_POLICY_H_
+#endif  // ACTOR_SYSTEM_INCLUDE_CDCF_LOAD_BALANCER_POLICY_H_
