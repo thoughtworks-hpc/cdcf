@@ -14,7 +14,7 @@
 #include <caf/all.hpp>
 #include <caf/io/all.hpp>
 
-#include "actor_monitor.h"
+#include "cdcf/actor_monitor.h"
 
 namespace cdcf {
 class ActorStatusMonitor {

@@ -2,8 +2,8 @@
  * Copyright (c) 2020 ThoughtWorks Inc.
  */
 
-#ifndef ROUTER_POOL_SRC_ROUTER_POOL_TEST_CONFIG_H_
-#define ROUTER_POOL_SRC_ROUTER_POOL_TEST_CONFIG_H_
+#ifndef ACTOR_SYSTEM_SRC_ROUTER_POOL_TEST_CONFIG_H_
+#define ACTOR_SYSTEM_SRC_ROUTER_POOL_TEST_CONFIG_H_
 
 #include <cdcf/actor_system.h>
 
@@ -39,4 +39,4 @@ class router_config : public cdcf::actor_system::Config {
   }
 };
 
-#endif  //  ROUTER_POOL_SRC_ROUTER_POOL_TEST_CONFIG_H_
+#endif  //  ACTOR_SYSTEM_SRC_ROUTER_POOL_TEST_CONFIG_H_

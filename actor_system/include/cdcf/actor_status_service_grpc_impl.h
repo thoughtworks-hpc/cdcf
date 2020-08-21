@@ -13,7 +13,7 @@
 #include <caf/io/all.hpp>
 
 #include "../../src/node_monitor.grpc.pb.h"
-#include "actor_status_monitor.h"
+#include "cdcf/actor_status_monitor.h"
 
 namespace cdcf {
 class ActorStatusServiceGrpcImpl final : public ::NodeActorMonitor::Service {
