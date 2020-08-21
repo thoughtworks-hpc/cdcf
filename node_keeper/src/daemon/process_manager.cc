@@ -3,6 +3,7 @@
  */
 
 #include "src/daemon/process_manager.h"
+
 #include <sys/wait.h>
 #include <unistd.h>
 

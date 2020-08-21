@@ -101,7 +101,8 @@ int GetNodeStatus(const std::string& host) {
 
 int main(int argc, char* argv[]) {
   ClientConfig input_parameter;
-  cdcf::CDCFConfig::RetValue parse_ret = input_parameter.parse_config(argc, argv);
+  cdcf::CDCFConfig::RetValue parse_ret =
+      input_parameter.parse_config(argc, argv);
 
   if (parse_ret != cdcf::CDCFConfig::RetValue::kSuccess) {
     return 1;
