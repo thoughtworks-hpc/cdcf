@@ -127,7 +127,7 @@ std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
   std::vector<Member> members;
   for (const auto& state : state_.states()) {
     members.emplace_back(state.name(), state.ip(), state.port(),
-                         state.hostname());
+                         state.hostname(), "", state.role());
   }
   return members;
 }

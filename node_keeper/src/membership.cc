@@ -427,7 +427,7 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     for (const auto& member : members_) {
       members.emplace_back(member.first.GetNodeName(),
                            member.first.GetIpAddress(), member.first.GetPort(),
-                           member.first.GetHostName());
+                           member.first.GetHostName(), member.first.GetUid(), member.first.GetRole());
     }
     response.InitAsFullStateMessage(members);
 
