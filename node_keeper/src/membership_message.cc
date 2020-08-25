@@ -95,6 +95,16 @@ bool membership::UpdateMessage::IsActorSystemUpMessage() const {
 void membership::FullStateMessage::InitAsFullStateMessage(
     const std::vector<Member>& members) {
   for (const auto& member : members) {
+  CDCF_LOGGER_DEBUG("---------------------------------");
+  CDCF_LOGGER_DEBUG("InitAsFullStateMessage: ");
+  for (const auto member: members) {
+      CDCF_LOGGER_DEBUG("After members.emplace_back() ");
+      CDCF_LOGGER_DEBUG("name: {}", member.GetNodeName());
+      CDCF_LOGGER_DEBUG("hostname: {}", member.GetHostName());
+      CDCF_LOGGER_DEBUG("ip: {}", member.GetIpAddress());
+      CDCF_LOGGER_DEBUG("role: {}", member.GetRole());
+      CDCF_LOGGER_DEBUG("uid: {}", member.GetUid());
+  }
     state_.set_error(MemberFullState::SUCCESS);
     auto new_state = state_.add_states();
     new_state->set_name(member.GetNodeName());
@@ -127,7 +137,7 @@ std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
   std::vector<Member> members;
   for (const auto& state : state_.states()) {
     members.emplace_back(state.name(), state.ip(), state.port(),
-                         state.hostname());
+                         state.hostname(), "", state.role());
   }
   return members;
 }
