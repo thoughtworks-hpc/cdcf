@@ -14,7 +14,7 @@
 #include "src/gossip.h"
 
 namespace gossip {
-class PullSession {
+class PullSession : public std::enable_shared_from_this<PullSession> {
  public:
   PullSession(asio::io_context *context, const std::string &host,
               const std::string &port)
@@ -40,13 +40,15 @@ class PullSession {
 
  private:
   void RequestAsync(const std::vector<uint8_t> &out) {
-    socket_.async_write_some(asio::buffer(out), [&](const auto &err, auto) {
-      if (err) {
-        did_pull_({ErrorCode::kUnknown, {}});
-        return;
-      }
-      ReadMessageAsync();
-    });
+    socket_.async_write_some(
+        asio::buffer(out),
+        [this, that = shared_from_this()](const auto &err, auto) {
+          if (err) {
+            did_pull_({ErrorCode::kUnknown, {}});
+            return;
+          }
+          ReadMessageAsync();
+        });
   }
 
   Pullable::PullResult RequestSync(const std::vector<uint8_t> &out) {
@@ -78,9 +80,10 @@ class PullSession {
   }
 
   void ReadMessageAsync() {
+    auto that = shared_from_this();
     socket_.async_read_some(
         asio::buffer(buffer_, buffer_.size()),
-        [&](auto &error, size_t bytes_transferred) {
+        [this, that](auto &error, size_t bytes_transferred) {
           if (bytes_transferred == 0) {
             did_pull_({ErrorCode::kUnknown, {}});
           }

@@ -30,14 +30,23 @@ void Transport::Run() {
 }
 
 Transport::~Transport() {
-  for (auto &session : pull_sessions_) {
-    session->Cancel();
-  }
-  pull_sessions_.clear();
-
+  CancelAllSessions();
   io_context_.stop();
   if (io_thread_.joinable()) {
     io_thread_.join();
+  }
+}
+
+void Transport::CancelAllSessions() {
+  decltype(pull_sessions_) pending_sessions;
+  {
+    std::lock_guard lock(mutex_);
+    pending_sessions = pull_sessions_;
+  }
+  for (auto ref : pending_sessions) {
+    if (auto session = ref.lock()) {
+      session->Cancel();
+    }
   }
 }
 
@@ -107,20 +116,26 @@ void Transport::RegisterPushHandler(PushHandler handler) {
 
 Pullable::PullResult Transport::Pull(const Address &node, const void *data,
                                      size_t size, DidPullHandler did_pull) try {
-  auto session = std::make_shared<PullSession>(&io_context_, node.host,
-                                               std::to_string(node.port));
-  auto it = pull_sessions_.insert(pull_sessions_.end(), session);
-  std::unique_ptr<int, std::function<void(int *)>> guard(nullptr, [=](int *) {
-    (*it)->Cancel();
+  auto port = std::to_string(node.port);
+  if (!did_pull) {
+    PullSession session(&io_context_, node.host, port);
+    return session.Request(data, size);
+  }
+
+  auto session = std::make_shared<PullSession>(&io_context_, node.host, port);
+  auto it = pull_sessions_.end();
+  {
+    std::lock_guard lock(mutex_);
+    it = pull_sessions_.insert(pull_sessions_.end(), session);
+  }
+
+  std::shared_ptr<int> guard(nullptr, [=](int *) {
+    std::lock_guard lock(mutex_);
     pull_sessions_.erase(it);
   });
-  if (did_pull) {
-    return session->Request(
-        data, size,
-        [session, did_pull](const auto &result) { return did_pull(result); });
-  } else {
-    return session->Request(data, size);
-  }
+  return session->Request(data, size, [did_pull, it, this, guard](auto result) {
+    return did_pull(result);
+  });
 } catch (const asio::system_error &e) {
   PullResult result{ExtractError(e), {}};
   if (did_pull) {

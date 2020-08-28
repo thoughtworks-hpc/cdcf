@@ -9,6 +9,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <thread>
@@ -167,7 +168,10 @@ class Transport : public Transportable {
 
   ErrorCode ExtractError(const asio::system_error &e);
 
-  std::list<std::shared_ptr<PullSession>> pull_sessions_;
+  void CancelAllSessions();
+
+  std::mutex mutex_;
+  std::list<std::weak_ptr<PullSession>> pull_sessions_;
   asio::io_context io_context_;
   asio::ip::udp::socket upd_socket_;
   std::thread io_thread_;
