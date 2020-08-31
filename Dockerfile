@@ -18,7 +18,7 @@ COPY node_keeper node_keeper
 COPY actor_system actor_system
 COPY demos demos
 COPY monitor_client monitor_client
-RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release \
+RUN cmake . -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Debug \
     && cmake --build . -j 3 \
     && ctest --output-on-failure
 
