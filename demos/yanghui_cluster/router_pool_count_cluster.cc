@@ -3,6 +3,8 @@
  */
 #include "include/router_pool_count_cluster.h"
 
+#include <limits.h>
+
 RouterPoolCountCluster::RouterPoolCountCluster(
     std::string host, caf::actor_system& system,
     const std::string& node_keeper_host, uint16_t node_keeper_port,
@@ -48,7 +50,11 @@ int RouterPoolCountCluster::AddNumber(int a, int b, int& result) {
   caf::scoped_actor self(system_);
   self->request(pool_, caf::infinite, a, b)
       .receive([&](int ret) { promise.set_value(ret); },
-               [&](const caf::error& err) { error = 1; });
+               [&](const caf::error& err) {
+                 promise.set_value(INT_MAX);
+                 error = 1;
+                 CDCF_LOGGER_ERROR("error: {}", caf::to_string(err));
+               });
 
   result = promise.get_future().get();
 
@@ -77,7 +83,11 @@ int RouterPoolCountCluster::Compare(std::vector<int> numbers, int& min) {
             min = ret;
             promise.set_value(ret);
           },
-          [&](const caf::error& err) { error = 1; });
+          [&](const caf::error& err) {
+            promise.set_value(INT_MAX);
+            error = 1;
+            CDCF_LOGGER_ERROR("error: {}", caf::to_string(err));
+          });
 
   min = promise.get_future().get();
   std::cout << "get min:" << min << std::endl;
@@ -99,7 +109,10 @@ std::string RouterPoolCountCluster::NodeList() {
             }
             result.set_value(info);
           },
-          [&](const caf::error& err) { result.set_value("ERROR"); });
+          [&](const caf::error& err) {
+            CDCF_LOGGER_ERROR("error: {}", caf::to_string(err));
+            result.set_value("ERROR");
+          });
   return result.get_future().get();
 }
 

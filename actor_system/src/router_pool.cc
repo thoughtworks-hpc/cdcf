@@ -266,7 +266,7 @@ bool RouterPool::AddActor(const caf::actor& gateway, const std::string& key) {
                   factory_args_, mpi_, name_, description_)
         .receive([&](caf::actor& ret) { promise.set_value(std::move(ret)); },
                  [&](caf::error& err) {
-                   std::cerr << "can't spawn actor from gateway" << std::endl;
+                   CDCF_LOGGER_ERROR("can't spawn actor from gateway, error: {}", caf::to_string(err));
                    promise.set_value(nullptr);
                  });
     add_actor = promise.get_future().get();

@@ -51,6 +51,7 @@ int ActorUnionCountCluster::AddNumber(int a, int b, int& result) {
                           [&](const caf::error& err) {
                             promise.set_value(INT_MAX);
                             error = 1;
+                            CDCF_LOGGER_ERROR("error: {}", caf::to_string(err));
                           },
                           a, b);
 
@@ -82,6 +83,7 @@ int ActorUnionCountCluster::Compare(std::vector<int> numbers, int& min) {
       [&](const caf::error& err) {
         promise.set_value(INT_MAX);
         error = 1;
+        CDCF_LOGGER_ERROR("error: {}", caf::to_string(err));
       },
       send_data);
 
