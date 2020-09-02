@@ -26,13 +26,17 @@ class WorkerPool : public cdcf::cluster::Observer {
       : system_(system),
         host_(std::move(host)),
         worker_port_(worker_port),
-        yanghui_io_(yanghui_io) {}
+        yanghui_io_(yanghui_io) {
+    auto context = new caf::scoped_execution_unit(&system_);
+    this->pool_ =
+        caf::actor_pool::make(context, caf::actor_pool::round_robin());
+  }
 
   int Init();
 
   bool IsEmpty() const;
 
-  caf::strong_actor_ptr GetWorker();
+  caf::actor& GetPool();
 
  private:
   int AddWorker(const std::string& host);
@@ -42,7 +46,7 @@ class WorkerPool : public cdcf::cluster::Observer {
   void PrintClusterMembers();
 
   mutable std::shared_mutex workers_mutex_;
-  std::vector<caf::strong_actor_ptr> workers_;
+  caf::actor pool_;
   std::atomic<int> worker_index_ = 0;
   std::string host_;
   caf::actor_system& system_;

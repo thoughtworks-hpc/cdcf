@@ -23,22 +23,20 @@ int WorkerPool::Init() {
 }
 
 bool WorkerPool::IsEmpty() const {
-  std::shared_lock lock(workers_mutex_);
-  return workers_.empty();
-}
+  caf::scoped_actor self{system_};
+  std::promise<int> promise;
+  self->request(this->pool_, caf::infinite, caf::sys_atom::value,
+                caf::get_atom::value)
+      .receive(
+          [&](const std::vector<caf::actor>& workers) {
+            promise.set_value(workers.size());
+            std::cout << "!!!!pool size is:" << workers.size() << std::endl;
+          },
+          [&](caf::error& err) { promise.set_value(0); });
+  auto result = promise.get_future().get();
 
-caf::strong_actor_ptr WorkerPool::GetWorker() {
   std::shared_lock lock(workers_mutex_);
-  if (workers_.empty()) {
-    return caf::strong_actor_ptr();
-  }
-  if (worker_index_ == workers_.size() - 1) {
-    worker_index_ = 0;
-    return workers_[workers_.size() - 1];
-  }
-  auto worker_index_to_return = worker_index_.load();
-  worker_index_++;
-  return workers_[worker_index_to_return];
+  return (result == 0);
 }
 
 int WorkerPool::AddWorker(const std::string& host) {
@@ -64,7 +62,9 @@ int WorkerPool::AddWorker(const std::string& host) {
                     host);
 
   std::unique_lock lock(workers_mutex_);
-  workers_.push_back(caf::actor_cast<caf::strong_actor_ptr>(*worker1));
+
+  caf::scoped_actor self{system_};
+  self->send(this->pool_, caf::sys_atom::value, caf::put_atom::value, *worker1);
 
   return 0;
 }
@@ -95,6 +95,7 @@ void WorkerPool::PrintClusterMembers() {
               << std::endl;
   }
 }
+caf::actor& WorkerPool::GetPool() { return pool_; }
 
 using start_atom = caf::atom_constant<caf::atom("start")>;
 using end_atom = caf::atom_constant<caf::atom("end")>;
@@ -117,33 +118,33 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
       [=](start_atom) {
         int i = self->state.level_;
         for (int j = 0; j < i + 1; j++) {
-          auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
+          auto pool = worker_pool->GetPool();
           if (j == 0) {
             if (is_high_priority) {
-              self->send(worker, cdcf::high_priority_atom::value,
+              self->send(pool, cdcf::high_priority_atom::value,
                          self->state.last_level_results_[0],
                          self->state.triangle_data_[i][j], j);
             } else {
-              self->send(worker, self->state.last_level_results_[0],
+              self->send(pool, self->state.last_level_results_[0],
                          self->state.triangle_data_[i][j], j);
             }
           } else if (j == i) {
             if (is_high_priority) {
-              self->send(worker, cdcf::high_priority_atom::value,
+              self->send(pool, cdcf::high_priority_atom::value,
                          self->state.last_level_results_[j - 1],
                          self->state.triangle_data_[i][j], j);
             } else {
-              self->send(worker, self->state.last_level_results_[j - 1],
+              self->send(pool, self->state.last_level_results_[j - 1],
                          self->state.triangle_data_[i][j], j);
             }
           } else {
             if (is_high_priority) {
-              self->send(worker, cdcf::high_priority_atom::value,
+              self->send(pool, cdcf::high_priority_atom::value,
                          std::min(self->state.last_level_results_[j - 1],
                                   self->state.last_level_results_[j]),
                          self->state.triangle_data_[i][j], j);
             } else {
-              self->send(worker,
+              self->send(pool,
                          std::min(self->state.last_level_results_[j - 1],
                                   self->state.last_level_results_[j]),
                          self->state.triangle_data_[i][j], j);
@@ -187,8 +188,8 @@ caf::behavior yanghui_with_priority(caf::stateful_actor<yanghui_state>* self,
       [=](end_atom) {
         NumberCompareData send_data;
         send_data.numbers = self->state.last_level_results_;
-        auto worker = caf::actor_cast<caf::actor>(worker_pool->GetWorker());
-        self->request(worker, caf::infinite, cdcf::high_priority_atom::value,
+        auto pool = worker_pool->GetPool();
+        self->request(pool, caf::infinite, cdcf::high_priority_atom::value,
                       send_data)
             .await([=](int final_result) {
               if (is_high_priority) {
