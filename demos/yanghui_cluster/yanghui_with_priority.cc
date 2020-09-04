@@ -30,12 +30,10 @@ bool WorkerPool::IsEmpty() const {
       .receive(
           [&](const std::vector<caf::actor>& workers) {
             promise.set_value(workers.size());
-            std::cout << "!!!!pool size is:" << workers.size() << std::endl;
           },
           [&](caf::error& err) { promise.set_value(0); });
   auto result = promise.get_future().get();
 
-  std::shared_lock lock(workers_mutex_);
   return (result == 0);
 }
 
@@ -60,8 +58,6 @@ int WorkerPool::AddWorker(const std::string& host) {
             << std::endl;
   CDCF_LOGGER_DEBUG("add worker for calculator with priority on host: {}",
                     host);
-
-  std::unique_lock lock(workers_mutex_);
 
   caf::scoped_actor self{system_};
   self->send(this->pool_, caf::sys_atom::value, caf::put_atom::value, *worker1);

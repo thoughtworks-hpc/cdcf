@@ -6,8 +6,6 @@
 #define DEMOS_YANGHUI_CLUSTER_INCLUDE_YANGHUI_WITH_PRIORITY_H_
 
 #include <atomic>
-#include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -45,7 +43,6 @@ class WorkerPool : public cdcf::cluster::Observer {
 
   void PrintClusterMembers();
 
-  mutable std::shared_mutex workers_mutex_;
   caf::actor pool_;
   std::atomic<int> worker_index_ = 0;
   std::string host_;
