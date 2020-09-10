@@ -46,14 +46,16 @@ class ActorGuard {
   void HandleSendFailed(const caf::message& message,
                         return_function_type return_function,
                         std::function<void(caf::error)> error_deal_function,
-                        caf::error err) {
+                        const caf::error& err) {
     if ("system" != caf::to_string(err.category())) {
       // not system error, mean actor not down, this is a business error.
       error_deal_function(err);
       return;
     }
 
-    CDCF_LOGGER_ERROR("send msg failed, try restart dest actor.");
+    CDCF_LOGGER_ERROR(
+        "send msg failed, try restart dest actor. message:{}, error str:{}",
+        caf::to_string(message), caf::to_string(err));
     keep_actor_ = restart_fun_(active_);
 
     if (active_) {
