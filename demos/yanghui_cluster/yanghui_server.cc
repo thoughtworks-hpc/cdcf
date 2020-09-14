@@ -10,7 +10,7 @@ caf::behavior yanghui_standard_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
     cdcf::ActorGuard* actor_guard) {
   return {[=](const YanghuiData& data) {
-    std::cout << "start standard job counting." << std::endl;
+    CDCF_LOGGER_INFO("start standard job counting.");
     auto yanghui_data = data.data;
     //            self->state.message_sender = self->current_sender();
     auto sender = self->current_sender();
@@ -19,8 +19,7 @@ caf::behavior yanghui_standard_job_actor_fun(
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
         },
         [&](const caf::error& err) {
-          std::cout << "call actor get error:" << caf::to_string(err)
-                    << std::endl;
+          CDCF_LOGGER_INFO("call actor get error:{}", caf::to_string(err));
           self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
         },
         yanghui_data);
@@ -32,10 +31,10 @@ caf::behavior yanghui_priority_job_actor_fun(
     caf::actor dispatcher) {
   return {
       [=](const YanghuiData& data) {
-        std::cout << "start yanghui calculation with priority." << std::endl;
+        CDCF_LOGGER_INFO("start yanghui calculation with priority.");
         auto yanghui_data = data.data;
         while (true) {
-          std::cout << "waiting for worker" << std::endl;
+          CDCF_LOGGER_INFO("waiting for worker");
           if (!worker_pool->IsEmpty()) {
             break;
           }
@@ -64,7 +63,7 @@ caf::behavior yanghui_load_balance_job_actor_fun(
     caf::actor yanghui_load_balance_count_path,
     caf::actor yanghui_load_balance_get_min) {
   return {[=](const YanghuiData& data) {
-            std::cout << "start load balance job counting." << std::endl;
+            CDCF_LOGGER_INFO("start load balance job counting.");
             auto yanghui_data = data.data;
             self->state.message_sender = self->current_sender();
             self->send(yanghui_load_balance_count_path, yanghui_data);
@@ -82,7 +81,7 @@ caf::behavior yanghui_router_pool_job_actor_fun(
     caf::stateful_actor<yanghui_job_state>* self,
     cdcf::ActorGuard* pool_guard) {
   return {[=](const YanghuiData& data) {
-    std::cout << "start router pool job counting." << std::endl;
+    CDCF_LOGGER_INFO("start router pool job counting.");
     auto yanghui_data = data.data;
     auto sender = self->current_sender();
     pool_guard->SendAndReceive(
@@ -90,8 +89,7 @@ caf::behavior yanghui_router_pool_job_actor_fun(
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
         },
         [&](const caf::error& err) {
-          std::cout << "call actor get error:" << caf::to_string(err)
-                    << std::endl;
+          CDCF_LOGGER_ERROR("call actor get error:{}", caf::to_string(err));
           self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
         },
         yanghui_data);
