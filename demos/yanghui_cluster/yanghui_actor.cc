@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#include "cdcf/logger.h"
 caf::behavior yanghui(caf::event_based_actor* self,
                       counter_interface* counter) {
   return {
@@ -19,6 +21,9 @@ caf::behavior yanghui(caf::event_based_actor* self,
         std::vector<int> states;
         states.resize(n);
         int error = 0;
+        CDCF_LOGGER_INFO(
+            "yanghui actor receive data, start count. actor address:{}.",
+            caf::to_string(self->address()));
 
         states[0] = 1;
         states[0] = data[0][0];
@@ -29,7 +34,8 @@ caf::behavior yanghui(caf::event_based_actor* self,
               // temp_states[0] = states[0] + data[i][j];
               error = counter->AddNumber(states[0], data[i][j], temp_states[0]);
               if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
+                CDCF_LOGGER_ERROR("add task error:{}, input:{}, {}", error,
+                                  states[0], data[i][j]);
                 return INT_MAX;
               }
             } else if (j == i) {
@@ -37,7 +43,8 @@ caf::behavior yanghui(caf::event_based_actor* self,
               error =
                   counter->AddNumber(states[j - 1], data[i][j], temp_states[j]);
               if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
+                CDCF_LOGGER_ERROR("add task error:{}, input:{}, {}", error,
+                                  states[j - 1], data[i][j]);
                 return INT_MAX;
               }
             } else {
@@ -46,7 +53,8 @@ caf::behavior yanghui(caf::event_based_actor* self,
               error = counter->AddNumber(std::min(states[j - 1], states[j]),
                                          data[i][j], temp_states[j]);
               if (0 != error) {
-                caf::aout(self) << "cluster down, exit task" << std::endl;
+                CDCF_LOGGER_ERROR("add task error:{}, input:{}, {}, {}", error,
+                                  states[j], data[i][j], data[i][j]);
                 return INT_MAX;
               }
             }
@@ -57,26 +65,18 @@ caf::behavior yanghui(caf::event_based_actor* self,
           }
         }
 
-        //    for (j = 0; j < n; j++) {
-        //      if (states[j] < min_sum) min_sum = states[j];
-        //    }
-
-        // std::vector<int> states_vec(states, states + n);
-
         error = counter->Compare(states, min_sum);
         if (0 != error) {
-          caf::aout(self) << "cluster down, exit task" << std::endl;
+          CDCF_LOGGER_ERROR("compare task failed.");
           return INT_MAX;
         }
 
-        caf::aout(self) << "yanghui triangle actor task complete, result: "
-                        << min_sum << std::endl;
-
+        CDCF_LOGGER_INFO("yanghui triangle actor task complete, result:{}",
+                         min_sum);
         return min_sum;
       },
       [=](std::string&) {
-        caf::aout(self) << "simulate get a critical error, yanghui actor quit."
-                        << std::endl;
+        CDCF_LOGGER_ERROR("simulate get a critical error, yanghui actor quit.");
         self->quit();
         return 0;
       }};
