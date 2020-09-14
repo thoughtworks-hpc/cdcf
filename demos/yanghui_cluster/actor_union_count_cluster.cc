@@ -31,7 +31,8 @@ void ActorUnionCountCluster::AddWorkerNode(const std::string& host) {
   auto worker_actor =
       yanghui_io_.remote_actor(system_, host, k_yanghui_work_port4);
   if (!worker_actor) {
-    CDCF_LOGGER_ERROR("connect remote actor failed. host:{}, port:{}", host, k_yanghui_work_port4);
+    CDCF_LOGGER_ERROR("connect remote actor failed. host:{}, port:{}", host,
+                      k_yanghui_work_port4);
     return;
   }
 
