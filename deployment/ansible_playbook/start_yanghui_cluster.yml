@@ -19,9 +19,9 @@
                 HOST: "{{ server }}"
                 ROLE: root
                 SEEDS: "{{ server }}:4445"
-                LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=20971520
+                LOG_COMMANDS: --log_file=/tmp/log/yanghui_root_v2.log --log_level=debug --log_file_size=65535
                 APP: /bin/yanghui_cluster_root_v2
-                APP_ARGS: "-r --root_host={{ server }} --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --log_file_size=20971520"
+                APP_ARGS: "-r --root_host={{ server }} --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_root_v2.log --log_level=debug --log_file_size=65535"
               network_mode: host
               ulimits:
                 core: -1
@@ -52,9 +52,9 @@
                 HOST: "{{ worker }}"
                 ROLE: worker
                 SEEDS: "{{ server }}:4445"
-                LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=20971520
+                LOG_COMMANDS: --log_file=/tmp/log/yanghui_worker1_v2.log --log_level=debug --log_file_size=65535
                 APP: /bin/yanghui_cluster_root_v2
-                APP_ARGS: "--root_host={{ server }} --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=20971520"
+                APP_ARGS: "--root_host={{ server }} --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_worker1_v2.log --log_level=debug --log_file_size=65535"
               network_mode: host
               cpus: "{{ cpus }}"
               volumes:
@@ -82,9 +82,9 @@
                 HOST: "{{ client }}"
                 ROLE: client
                 SEEDS: "{{ server }}:4445"
-                LOG_COMMANDS: --log_file=/tmp/log/yanghui_client.log --log_level=debug --log_file_size=20971520
+                LOG_COMMANDS: --log_file=/tmp/log/yanghui_client.log --log_level=debug --log_file_size=65535
                 APP: ""
-                APP_ARGS: "--role=client --root_host={{ server }} -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_client.log --log_level=debug --log_file_size=20971520"
+                APP_ARGS: "--role=client --root_host={{ server }} -l 1 --root_port=56600 --worker_port=56601 --threads_proportion=2 --log_file=/tmp/log/actorsystem_yanghui_client.log --log_level=debug --log_file_size=65535"
               network_mode: host
               volumes:
                 - /tmp/log:/tmp/log
