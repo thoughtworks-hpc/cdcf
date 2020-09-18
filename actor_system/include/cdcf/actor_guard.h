@@ -54,8 +54,10 @@ class ActorGuard {
     }
 
     CDCF_LOGGER_ERROR(
-        "send msg failed, try restart dest actor. message:{}, error str:{}",
-        caf::to_string(message), caf::to_string(err));
+        "send msg failed, try restart dest actor. message:{}, error str:{}, "
+        "old actor:{}",
+        caf::to_string(message), caf::to_string(err),
+        caf::to_string(keep_actor_.address()));
     keep_actor_ = restart_fun_(active_);
 
     if (active_) {
