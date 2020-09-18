@@ -30,7 +30,7 @@ class ActorGuard {
                       const send_type&... messages) {
     if (active_) {
       caf::message send_message = caf::make_message(messages...);
-
+      std::lock_guard<std::mutex> lock_gard(keeper_locker);
       sender_actor_->request(keep_actor_, timeout_in_seconds_, messages...)
           .receive(return_function, [&](caf::error err) {
             HandleSendFailed(send_message, return_function, error_deal_function,
@@ -52,13 +52,15 @@ class ActorGuard {
       error_deal_function(err);
       return;
     }
-
-    CDCF_LOGGER_ERROR(
-        "send msg failed, try restart dest actor. message:{}, error str:{}, "
-        "old actor:{}",
-        caf::to_string(message), caf::to_string(err),
-        caf::to_string(keep_actor_.address()));
-    keep_actor_ = restart_fun_(active_);
+    {
+      std::lock_guard<std::mutex> lock_gard(keeper_locker);
+      CDCF_LOGGER_ERROR(
+          "send msg failed, try restart dest actor. message:{}, error str:{}, "
+          "old actor:{}",
+          caf::to_string(message), caf::to_string(err),
+          caf::to_string(keep_actor_.address()));
+      keep_actor_ = restart_fun_(active_);
+    }
 
     if (active_) {
       CDCF_LOGGER_INFO("restart actor success.");
@@ -70,6 +72,7 @@ class ActorGuard {
     }
   }
 
+  std::mutex keeper_locker;
   caf::actor keep_actor_;
   caf::scoped_actor sender_actor_;
   std::function<caf::actor(std::atomic<bool>&)> restart_fun_;
