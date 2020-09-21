@@ -109,7 +109,7 @@ void UnionLeader(caf::actor_system& system, const config& cfg) {
       [&](bool active) {
         return StartWorker(system, *node, type, args, tout, active);
       },
-      system);
+      system, std::chrono::seconds(1));
 
   caf::scoped_actor self{system};
 

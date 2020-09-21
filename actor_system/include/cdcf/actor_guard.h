@@ -42,6 +42,23 @@ class ActorGuard {
   }
 
  private:
+  template <class... send_type, class return_function_type>
+  bool SendAndReceiveInternal(
+      return_function_type return_function,
+      std::function<void(caf::error)> error_deal_function,
+      const send_type&... messages) {
+    if (active_) {
+      caf::message send_message = caf::make_message(messages...);
+      sender_actor_->request(keep_actor_, timeout_in_seconds_, messages...)
+          .receive(return_function, [&](caf::error err) {
+            HandleSendFailed(send_message, return_function, error_deal_function,
+                             err);
+          });
+    }
+
+    return active_;
+  }
+
   template <class return_function_type>
   void HandleSendFailed(const caf::message& message,
                         return_function_type return_function,
@@ -53,7 +70,6 @@ class ActorGuard {
       return;
     }
     {
-      std::lock_guard<std::mutex> lock_gard(keeper_locker);
       CDCF_LOGGER_ERROR(
           "send msg failed, try restart dest actor. message:{}, error str:{}, "
           "old actor:{}",
@@ -63,8 +79,10 @@ class ActorGuard {
     }
 
     if (active_) {
-      CDCF_LOGGER_INFO("restart actor success.");
-      (void)SendAndReceive(return_function, error_deal_function, message);
+      CDCF_LOGGER_INFO("restart actor success. new actor:{}",
+                       caf::to_string(keep_actor_.address()));
+      (void)SendAndReceiveInternal(return_function, error_deal_function,
+                                   message);
     } else {
       CDCF_LOGGER_ERROR("restart actor failed. message:{} will not deliver.",
                         caf::to_string(message));
