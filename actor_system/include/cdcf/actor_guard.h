@@ -81,6 +81,8 @@ class ActorGuard {
     if (active_) {
       CDCF_LOGGER_INFO("restart actor success. new actor:{}",
                        caf::to_string(keep_actor_.address()));
+      // wait for start actor ready
+      std::this_thread::sleep_for(std::chrono::seconds(2));
       (void)SendAndReceiveInternal(return_function, error_deal_function,
                                    message);
     } else {
