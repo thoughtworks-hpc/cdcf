@@ -31,8 +31,7 @@ struct yanghui_job_state {
  *  yanghui_standard_job_actor
  */
 caf::behavior yanghui_standard_job_actor_fun(
-    caf::stateful_actor<yanghui_job_state>* self,
-    cdcf::ActorGuard* actor_guard);
+    caf::stateful_actor<yanghui_job_state>* self, caf::actor actor_guard);
 
 /**
  *  yanghui_priority_job_actor

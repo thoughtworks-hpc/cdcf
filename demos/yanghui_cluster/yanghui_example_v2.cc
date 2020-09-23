@@ -413,21 +413,21 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
   auto supervisor = system.spawn<cdcf::ActorMonitor>(downMsgHandle);
   cdcf::SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
 
-  cdcf::ActorGuard actor_guard(
-      yanghui_actor,
-      [&](std::atomic<bool>& active) {
-        active = true;
-        auto new_yanghui = system.spawn(yanghui, count_cluster);
-        CDCF_LOGGER_ERROR(
-            "yanghui actor for count cluster failed. spawn new one: {}",
-            caf::to_string(new_yanghui.address()));
-        actor_status_monitor.RegisterActor(
-            new_yanghui, "Yanghui",
-            "a actor can count yanghui triangle using countcluster.");
-        // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
-        return new_yanghui;
-      },
-      system);
+  //  cdcf::ActorGuard actor_guard(
+  //      yanghui_actor,
+  //      [&](std::atomic<bool>& active) {
+  //        active = true;
+  //        auto new_yanghui = system.spawn(yanghui, count_cluster);
+  //        CDCF_LOGGER_ERROR(
+  //            "yanghui actor for count cluster failed. spawn new one: {}",
+  //            caf::to_string(new_yanghui.address()));
+  //        actor_status_monitor.RegisterActor(
+  //            new_yanghui, "Yanghui",
+  //            "a actor can count yanghui triangle using countcluster.");
+  //        // SetMonitor(supervisor, yanghui_actor, "worker actor for
+  //        testing"); return new_yanghui;
+  //      },
+  //      system);
 
   auto yanghui_load_balance_result = system.spawn(result_print_actor);
   auto yanghui_load_balance_get_min =
@@ -449,7 +449,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
             << yanghui_job_dispatcher_actor.id() << std::endl;
 
   auto yanghui_standard_job_actor =
-      system.spawn(yanghui_standard_job_actor_fun, &actor_guard);
+      system.spawn(yanghui_standard_job_actor_fun, yanghui_actor);
   std::cout << "yanghui_standard_job_actor spawned with id: "
             << yanghui_standard_job_actor.id() << std::endl;
 
@@ -483,9 +483,12 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
     }
 
     if (dummy == "n") {
+      caf::scoped_actor self{system};
       std::cout << "start count." << std::endl;
-      // self->send(yanghui_actor, kYanghuiData2);
-      actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+      self->send(yanghui_actor, kYanghuiData2);
+      self->receive([](int result) { printRet(result); });
+      // actor_guard.SendAndReceive(printRet, dealSendErr, kYanghuiData2);
+
       continue;
     }
 
@@ -506,9 +509,10 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
     }
 
     if (dummy == "e") {
+      caf::scoped_actor self{system};
       std::cout << "start count." << std::endl;
-      // self->send(yanghui_actor, kYanghuiData2);
-      actor_guard.SendAndReceive(printRet, dealSendErr, "quit");
+      self->send(yanghui_actor, "quit");
+      // actor_guard.SendAndReceive(printRet, dealSendErr, "quit");
 
       continue;
     }
