@@ -7,22 +7,26 @@
 #include <limits.h>
 
 caf::behavior yanghui_standard_job_actor_fun(
-    caf::stateful_actor<yanghui_job_state>* self,
-    cdcf::ActorGuard* actor_guard) {
+    caf::stateful_actor<yanghui_job_state>* self, caf::actor yanghui_actor) {
   return {[=](const YanghuiData& data) {
     CDCF_LOGGER_INFO("start standard job counting.");
     auto yanghui_data = data.data;
     //            self->state.message_sender = self->current_sender();
     auto sender = self->current_sender();
-    actor_guard->SendAndReceive(
-        [&](int result) {
+    self->request(yanghui_actor, std::chrono::seconds(10), yanghui_data)
+        .then([=](int result) {
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
-        },
-        [&](const caf::error& err) {
-          CDCF_LOGGER_INFO("call actor get error:{}", caf::to_string(err));
-          self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
-        },
-        yanghui_data);
+        });
+    //    actor_guard->SendAndReceive(
+    //        [&](int result) {
+    //          self->send(caf::actor_cast<caf::actor>(sender), true, result);
+    //        },
+    //        [&](const caf::error& err) {
+    //          CDCF_LOGGER_INFO("call actor get error:{}",
+    //          caf::to_string(err));
+    //          self->send(caf::actor_cast<caf::actor>(sender), false, INT_MAX);
+    //        },
+    //        yanghui_data);
   }};
 }
 
