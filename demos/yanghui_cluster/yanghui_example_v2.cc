@@ -372,7 +372,7 @@ void SmartRootStart(caf::actor_system& system, const config& cfg) {
         // SetMonitor(supervisor, yanghui_actor, "worker actor for testing");
         return new_yanghui;
       },
-      system);
+      system, std::chrono::seconds(290));
 
   //  actor_union_count_cluster counter(cfg.root_host, system,
   //  cfg.node_keeper_port,
