@@ -15,7 +15,7 @@ class CdcfConan(ConanFile):
 
     def source(self):
         if self.settings.os == "Linux":
-            self.run("git clone -b develop https://github.com/thoughtworks-hpc/cdcf")
+            self.run("git clone -b fix-bug#15 https://github.com/thoughtworks-hpc/cdcf")
             tools.replace_in_file("cdcf/CMakeLists.txt", "project(cdcf)",
                                   '''project(cdcf)
         include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -35,7 +35,7 @@ class CdcfConan(ConanFile):
     def build(self):
         if self.settings.os == "Macos":
             self.run('mkdir unzipFolder')
-            tools.unzip('%s/cdcf/mac_cdcf_stable_package.zip' % (self.source_folder), 'unzipFolder')
+            tools.unzip('%s/cdcf/mac_cdcf_test_package.zip' % (self.source_folder), 'unzipFolder')
         else:
             cmake = CMake(self)
             if self.settings.os == "Linux":
