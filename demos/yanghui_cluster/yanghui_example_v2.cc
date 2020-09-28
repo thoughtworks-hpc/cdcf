@@ -51,39 +51,50 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   auto actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor1),
                                        k_yanghui_work_port1, nullptr, true);
   if (!actor_port) {
-    std::cout << "publish actor1 failed, error: "
-              << system.render(actor_port.error()) << std::endl;
+    CDCF_LOGGER_ERROR("Publish actor1 failed, error: {}",
+                      system.render(actor_port.error()));
+    //    std::cout << "publish actor1 failed, error: "
+    //              << system.render(actor_port.error()) << std::endl;
     exit(1);
   }
-  std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
+  CDCF_LOGGER_INFO("Worker start at port: {}", k_yanghui_work_port1);
+  // std::cout << "worker start at port:" << k_yanghui_work_port1 << std::endl;
 
   auto actor2 = system.spawn<typed_calculator>();
   actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor2),
                                   k_yanghui_work_port2, nullptr, true);
   if (!actor_port) {
-    std::cout << "publish actor2 failed, error: "
-              << system.render(actor_port.error()) << std::endl;
+    CDCF_LOGGER_ERROR("Publish actor2 failed, error: {}",
+                      system.render(actor_port.error()));
+    //    std::cout << "publish actor2 failed, error: "
+    //              << system.render(actor_port.error()) << std::endl;
     exit(1);
   }
-  std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
+  CDCF_LOGGER_INFO("Worker start at port: {}", k_yanghui_work_port2);
+  // std::cout << "worker start at port:" << k_yanghui_work_port2 << std::endl;
 
   auto actor3 = system.spawn<typed_calculator>();
   actor_port = yanghui_io.publish(caf::actor_cast<caf::actor>(actor3),
                                   k_yanghui_work_port3, nullptr, true);
   if (!actor_port) {
-    std::cout << "publish actor3 failed, error: "
-              << system.render(actor_port.error()) << std::endl;
+    CDCF_LOGGER_ERROR("Publish actor3 failed, error: {}",
+                      system.render(actor_port.error()));
+    //    std::cout << "publish actor3 failed, error: "
+    //              << system.render(actor_port.error()) << std::endl;
     exit(1);
   }
-  std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
+  CDCF_LOGGER_INFO("Worker start at port: {}", k_yanghui_work_port3);
+  // std::cout << "worker start at port:" << k_yanghui_work_port3 << std::endl;
 
   auto actor_for_load_balance_demo =
       system.spawn(simple_counter_add_load, cfg.worker_load);
   // Todo: 错误处理
   yanghui_io.publish(caf::actor_cast<caf::actor>(actor_for_load_balance_demo),
                      k_yanghui_work_port4);
-  std::cout << "load balance worker start at port:" << k_yanghui_work_port4
-            << ", worker_load:" << cfg.worker_load << std::endl;
+  CDCF_LOGGER_INFO("Load balance worker start at port: {}, worker_load: {}",
+                   k_yanghui_work_port4, cfg.worker_load);
+  //  std::cout << "load balance worker start at port:" << k_yanghui_work_port4
+  //            << ", worker_load:" << cfg.worker_load << std::endl;
 
   cdcf::ActorStatusMonitor actor_status_monitor(system);
   cdcf::ActorStatusServiceGrpcImpl actor_status_service(system,
@@ -94,8 +105,10 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
   actor_port = yanghui_io.publish(cdcf_spawn, cfg.worker_port, nullptr, true);
 
   if (!actor_port) {
-    std::cout << "publish cdcf_spawn failed, error: "
-              << system.render(actor_port.error()) << std::endl;
+    CDCF_LOGGER_ERROR("Publish cdcf spawn failed, error: {}",
+                      system.render(actor_port.error()));
+    //    std::cout << "publish cdcf_spawn failed, error: "
+    //              << system.render(actor_port.error()) << std::endl;
     exit(1);
   }
 
@@ -113,7 +126,9 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
       actor_for_load_balance_demo, "calculator for load balance",
       "a actor can calculate for load balance yanghui.");
 
-  std::cout << "yanghui server ready to work, press 'q' to stop." << std::endl;
+  CDCF_LOGGER_INFO("Yanghui server ready to work, press 'q' to stop.");
+  // std::cout << "yanghui server ready to work, press 'q' to stop." <<
+  // std::endl;
   actor_status_service.Run();
   cdcf::cluster::Cluster::GetInstance()->NotifyReady();
 
@@ -122,7 +137,8 @@ void SmartWorkerStart(caf::actor_system& system, const config& cfg) {
     std::string dummy;
     std::getline(std::cin, dummy);
     if (dummy == "q") {
-      std::cout << "stop work" << std::endl;
+      CDCF_LOGGER_INFO("Manually STOP yanghui service");
+      // std::cout << "stop work" << std::endl;
       break;
     }
 
@@ -246,7 +262,8 @@ void downMsgHandle(const caf::down_msg& downMsg,
 }
 
 void dealSendErr(const caf::error& err) {
-  std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
+  CDCF_LOGGER_ERROR("call actor get error: {}", caf::to_string(err));
+  // std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
 caf::actor InitHighPriorityYanghuiActors(caf::actor_system& system,

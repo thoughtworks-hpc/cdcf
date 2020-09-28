@@ -31,6 +31,10 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:7.8.1
     container_name: logstash
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
     ports:
       - 5044:5044
     volumes:
