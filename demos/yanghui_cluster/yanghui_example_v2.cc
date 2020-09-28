@@ -263,7 +263,7 @@ void downMsgHandle(const caf::down_msg& downMsg,
 
 void dealSendErr(const caf::error& err) {
   CDCF_LOGGER_ERROR("call actor get error: {}", caf::to_string(err));
-  //std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
+  // std::cout << "call actor get error:" << caf::to_string(err) << std::endl;
 }
 
 caf::actor InitHighPriorityYanghuiActors(caf::actor_system& system,
