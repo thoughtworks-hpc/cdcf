@@ -887,7 +887,7 @@ void membership::Membership::SendSelfActorSystemUpGossip() {
   SendGossip(payload);
   CDCF_LOGGER_INFO(
       "send self actor system up gossip, Member: {}, Incarnation: {}",
-      message.GetMember(), message.GetIncarnation());
+      message.GetMember().GetNodeName(), message.GetIncarnation());
 }
 
 bool membership::operator==(const membership::Member& lhs,
