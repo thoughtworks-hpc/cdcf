@@ -136,7 +136,7 @@ class ClusterImpl {
       std::cout << "*** cluster receive actor system up" << std::endl;
       member.status = Member::Status::ActorSystemUp;
     }
-    // TODO
+    // TODO(xx): 过滤
     if (!FindIfIsHost(member.host)) {
       Cluster::GetInstance()->Notify({member});
     }

@@ -60,7 +60,7 @@ void PrintClusterMembers() {
 }
 
 void CountCluster::Update(const cdcf::cluster::Event& event) {
-  // TODO 都打印一下
+  // TODO(xx): 都打印一下
   CDCF_LOGGER_INFO("update host: {},{},{}", host_, event.member.hostname,
                    event.member.host);
   std::cout << "update host " << host_ << " " << event.member.hostname << " "
