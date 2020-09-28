@@ -78,11 +78,18 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
   std::lock_guard<std::mutex> lock(mutex_);
   for (auto& channel : channels_) {
     for (auto& event : events) {
+      if (event.member.GetIpAddress() == host_ ||
+          event.member.GetHostName() == host_) {
+        continue;
+      }
       channel.Put(event);
     }
   }
 }
+
 GRPCImpl::GRPCImpl(membership::Membership& cluster_membership)
     : cluster_membership_(cluster_membership) {}
+
+void GRPCImpl::SetHost(const std::string& host) { host_ = host; }
 
 }  // namespace node_keeper
