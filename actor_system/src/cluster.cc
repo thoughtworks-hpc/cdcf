@@ -3,9 +3,12 @@
  */
 #include "cdcf/cluster/cluster.h"
 
+#include <arpa/inet.h>
 #include <grpcpp/channel.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
 
 #include <thread>
 
@@ -28,6 +31,11 @@ class ClusterImpl {
     stub_ = NodeKeeper::NewStub(channel);
     Fetch();
     thread_ = std::thread(&ClusterImpl::Routine, this);
+    GetIpAddress(ip_list_);
+    std::cout << "ip list aaa:" << std::endl;
+    for (auto& item : ip_list_) {
+      std::cout << item << std::endl;
+    }
   }
 
   ClusterImpl(const std::string& host_ip, uint16_t port) {
@@ -42,6 +50,11 @@ class ClusterImpl {
     stub_ = NodeKeeper::NewStub(channel);
     Fetch();
     thread_ = std::thread(&ClusterImpl::Routine, this);
+    ip_list_.emplace_back(host_ip);
+    std::cout << "ip list:" << std::endl;
+    for (auto& item : ip_list_) {
+      std::cout << item << std::endl;
+    }
   }
 
   ~ClusterImpl() {
@@ -123,7 +136,41 @@ class ClusterImpl {
       std::cout << "*** cluster receive actor system up" << std::endl;
       member.status = Member::Status::ActorSystemUp;
     }
-    Cluster::GetInstance()->Notify({member});
+    // TODO
+    if (!FindIfIsHost(member.host)) {
+      Cluster::GetInstance()->Notify({member});
+    }
+    //    Cluster::GetInstance()->Notify({member});
+  }
+
+  static int GetIpAddress(std::vector<std::string>& ip_list) {
+    struct ifaddrs* ifAddrStruct = nullptr;
+    struct ifaddrs* ifa;
+    void* tmpAddrPtr;
+
+    getifaddrs(&ifAddrStruct);
+
+    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
+      if (!ifa->ifa_addr) {
+        continue;
+      }
+      if (ifa->ifa_addr->sa_family == AF_INET) {
+        tmpAddrPtr = &((struct sockaddr_in*)ifa->ifa_addr)->sin_addr;
+        char addressBuffer[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+        ip_list.emplace_back(addressBuffer);
+      }
+    }
+    return 0;
+  }
+
+  bool FindIfIsHost(std::string& host) {
+    for (auto& ip : ip_list_) {
+      if (host == ip) {
+        return true;
+      }
+    }
+    return false;
   }
 
   std::mutex mutex_members_;
@@ -131,6 +178,7 @@ class ClusterImpl {
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};
+  std::vector<std::string> ip_list_;
 };
 
 std::mutex Cluster::instance_mutex_;

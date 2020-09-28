@@ -60,7 +60,13 @@ void PrintClusterMembers() {
 }
 
 void CountCluster::Update(const cdcf::cluster::Event& event) {
-  if (event.member.hostname != host_ || event.member.host != host_) {
+  // TODO 都打印一下
+  CDCF_LOGGER_INFO("update host: {},{},{}", host_, event.member.hostname,
+                   event.member.host);
+  std::cout << "update host " << host_ << " " << event.member.hostname << " "
+            << event.member.host << std::endl;
+
+  if (event.member.hostname != host_ && event.member.host != host_) {
     if (event.member.status == event.member.ActorSystemUp) {
       CDCF_LOGGER_DEBUG("Actor system up, host: {}, role: {}",
                         event.member.host, event.member.role);
