@@ -10,17 +10,25 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
   return {
       [self, &deal_msg_count, sleep_micro](int a, int b) -> int {
         ++deal_msg_count;
-        caf::aout(self) << " slow calculator received add task. input a:" << a
-                        << " b:" << b
-                        << ", ************* calculator sleep microseconds:"
-                        << sleep_micro << " msg count:" << deal_msg_count
-                        << std::endl;
+        CDCF_LOGGER_INFO(
+            " slow calculator received add task. input a: {} b: {},  "
+            "************* calculator sleep microseconds: {} msg count:{}",
+            a, b, sleep_micro, deal_msg_count);
+        //        caf::aout(self) << " slow calculator received add task. input
+        //        a:" << a
+        //                        << " b:" << b
+        //                        << ", ************* calculator sleep
+        //                        microseconds:"
+        //                        << sleep_micro << " msg count:" <<
+        //                        deal_msg_count
+        //                        << std::endl;
         if (sleep_micro) {
           std::this_thread::sleep_for(std::chrono::microseconds(sleep_micro));
         }
 
         int result = a + b;
-        caf::aout(self) << "return: " << result << std::endl;
+        CDCF_LOGGER_INFO("return: {}", result);
+        // caf::aout(self) << "return: " << result << std::endl;
         return result;
       },
       [=](int a, int b, int position) -> ResultWithPosition {
@@ -29,13 +37,15 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
       [self, &deal_msg_count, sleep_micro](NumberCompareData& data) -> int {
         ++deal_msg_count;
         if (data.numbers.empty()) {
-          caf::aout(self) << "get empty compare" << std::endl;
+          CDCF_LOGGER_ERROR("get empty compare");
+          // caf::aout(self) << "get empty compare" << std::endl;
           return 999;
         }
 
         int result = data.numbers[0];
 
-        caf::aout(self) << "received compare task, input: ";
+        CDCF_LOGGER_INFO("received compare task, input: ");
+        // caf::aout(self) << "received compare task, input: ";
 
         for (int number : data.numbers) {
           caf::aout(self) << number << " ";
@@ -43,16 +53,21 @@ calculator::behavior_type sleep_calculator_fun(calculator::pointer self,
             result = number;
           }
         }
-
-        caf::aout(self) << "************* calculator sleep microseconds:"
-                        << sleep_micro << " msg count:" << deal_msg_count
-                        << std::endl;
+        CDCF_LOGGER_INFO(
+            "************* calculator sleep microseconds:"
+            "{} msg count: {}",
+            sleep_micro, deal_msg_count);
+        //        caf::aout(self) << "************* calculator sleep
+        //        microseconds:"
+        //                        << sleep_micro << " msg count:" <<
+        //                        deal_msg_count
+        //                        << std::endl;
 
         if (sleep_micro) {
           std::this_thread::sleep_for(std::chrono::microseconds(sleep_micro));
         }
-
-        caf::aout(self) << "return: " << result << std::endl;
+        CDCF_LOGGER_INFO("return: {}", result);
+        // caf::aout(self) << "return: " << result << std::endl;
 
         return result;
       }};
