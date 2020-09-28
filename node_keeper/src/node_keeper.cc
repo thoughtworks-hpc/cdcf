@@ -67,7 +67,6 @@ class Subscriber : public membership::Subscriber {
 
 [[noreturn]] void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
-  // TODO 传host
   GRPCImpl service(membership_);
   service.SetHost(host_);
   NodeStatusGRPCImpl node_status_service(membership_);
