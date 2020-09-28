@@ -1,19 +1,40 @@
-input {
-  beats {
-  port => "5044"
+  input {
+    beats {
+    port => "5044"
+    }
   }
-}
 
-  filter {
-  grok {
-  match => { "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:level}%{DATA} %{DATA}%{PATH:source}:%{NUMBER:line_num}%{DATA} %{GREEDYDATA:line}" }
-  }
-}
+    filter {
+    grok {
+    match => {
+    "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:level}%{DATA} %{DATA}%{PATH:source}:%{NUMBER:line_num}%{DATA} %{GREEDYDATA:line}"
+    }
+    }
 
-  output {
-  elasticsearch {
-  hosts => ["http://elasticsearch:9200"]
-  index => "cdcf_log"
+    #grok {
+    #  match => {
+    #     "message" => "%{DATA}%{TIMESTAMP_ISO8601:timestamp}]%{DATA} %{DATA}%{WORD:level}%{DATA} %{GREEDYDATA:line}"
+    #  }
+    #}
+
+    mutate {
+    remove_field => ["agent"]
+    remove_field => ["ecs"]
+    remove_field => ["fields"]
+    remove_field => ["cloud"]
+    }
   }
-  stdout { codec => rubydebug }
-}
+
+    output {
+    if "cte_log" in [tags] {
+    elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    index => "cte_log"
+    }
+    } else {
+    elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    index => "cdcf_log"
+    }
+    }
+  }
