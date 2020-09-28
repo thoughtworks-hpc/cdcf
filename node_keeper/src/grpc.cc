@@ -29,6 +29,7 @@ namespace node_keeper {
 ::grpc::Status GRPCImpl::ActorSystemUp(::grpc::ServerContext* context,
                                        const ::google::protobuf::Empty* request,
                                        ::google::protobuf::Empty* response) {
+  CDCF_LOGGER_INFO("receive actor system up from self actor system.");
   cluster_membership_.SetSelfActorSystemUp();
   cluster_membership_.SendSelfActorSystemUpGossip();
   return ::grpc::Status::OK;
