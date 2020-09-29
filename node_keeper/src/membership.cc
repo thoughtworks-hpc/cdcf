@@ -722,6 +722,8 @@ void membership::Membership::UpdateActorSystemStatus(
       member_actor_system_[member_with_status.member] = false;
     }
   }
+
+  Notify();
 }
 
 void membership::Membership::MergeDownUpdate(const Member& member,
