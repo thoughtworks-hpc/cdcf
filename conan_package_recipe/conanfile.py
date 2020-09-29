@@ -2,7 +2,7 @@ from conans import ConanFile, CMake, tools
 
 class CdcfConan(ConanFile):
     name = "cdcf"
-    version = "1.0"
+    version = "1.1"
     license = "MIT"
     author = "thoughtworks HPC"
     url = "https://github.com/thoughtworks-hpc/cdcf"

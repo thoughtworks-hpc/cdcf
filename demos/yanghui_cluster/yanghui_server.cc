@@ -13,7 +13,7 @@ caf::behavior yanghui_standard_job_actor_fun(
     auto yanghui_data = data.data;
     //            self->state.message_sender = self->current_sender();
     auto sender = self->current_sender();
-    self->request(yanghui_actor, std::chrono::seconds(10), yanghui_data)
+    self->request(yanghui_actor, std::chrono::seconds(290), yanghui_data)
         .then([=](int result) {
           self->send(caf::actor_cast<caf::actor>(sender), true, result);
         });

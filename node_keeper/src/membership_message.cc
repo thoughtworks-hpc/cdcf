@@ -107,6 +107,21 @@ void membership::FullStateMessage::InitAsFullStateMessage(
   }
 }
 
+void membership::FullStateMessage::InitAsFullStateMessageWithStatus(
+    const std::vector<MemberWithStatus>& members_with_status) {
+  for (const auto& member_with_status : members_with_status) {
+    state_.set_error(MemberFullState::SUCCESS);
+    auto new_state = state_.add_states();
+    new_state->set_name(member_with_status.member.GetNodeName());
+    new_state->set_hostname(member_with_status.member.GetHostName());
+    new_state->set_ip(member_with_status.member.GetIpAddress());
+    new_state->set_role(member_with_status.member.GetRole());
+    new_state->set_port(member_with_status.member.GetPort());
+    new_state->set_status(member_with_status.status);
+    new_state->set_incarnation(1);
+  }
+}
+
 void membership::UpdateMessage::InitAsActorSystemDownMessage(
     const membership::Member& member, unsigned int incarnation) {
   SetUpdate(member, incarnation);
@@ -130,6 +145,20 @@ std::vector<membership::Member> membership::FullStateMessage::GetMembers() {
                          state.hostname(), "", state.role());
   }
   return members;
+}
+
+std::vector<membership::MemberWithStatus>
+membership::FullStateMessage::GetMembersWithStatus() {
+  std::vector<MemberWithStatus> members_with_status;
+  for (const auto& state : state_.states()) {
+    MemberWithStatus member_with_status;
+    member_with_status.member = Member(state.name(), state.ip(), state.port(),
+                                       state.hostname(), "", state.role());
+    member_with_status.status = state.status();
+    members_with_status.push_back(member_with_status);
+  }
+
+  return members_with_status;
 }
 
 bool membership::FullStateMessage::IsSuccess() {

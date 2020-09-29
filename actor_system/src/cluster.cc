@@ -9,18 +9,19 @@
 
 #include <thread>
 
+#include "cdcf/logger.h"
 #include "src/node_keeper.grpc.pb.h"
 
 namespace cdcf::cluster {
 
 class ClusterImpl {
  public:
+  // Todo: duplicate code
   ClusterImpl() {
     const std::string& host{"127.0.0.1"};
     const uint16_t port = 50051;
     auto address = host + ":" + std::to_string(port);
-    std::cout << "ClusterImpl connect to node keeper address:" << address
-              << std::endl;
+    CDCF_LOGGER_INFO("ClusterImpl connect to node keeper address: {}", address);
     auto channel =
         grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
     auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);
@@ -33,8 +34,9 @@ class ClusterImpl {
   ClusterImpl(const std::string& host_ip, uint16_t port) {
     const std::string& host{host_ip};
     auto address = host + ":" + std::to_string(port);
-    std::cout << "ClusterImpl connect to node keeper with parameter address:"
-              << address << std::endl;
+    CDCF_LOGGER_INFO(
+        "ClusterImpl connect to node keeper with parameter address: {}",
+        address);
     auto channel =
         grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
     auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(10);
@@ -61,9 +63,10 @@ class ClusterImpl {
     ::google::protobuf::Empty empty;
     auto status = stub_->ActorSystemUp(&context, {}, &empty);
     if (!status.ok()) {
-      std::cout << "[ActorSystemUp] error code:  " << status.error_code()
-                << ",msg: " << status.error_message()
-                << ", detail: " << status.error_details() << std::endl;
+      CDCF_LOGGER_ERROR(
+          "Send actor system up to self node keeper, error code: {}, error "
+          "msg: {}, detail: {}",
+          status.error_code(), status.error_message(), status.error_details());
     }
   }
 

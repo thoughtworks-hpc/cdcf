@@ -14,7 +14,7 @@ class CdcfConan(ConanFile):
     generators = "cmake"
 
     def source(self):
-        self.run("git clone -b fix-bug#15 https://github.com/thoughtworks-hpc/cdcf")
+        self.run("git clone -b develop https://github.com/thoughtworks-hpc/cdcf")
         tools.replace_in_file("cdcf/CMakeLists.txt", "project(cdcf)",
                               '''project(cdcf)
         include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -32,7 +32,7 @@ class CdcfConan(ConanFile):
         cmake = CMake(self)
         self.run('cd cdcf && conan install . -s compiler.libcxx=libc++ --build missing')
         self.run('cmake %s/cdcf %s'
-            % (self.source_folder, cmake.command_line + '  -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake '))
+                 % (self.source_folder, cmake.command_line + '  -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake '))
         self.run("cmake --build . %s -- -j 4" % cmake.build_config)
 
     def package(self):
@@ -41,4 +41,3 @@ class CdcfConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["actor_system", "common"]
-

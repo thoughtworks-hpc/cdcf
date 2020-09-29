@@ -139,6 +139,7 @@ void membership::Membership::PullFromSeedMember() {
                          HandleDidPull(result);
                          return;
                        }
+                       std::this_thread::sleep_for(std::chrono::seconds(1));
                        PullFromSeedMember();
                      });
   }
@@ -339,8 +340,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     }
     RecoverySuspect(member);
   } else if (message.IsActorSystemDownMessage()) {
-    CDCF_LOGGER_DEBUG("Receive gossip actors system down message for {}:{}",
-                      member.GetNodeName(), member.GetPort());
+    CDCF_LOGGER_INFO("Receive gossip actors system down message for {}:{}",
+                     member.GetNodeName(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -350,8 +351,8 @@ void membership::Membership::HandleGossip(const struct gossip::Address& node,
     SendGossip(payload);
     MergeActorSystemDown(member, message.GetIncarnation());
   } else if (message.IsActorSystemUpMessage()) {
-    CDCF_LOGGER_DEBUG("Receive gossip actors system up message for {}:{}",
-                      member.GetNodeName(), member.GetPort());
+    CDCF_LOGGER_INFO("Receive gossip actors system up message for {}:{}",
+                     member.GetNodeName(), member.GetPort());
     if (!IfBelongsToMembers(member)) {
       return;
     }
@@ -374,10 +375,12 @@ void membership::Membership::HandleDidPull(
         MergeUpUpdate(member, 0);
       }
 
+      UpdateActorSystemStatus(message.GetMembersWithStatus());
+
       UpdateMessage update;
       auto incarnation = IncreaseIncarnation();
       update.InitAsUpMessage(self_, incarnation);
-      CDCF_LOGGER_DEBUG(
+      CDCF_LOGGER_INFO(
           "Send self gossip up message to others, incarnation={}, role={}",
           incarnation, self_.GetRole());
       auto update_serialized = update.SerializeToString();
@@ -423,14 +426,18 @@ std::vector<uint8_t> membership::Membership::HandlePull(
     CDCF_LOGGER_INFO("Received full state pull request from {}:{}",
                      address.host, address.port);
 
-    std::vector<Member> members;
-    for (const auto& member : members_) {
-      members.emplace_back(member.first.GetNodeName(),
-                           member.first.GetIpAddress(), member.first.GetPort(),
-                           member.first.GetHostName(), member.first.GetUid(),
-                           member.first.GetRole());
-    }
-    response.InitAsFullStateMessage(members);
+    //    std::vector<Member> members;
+    //    for (const auto& member : members_) {
+    //      members.emplace_back(member.first.GetNodeName(),
+    //                           member.first.GetIpAddress(),
+    //                           member.first.GetPort(),
+    //                           member.first.GetHostName(),
+    //                           member.first.GetUid(), member.first.GetRole());
+    //    }
+    //    response.InitAsFullStateMessage(members);
+
+    auto members_with_status = GetMembersWithStatus();
+    response.InitAsFullStateMessageWithStatus(members_with_status);
 
     message_serialized = response.SerializeToString();
   } else if (request.IsPingType()) {
@@ -705,6 +712,21 @@ void membership::Membership::MergeUpUpdate(const Member& member,
   Notify();
 }
 
+void membership::Membership::UpdateActorSystemStatus(
+    const std::vector<MemberWithStatus>& members_with_status) {
+  const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+
+  for (const auto& member_with_status : members_with_status) {
+    if (MemberUpdate::ACTOR_SYSTEM_UP == member_with_status.status) {
+      member_actor_system_[member_with_status.member] = true;
+    } else {
+      member_actor_system_[member_with_status.member] = false;
+    }
+  }
+
+  Notify();
+}
+
 void membership::Membership::MergeDownUpdate(const Member& member,
                                              unsigned int incarnation) {
   if (member == self_) {
@@ -832,8 +854,8 @@ void membership::Membership::MergeActorSystemUp(
   {
     const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
     member_actor_system_[member] = true;
-    CDCF_LOGGER_DEBUG("merge actor system up success. member: {}:{}",
-                      member.GetNodeName(), member.GetPort());
+    CDCF_LOGGER_INFO("merge actor system up success. member: {}:{}",
+                     member.GetNodeName(), member.GetPort());
   }
 
   Notify();
@@ -854,8 +876,8 @@ void membership::Membership::MergeActorSystemDown(
   {
     const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
     member_actor_system_[member] = false;
-    CDCF_LOGGER_DEBUG("merge actor system down success. member: {}:{}",
-                      member.GetNodeName(), member.GetPort());
+    CDCF_LOGGER_INFO("merge actor system down success. member: {}:{}",
+                     member.GetNodeName(), member.GetPort());
   }
 
   Notify();
@@ -868,8 +890,8 @@ void membership::Membership::NotifyActorSystemDown() {
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   SendGossip(payload);
-  CDCF_LOGGER_DEBUG("send self actor system down gossip, incarnation: ",
-                    message.GetIncarnation());
+  CDCF_LOGGER_INFO("send self actor system down gossip, incarnation: ",
+                   message.GetIncarnation());
 }
 std::map<membership::Member, bool> membership::Membership::GetActorSystems()
     const {
@@ -885,6 +907,34 @@ void membership::Membership::SendSelfActorSystemUpGossip() {
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
   SendGossip(payload);
+  CDCF_LOGGER_INFO(
+      "send self actor system up gossip, Member: {}, Incarnation: {}",
+      message.GetMember().GetNodeName(), message.GetIncarnation());
+}
+
+std::vector<membership::MemberWithStatus>
+membership::Membership::GetMembersWithStatus() {
+  std::vector<MemberWithStatus> members_with_status;
+  std::vector<Member> return_members;
+  const std::lock_guard<std::mutex> lock(mutex_members_);
+  const std::lock_guard<std::mutex> actor_system_lock(
+      mutex_member_actor_system_);
+
+  for (auto& one_member_info : members_) {
+    MemberWithStatus member_with_status;
+    member_with_status.member = one_member_info.first;
+
+    if (0 != member_actor_system_.count(member_with_status.member) &&
+        member_actor_system_[member_with_status.member]) {
+      member_with_status.status = MemberUpdate::ACTOR_SYSTEM_UP;
+    } else {
+      member_with_status.status = MemberUpdate::UP;
+    }
+
+    members_with_status.emplace_back(member_with_status);
+  }
+
+  return members_with_status;
 }
 
 bool membership::operator==(const membership::Member& lhs,

@@ -5,6 +5,8 @@
 #ifndef NODE_KEEPER_SRC_MEMBERSHIP_H_
 #define NODE_KEEPER_SRC_MEMBERSHIP_H_
 
+#include <protobuf/message.pb.h>
+
 #include <chrono>
 #include <map>
 #include <memory>
@@ -134,6 +136,11 @@ class Subscriber {
   void virtual Update() = 0;
 };
 
+struct MemberWithStatus {
+  Member member;
+  MemberUpdate::MemberStatus status;
+};
+
 class Membership {
  public:
   Membership()
@@ -145,6 +152,7 @@ class Membership {
   int Init(std::shared_ptr<gossip::Transportable> transport,
            const Config& config);
   virtual std::vector<Member> GetMembers() const;
+  std::vector<MemberWithStatus> GetMembersWithStatus();
   std::vector<Member> GetSuspects() const;
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
   void SendGossip(const gossip::Payload& payload);
@@ -164,6 +172,8 @@ class Membership {
   unsigned int GetMemberLocalIncarnation(const membership::Member& member);
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
+  void UpdateActorSystemStatus(
+      const std::vector<MemberWithStatus>& members_with_status);
   void MergeActorSystemDown(const Member& member, unsigned int incarnation);
   void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
