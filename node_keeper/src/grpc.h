@@ -66,6 +66,10 @@ class GRPCImpl final : public ::NodeKeeper::Service {
   channels_type channels_;
   std::set<membership::Member> members_;
   membership::Membership& cluster_membership_;
+  std::string host_;
+
+ public:
+  void SetHost(const std::string& host);
 };
 
 class GRPCServer {

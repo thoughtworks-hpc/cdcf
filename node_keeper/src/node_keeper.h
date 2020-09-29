@@ -15,6 +15,7 @@ namespace node_keeper {
 
 class NodeKeeper {
   membership::Membership membership_;
+  std::string host_ = "self_host";
 
  public:
   explicit NodeKeeper(const Config& config);

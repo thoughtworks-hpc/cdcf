@@ -28,3 +28,4 @@ endif ()
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_DIRECTORY ${PROJECT_SOURCE_DIR}/pack)
 include(CPack)
+

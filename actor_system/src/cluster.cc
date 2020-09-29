@@ -134,6 +134,7 @@ class ClusterImpl {
   std::unique_ptr<NodeKeeper::Stub> stub_;
   std::thread thread_;
   bool stop_{false};
+  std::vector<std::string> ip_list_;
 };
 
 std::mutex Cluster::instance_mutex_;

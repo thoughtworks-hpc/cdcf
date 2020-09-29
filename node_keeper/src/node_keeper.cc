@@ -19,6 +19,7 @@
 namespace node_keeper {
 NodeKeeper::NodeKeeper(const Config& config) : membership_() {
   std::string name = config.name_;
+  host_ = config.host_;
   gossip::Address address{config.host_, config.port_};
   auto seeds = config.GetSeeds();
 
@@ -67,6 +68,7 @@ class Subscriber : public membership::Subscriber {
 [[noreturn]] void NodeKeeper::Run() {
   std::string server_address("0.0.0.0:50051");
   GRPCImpl service(membership_);
+  service.SetHost(host_);
   NodeStatusGRPCImpl node_status_service(membership_);
   GRPCServer server(server_address, {&service, &node_status_service});
   std::cout << "gRPC Server listening on " << server_address << std::endl;
