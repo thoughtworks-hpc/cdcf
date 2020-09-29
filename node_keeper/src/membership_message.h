@@ -55,9 +55,13 @@ class UpdateMessage : public Message {
 class FullStateMessage : public Message {
  public:
   void InitAsFullStateMessage(const std::vector<Member>& members);
+
+  void InitAsFullStateMessageWithStatus(
+      const std::vector<MemberWithStatus>& members_with_status);
   void InitAsReentryRejected();
   bool IsSuccess();
   std::vector<Member> GetMembers();
+  std::vector<MemberWithStatus> GetMembersWithStatus();
 
   google::protobuf::Message& BaseMessage() override { return state_; }
 
