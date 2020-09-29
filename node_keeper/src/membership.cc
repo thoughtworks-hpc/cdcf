@@ -139,6 +139,7 @@ void membership::Membership::PullFromSeedMember() {
                          HandleDidPull(result);
                          return;
                        }
+                       std::this_thread::sleep_for(std::chrono::seconds(1));
                        PullFromSeedMember();
                      });
   }
