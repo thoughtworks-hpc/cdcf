@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(cdcf)
 
+message("########### Fix Bug 15 ######################")
+
 # ignore asio template compile warning
 add_definitions(-D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
 
@@ -28,3 +30,4 @@ endif ()
 include(InstallRequiredSystemLibraries)
 set(CPACK_PACKAGE_DIRECTORY ${PROJECT_SOURCE_DIR}/pack)
 include(CPack)
+
