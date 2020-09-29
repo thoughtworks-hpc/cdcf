@@ -10,7 +10,6 @@
 std::vector<std::string> ConstructAppArgs(const node_keeper::Config& config);
 
 int main(int argc, char* argv[]) {
-  CDCF_LOGGER_INFO("################# Fix bug 15 #######################");
   node_keeper::Config config;
   auto ret = config.parse_config(argc, argv, "cdcf-default.ini");
   if (ret != cdcf::CDCFConfig::RetValue::kSuccess) {
