@@ -172,7 +172,8 @@ class Membership {
   unsigned int GetMemberLocalIncarnation(const membership::Member& member);
   unsigned int GetSuspectLocalIncarnation(const membership::Member& member);
   void MergeUpUpdate(const Member& member, unsigned int incarnation);
-  void UpdateActorSystemStatus(const std::vector<MemberWithStatus>& members_with_status);
+  void UpdateActorSystemStatus(
+      const std::vector<MemberWithStatus>& members_with_status);
   void MergeActorSystemDown(const Member& member, unsigned int incarnation);
   void MergeActorSystemUp(const Member& member, unsigned int incarnation);
   void MergeDownUpdate(const Member& member, unsigned int incarnation);
@@ -202,7 +203,6 @@ class Membership {
   void Suspect(const Member& member, unsigned int incarnation);
   void RecoverySuspect(const Member& member);
   int GetRetransmitLimit() const;
-
 
   std::map<Member, int> members_;
   std::map<Member, int> suspects_;
