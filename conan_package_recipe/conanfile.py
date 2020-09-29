@@ -2,7 +2,7 @@ from conans import ConanFile, CMake, tools
 
 class CdcfConan(ConanFile):
     name = "cdcf"
-    version = "1.1"
+    version = "1.2"
     license = "MIT"
     author = "thoughtworks HPC"
     url = "https://github.com/thoughtworks-hpc/cdcf"
@@ -35,7 +35,7 @@ class CdcfConan(ConanFile):
     def build(self):
         if self.settings.os == "Macos":
             self.run('mkdir unzipFolder')
-            tools.unzip('%s/cdcf/mac_cdcf_stable_package.zip' % (self.source_folder), 'unzipFolder')
+            tools.unzip('%s/cdcf/mac_cdcf_1_2_hpc_stable_package.zip' % (self.source_folder), 'unzipFolder')
         else:
             cmake = CMake(self)
             if self.settings.os == "Linux":
