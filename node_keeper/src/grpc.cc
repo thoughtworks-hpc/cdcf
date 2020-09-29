@@ -80,6 +80,7 @@ void GRPCImpl::Notify(const std::vector<MemberEvent>& events) {
     for (auto& event : events) {
       if (event.member.GetIpAddress() == host_ ||
           event.member.GetHostName() == host_) {
+        CDCF_LOGGER_INFO("Find local node event, host: {} ignored", host_);
         continue;
       }
       channel.Put(event);
