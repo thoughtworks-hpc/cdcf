@@ -371,10 +371,6 @@ void membership::Membership::HandleDidPull(
     message.DeserializeFromArray(result.second.data(), result.second.size());
 
     if (message.IsSuccess()) {
-      for (const auto& member : message.GetMembers()) {
-        MergeUpUpdate(member, 0);
-      }
-
       UpdateActorSystemStatus(message.GetMembersWithStatus());
 
       UpdateMessage update;
@@ -714,11 +710,23 @@ void membership::Membership::MergeUpUpdate(const Member& member,
 
 void membership::Membership::UpdateActorSystemStatus(
     const std::vector<MemberWithStatus>& members_with_status) {
-  const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+  const std::lock_guard<std::mutex> lock_members(mutex_members_);
+  const std::lock_guard<std::mutex> lock_actor_system(
+      mutex_member_actor_system_);
 
   for (const auto& member_with_status : members_with_status) {
+    if (members_.find(member_with_status.member) == members_.end()) {
+      members_[member_with_status.member] = 0;
+      CDCF_LOGGER_INFO("Add member {}:{} by merging up update",
+                       member_with_status.member.GetIpAddress(),
+                       member_with_status.member.GetPort());
+    }
+
     if (MemberUpdate::ACTOR_SYSTEM_UP == member_with_status.status) {
       member_actor_system_[member_with_status.member] = true;
+      CDCF_LOGGER_INFO("Add up actor system {}:{} by merging up update",
+                       member_with_status.member.GetIpAddress(),
+                       member_with_status.member.GetPort());
     } else {
       member_actor_system_[member_with_status.member] = false;
     }
