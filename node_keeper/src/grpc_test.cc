@@ -26,6 +26,7 @@ class GRPCTest : public ::testing::Test {
 
   void SetUp() override {
     service_ = std::make_unique<GRPCImpl>(membership);
+    service_->SetHost("not_local");
     std::vector<grpc::Service*> services = {service_.get()};
     server_ = std::make_unique<GRPCServer>(server_address_, services);
     ResetStub();
