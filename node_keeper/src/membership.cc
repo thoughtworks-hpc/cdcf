@@ -908,6 +908,8 @@ std::map<membership::Member, bool> membership::Membership::GetActorSystems()
 }
 void membership::Membership::SetSelfActorSystemUp() {
   is_self_actor_system_up_ = true;
+  const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
+  member_actor_system_[self_] = true;
 }
 void membership::Membership::SendSelfActorSystemUpGossip() {
   membership::UpdateMessage message;
