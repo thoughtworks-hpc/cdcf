@@ -894,6 +894,7 @@ void membership::Membership::MergeActorSystemDown(
 void membership::Membership::NotifyActorSystemDown() {
   membership::UpdateMessage message;
   is_self_actor_system_up_ = false;
+  member_actor_system_.erase(self_);
   message.InitAsActorSystemDownMessage(self_, IncreaseIncarnation());
   auto serialized = message.SerializeToString();
   gossip::Payload payload(serialized.data(), serialized.size());
@@ -901,6 +902,7 @@ void membership::Membership::NotifyActorSystemDown() {
   CDCF_LOGGER_INFO("send self actor system down gossip, incarnation: ",
                    message.GetIncarnation());
 }
+
 std::map<membership::Member, bool> membership::Membership::GetActorSystems()
     const {
   const std::lock_guard<std::mutex> lock(mutex_member_actor_system_);
