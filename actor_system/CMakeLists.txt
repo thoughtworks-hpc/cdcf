@@ -7,7 +7,7 @@ list(APPEND ALL_SOURCES ${LOAD_BALANCER_SOURCES})
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
-find_package(gRPC REQUIRED)
+find_package(grpc CONFIG REQUIRED)
 # There's no simple way to generate code for gRPC from protobuf AFAIK, following block is to do that.
 set(PB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../node_keeper/protobuf")
 set(PB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
