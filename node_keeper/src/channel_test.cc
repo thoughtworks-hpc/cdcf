@@ -11,7 +11,7 @@ TEST(Channel, ShouldGetItemAfterPut) {
   node_keeper::Channel<int> channel;
   auto expect = 23;
   channel.Put(expect);
-
+  int i = 0;
   auto result = channel.Get();
 
   ASSERT_TRUE(result.first);
