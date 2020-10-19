@@ -3,7 +3,7 @@ project(monitor_client)
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
-find_package(grpc REQUIRED)
+find_package(gRPC REQUIRED)
 
 include_directories(./include)
 aux_source_directory(src ALL_SOURCES)
@@ -16,9 +16,9 @@ set(NODE_MONITOR_GRPC_SRCS "${PB_DIR}/node_monitor.grpc.pb.cc")
 set(NODE_MONITOR_GRPC_HDRS "${PB_DIR}/node_monitor.grpc.pb.h")
 
 if (WIN32)
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
 else ()
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin)
 endif ()
 
 add_custom_command(
@@ -36,4 +36,4 @@ list(APPEND ALL_SOURCES ${NODE_MONITOR_PROTO_SRCS} ${NODE_MONITOR_GRPC_SRCS})
 add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-target_link_libraries(${PROJECT_NAME} common protobuf::protobuf grpc::grpc)
+target_link_libraries(${PROJECT_NAME} common protobuf::protobuf gRPC::gRPC)

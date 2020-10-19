@@ -11,7 +11,7 @@ list(APPEND ALL_SOURCES ${GOSSIP_SOURCES} ${DAEMON_SOURCES} protobuf/message.pro
 find_package(asio REQUIRED)
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
-find_package(grpc REQUIRED)
+find_package(gRPC REQUIRED)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -25,9 +25,9 @@ set(NODE_KEEPER_GRPC_HDRS "${PB_DIR}/node_keeper.grpc.pb.h")
 # gRPC's cmake installation is alternative.
 
 if (WIN32)
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
 else ()
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin)
 endif ()
 
 add_custom_command(
@@ -61,7 +61,7 @@ list(FILTER EXE_SOURCES EXCLUDE REGEX "^.*_test.cc$")
 add_executable(${PROJECT_NAME} ${EXE_SOURCES} ${NODE_KEEPER_PROTO_SRCS} ${NODE_KEEPER_GRPC_SRCS})
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-target_link_libraries(${PROJECT_NAME} asio::asio protobuf::protobuf grpc::grpc common)
+target_link_libraries(${PROJECT_NAME} asio::asio protobuf::protobuf gRPC::gRPC common)
 protobuf_generate(LANGUAGE cpp TARGET ${PROJECT_NAME})
 
 set(TEST_SOURCES ${ALL_SOURCES})
@@ -69,7 +69,7 @@ list(FILTER TEST_SOURCES EXCLUDE REGEX "main.cc$")
 if (NOT "${TEST_SOURCES}" STREQUAL "")
     add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
     find_package(GTest REQUIRED)
-    target_link_libraries(${PROJECT_NAME}_test GTest::GTest asio::asio protobuf::protobuf grpc::grpc common)
+    target_link_libraries(${PROJECT_NAME}_test GTest::GTest asio::asio protobuf::protobuf gRPC::gRPC common)
     protobuf_generate(LANGUAGE cpp TARGET ${PROJECT_NAME}_test)
     add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
     set_tests_properties(${PROJECT_NAME}_test PROPERTIES TIMEOUT 60)

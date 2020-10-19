@@ -7,7 +7,7 @@ list(APPEND ALL_SOURCES ${LOAD_BALANCER_SOURCES})
 
 find_package(protobuf REQUIRED)
 find_package(protoc REQUIRED)
-find_package(grpc REQUIRED)
+find_package(gRPC REQUIRED)
 # There's no simple way to generate code for gRPC from protobuf AFAIK, following block is to do that.
 set(PB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../node_keeper/protobuf")
 set(PB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -19,9 +19,9 @@ set(NODE_KEEPER_GRPC_HDRS "${PB_DIR}/node_keeper.grpc.pb.h")
 # gRPC's cmake installation is alternative.
 
 if (WIN32)
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin.exe)
 else ()
-    set(GRPC_CPP_PLUGIN ${grpc_LIB_DIRS}/../bin/grpc_cpp_plugin)
+    set(GRPC_CPP_PLUGIN ${gRPC_LIB_DIRS}/../bin/grpc_cpp_plugin)
 endif ()
 
 
@@ -61,7 +61,7 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(caf REQUIRED)
-target_link_libraries(${PROJECT_NAME} common caf::caf grpc::grpc)
+target_link_libraries(${PROJECT_NAME} common caf::caf gRPC::gRPC)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(TEST_SOURCES ${ALL_SOURCES})
