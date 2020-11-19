@@ -48,9 +48,17 @@ class ClusterImpl {
 
   ~ClusterImpl() {
     stop_ = true;
+    CDCF_LOGGER_CRITICAL("ClusterImpl destruct start!~!!!!!!!!");
     if (thread_.joinable()) {
+      CDCF_LOGGER_CRITICAL("ClusterImpl join the thread");
       thread_.join();
     }
+    //    stub_.release();
+    (void)stub_.release();
+    if (stub_ == nullptr) {
+      CDCF_LOGGER_CRITICAL("stub release");
+    }
+    CDCF_LOGGER_CRITICAL("ClusterImpl destruct finish!~!!!!!!!");
   }
 
   std::vector<Member> GetMembers() {
@@ -75,9 +83,11 @@ class ClusterImpl {
     Fetch();
     grpc::ClientContext context;
     auto reader(stub_->Subscribe(&context, {}));
+    CDCF_LOGGER_CRITICAL("Routine start");
     for (::Event event; !stop_ && reader->Read(&event);) {
       Update(event);
     }
+    CDCF_LOGGER_CRITICAL("Routine finish");
   }
 
   void Fetch() {
@@ -138,31 +148,35 @@ class ClusterImpl {
 };
 
 std::mutex Cluster::instance_mutex_;
-std::unique_ptr<Cluster> Cluster::instance_;
+Cluster* Cluster::instance_;
 
 Cluster* Cluster::GetInstance() {
   if (instance_) {
-    return &*instance_;
+    return instance_;
   }
   std::lock_guard lock(instance_mutex_);
   if (instance_) {
-    return &*instance_;
+    return instance_;
   }
-  instance_.reset(new Cluster());
-  return &*instance_;
+  instance_ = new Cluster();
+  CDCF_LOGGER_CRITICAL("new instance!!");
+  return instance_;
 }
 
 Cluster* Cluster::GetInstance(const std::string& host_ip, uint16_t port) {
   if (instance_) {
-    return &*instance_;
+    return instance_;
   }
   std::lock_guard lock(instance_mutex_);
   if (instance_) {
-    return &*instance_;
+    return instance_;
   }
-  instance_.reset(new Cluster(host_ip, port));
-  return &*instance_;
+  //  instance_.reset(new Cluster(host_ip, port));
+  instance_ = new Cluster();
+  return instance_;
 }
+
+void Cluster::DeleteInstance() { delete instance_; }
 
 std::vector<Member> Cluster::GetMembers() { return impl_->GetMembers(); }
 

@@ -89,7 +89,7 @@ class ClusterImpl;
 
 class Cluster : public Subject {
   static std::mutex instance_mutex_;
-  static std::unique_ptr<Cluster> instance_;
+  static Cluster* instance_;
 
   Cluster(const Cluster&) = delete;
   Cluster(const Cluster&&) = delete;
@@ -97,6 +97,7 @@ class Cluster : public Subject {
  public:
   static Cluster* GetInstance();
   static Cluster* GetInstance(const std::string& host_ip, uint16_t port);
+  static void DeleteInstance();
 
   ~Cluster();
 
