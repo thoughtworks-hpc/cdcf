@@ -4,7 +4,7 @@ RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/source
 RUN apt-get clean \
     && apt-get update \
     && apt-get install python-pip cmake vim gdb -y
-RUN pip install conan \
+RUN pip install conan==1.29.1 \
     && conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
 
 WORKDIR /cdcf
