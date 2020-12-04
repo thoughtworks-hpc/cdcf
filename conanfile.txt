@@ -1,4 +1,5 @@
 [requires]
+c-ares/1.15.0#941389ce058bbbc6b5e536a7ac97abfe
 gtest/1.10.0
 asio/1.13.0
 openssl/1.0.2u
