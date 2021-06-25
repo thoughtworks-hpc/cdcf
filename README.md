@@ -2,6 +2,8 @@
 
 ![](https://github.com/thoughtworks-hpc/cdcf/workflows/CI/badge.svg)
 ![](https://github.com/thoughtworks-hpc/cdcf/workflows/Coding%20Style/badge.svg)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=thoughtworks-hpc_cdcf&metric=coverage)](https://sonarcloud.io/dashboard?id=thoughtworks-hpc_cdcf)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=thoughtworks-hpc_cdcf&metric=sqale_index)](https://sonarcloud.io/dashboard?id=thoughtworks-hpc_cdcf)
 
 ## Build from source
 
