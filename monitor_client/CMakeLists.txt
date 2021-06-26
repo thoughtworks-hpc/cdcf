@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(monitor_client)
 
-find_package(protobuf REQUIRED)
-find_package(protoc REQUIRED)
+find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
 include_directories(./include)

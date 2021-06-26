@@ -9,8 +9,7 @@ aux_source_directory(src/daemon DAEMON_SOURCES)
 list(APPEND ALL_SOURCES ${GOSSIP_SOURCES} ${DAEMON_SOURCES} protobuf/message.proto)
 
 find_package(asio REQUIRED)
-find_package(protobuf REQUIRED)
-find_package(protoc REQUIRED)
+find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

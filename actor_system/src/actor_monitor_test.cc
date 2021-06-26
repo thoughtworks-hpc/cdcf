@@ -88,7 +88,7 @@ TEST_F(ActorMonitorTest, should_report_exit_msg_when_exit_event_happen) {
   event_based_sender->send_exit(calculator_, caf::exit_reason::kill);
 
   error_message_ = promise_.get_future().get();
-  EXPECT_EQ("error(5, 'exit')", error_message_);
+  EXPECT_EQ("exit_reason(kill)", error_message_);
 }
 
 TEST_F(ActorMonitorTest, should_report_error_msg_when_error_event_message) {
@@ -105,7 +105,7 @@ TEST_F(ActorMonitorTest, should_report_error_msg_when_error_event_message) {
   event_based_sender->send(calculator_,
                            caf::make_error(caf::exit_reason::out_of_workers));
   error_message_ = promise_.get_future().get();
-  EXPECT_EQ("error(3, 'exit')", error_message_);
+  EXPECT_EQ("exit_reason(out_of_workers)", error_message_);
 }
 
 TEST_F(ActorMonitorTest, should_report_default_msg_when_send_unknown_message) {

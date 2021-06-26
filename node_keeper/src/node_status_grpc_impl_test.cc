@@ -270,5 +270,5 @@ TEST(GetAllNodeStatus, one_node_is_unavailable) {
   EXPECT_EQ(resp->node_status(1).max_memory(), 0);
   EXPECT_EQ(resp->node_status(1).mem_use_rate(), 0);
   EXPECT_EQ(resp->node_status(1).ip(), "Unavailable Address");
-  EXPECT_EQ(resp->node_status(1).error_message(), "DNS resolution failed");
+  EXPECT_FALSE(resp->node_status(1).error_message().empty());
 }

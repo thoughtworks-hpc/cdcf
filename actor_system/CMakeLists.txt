@@ -5,8 +5,7 @@ aux_source_directory(src ALL_SOURCES)
 aux_source_directory(src/load_balancer LOAD_BALANCER_SOURCES)
 list(APPEND ALL_SOURCES ${LOAD_BALANCER_SOURCES})
 
-find_package(protobuf REQUIRED)
-find_package(protoc REQUIRED)
+find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
 # There's no simple way to generate code for gRPC from protobuf AFAIK, following block is to do that.
 set(PB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../node_keeper/protobuf")
@@ -60,8 +59,8 @@ install(DIRECTORY include/cdcf DESTINATION include FILES_MATCHING PATTERN "*.h")
 target_include_directories(${PROJECT_NAME}
         PUBLIC include
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-find_package(caf REQUIRED)
-target_link_libraries(${PROJECT_NAME} common caf::caf gRPC::gRPC)
+find_package(CAF REQUIRED)
+target_link_libraries(${PROJECT_NAME} common CAF::CAF gRPC::gRPC)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 set(TEST_SOURCES ${ALL_SOURCES})

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(ping_pong)
 
-find_package(caf REQUIRED)
+find_package(CAF REQUIRED)
 
 add_executable(ping ping.cc)
 add_executable(pong pong.cc)
