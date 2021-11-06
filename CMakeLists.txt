@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(cdcf)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ignore asio template compile warning
 add_definitions(-D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
 
